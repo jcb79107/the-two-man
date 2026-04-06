@@ -1,0 +1,15 @@
+{
+  "/api/public/tournament/[slug]/bracket/route": "/api/public/tournament/[slug]/bracket",
+  "/_not-found/page": "/_not-found",
+  "/api/matches/[token]/scorecard/route": "/api/matches/[token]/scorecard",
+  "/api/admin/tournament/bootstrap/route": "/api/admin/tournament/bootstrap",
+  "/api/public/tournament/[slug]/standings/route": "/api/public/tournament/[slug]/standings",
+  "/page": "/",
+  "/invite/[token]/page": "/invite/[token]",
+  "/match/[token]/page": "/match/[token]",
+  "/tournament/[slug]/bracket/page": "/tournament/[slug]/bracket",
+  "/tournament/[slug]/matches/[matchId]/page": "/tournament/[slug]/matches/[matchId]",
+  "/tournament/[slug]/page": "/tournament/[slug]",
+  "/tournament/[slug]/standings/page": "/tournament/[slug]/standings",
+  "/admin/page": "/admin"
+}

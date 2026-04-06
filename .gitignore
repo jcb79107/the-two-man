@@ -1,0 +1,9 @@
+.DS_Store
+.next
+.next*
+node_modules
+.env
+.env.local
+coverage
+dist
+prisma/dev.db

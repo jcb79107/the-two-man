@@ -1,0 +1,133 @@
+{
+  "version": 3,
+  "pages404": true,
+  "caseSensitive": false,
+  "basePath": "",
+  "redirects": [
+    {
+      "source": "/:path+/",
+      "destination": "/:path+",
+      "internal": true,
+      "statusCode": 308,
+      "regex": "^(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))/$"
+    }
+  ],
+  "headers": [],
+  "rewrites": {
+    "beforeFiles": [],
+    "afterFiles": [],
+    "fallback": []
+  },
+  "dynamicRoutes": [
+    {
+      "page": "/api/matches/[token]/scorecard",
+      "regex": "^/api/matches/([^/]+?)/scorecard(?:/)?$",
+      "routeKeys": {
+        "nxtPtoken": "nxtPtoken"
+      },
+      "namedRegex": "^/api/matches/(?<nxtPtoken>[^/]+?)/scorecard(?:/)?$"
+    },
+    {
+      "page": "/api/public/tournament/[slug]/bracket",
+      "regex": "^/api/public/tournament/([^/]+?)/bracket(?:/)?$",
+      "routeKeys": {
+        "nxtPslug": "nxtPslug"
+      },
+      "namedRegex": "^/api/public/tournament/(?<nxtPslug>[^/]+?)/bracket(?:/)?$"
+    },
+    {
+      "page": "/api/public/tournament/[slug]/standings",
+      "regex": "^/api/public/tournament/([^/]+?)/standings(?:/)?$",
+      "routeKeys": {
+        "nxtPslug": "nxtPslug"
+      },
+      "namedRegex": "^/api/public/tournament/(?<nxtPslug>[^/]+?)/standings(?:/)?$"
+    },
+    {
+      "page": "/invite/[token]",
+      "regex": "^/invite/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPtoken": "nxtPtoken"
+      },
+      "namedRegex": "^/invite/(?<nxtPtoken>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/match/[token]",
+      "regex": "^/match/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPtoken": "nxtPtoken"
+      },
+      "namedRegex": "^/match/(?<nxtPtoken>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/tournament/[slug]",
+      "regex": "^/tournament/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPslug": "nxtPslug"
+      },
+      "namedRegex": "^/tournament/(?<nxtPslug>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/tournament/[slug]/bracket",
+      "regex": "^/tournament/([^/]+?)/bracket(?:/)?$",
+      "routeKeys": {
+        "nxtPslug": "nxtPslug"
+      },
+      "namedRegex": "^/tournament/(?<nxtPslug>[^/]+?)/bracket(?:/)?$"
+    },
+    {
+      "page": "/tournament/[slug]/matches/[matchId]",
+      "regex": "^/tournament/([^/]+?)/matches/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPslug": "nxtPslug",
+        "nxtPmatchId": "nxtPmatchId"
+      },
+      "namedRegex": "^/tournament/(?<nxtPslug>[^/]+?)/matches/(?<nxtPmatchId>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/tournament/[slug]/standings",
+      "regex": "^/tournament/([^/]+?)/standings(?:/)?$",
+      "routeKeys": {
+        "nxtPslug": "nxtPslug"
+      },
+      "namedRegex": "^/tournament/(?<nxtPslug>[^/]+?)/standings(?:/)?$"
+    }
+  ],
+  "staticRoutes": [
+    {
+      "page": "/",
+      "regex": "^/(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/(?:/)?$"
+    },
+    {
+      "page": "/_not-found",
+      "regex": "^/_not\\-found(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/_not\\-found(?:/)?$"
+    },
+    {
+      "page": "/admin",
+      "regex": "^/admin(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin(?:/)?$"
+    }
+  ],
+  "dataRoutes": [],
+  "rsc": {
+    "header": "rsc",
+    "varyHeader": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+    "prefetchHeader": "next-router-prefetch",
+    "didPostponeHeader": "x-nextjs-postponed",
+    "contentTypeHeader": "text/x-component",
+    "suffix": ".rsc",
+    "prefetchSuffix": ".prefetch.rsc",
+    "prefetchSegmentHeader": "next-router-segment-prefetch",
+    "prefetchSegmentSuffix": ".segment.rsc",
+    "prefetchSegmentDirSuffix": ".segments"
+  },
+  "rewriteHeaders": {
+    "pathHeader": "x-nextjs-rewritten-path",
+    "queryHeader": "x-nextjs-rewritten-query"
+  }
+}
