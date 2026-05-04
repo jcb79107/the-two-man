@@ -12,7 +12,7 @@ export function getAppUrl() {
   }
 
   if (process.env.NODE_ENV === "production") {
-    return "https://thetwoman.site";
+    return "https://www.thetwoman.site";
   }
 
   return "http://localhost:3000";
