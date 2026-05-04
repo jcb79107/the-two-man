@@ -25,7 +25,7 @@ export default async function PrivateMatchScorecardPage({
   const adminMode = query?.admin === "1" && (await isAdminAuthenticated());
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-4 px-4 py-4 pb-28 sm:px-6">
+    <main className="mx-auto flex min-h-screen w-full max-w-[620px] flex-col gap-4 px-4 py-4 pb-28 sm:px-6">
       <PrivateMatchWorkspace initialData={dbData} pageMode="scorecard" adminMode={adminMode} />
     </main>
   );

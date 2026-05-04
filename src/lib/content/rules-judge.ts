@@ -1,5 +1,5 @@
 export const RULES_JUDGE_URL =
-  "https://chatgpt.com/share/69c9bc6b-7c7c-8331-950b-435879f5bc10";
+  "https://chatgpt.com/share/69e00418-71ac-8330-b44a-a480102ffbfb";
 
 export const RULES_JUDGE_LABEL = "Rules judge";
 

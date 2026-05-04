@@ -58,6 +58,8 @@ export interface AdminDashboardData {
     isOverride: boolean;
     overrideNote: string | null;
     playedOn: string | null;
+    setupComplete: boolean;
+    scoreEntryCount: number;
     recipients: Array<{
       playerId: string;
       displayName: string;
@@ -178,6 +180,12 @@ export async function getAdminDashboardData(): Promise<AdminDashboardData> {
         matches: {
           orderBy: [{ stage: "asc" }, { roundLabel: "asc" }],
           include: {
+            _count: {
+              select: {
+                playerSelections: true,
+                holeScores: true
+              }
+            },
             pod: true,
             homeTeam: {
               include: {
@@ -296,6 +304,8 @@ export async function getAdminDashboardData(): Promise<AdminDashboardData> {
         playedOn: (match.finalizedAt ?? match.submittedAt ?? match.scheduledAt)
           ? (match.finalizedAt ?? match.submittedAt ?? match.scheduledAt)?.toISOString().slice(0, 10) ?? null
           : null,
+        setupComplete: match._count.playerSelections === 4,
+        scoreEntryCount: match._count.holeScores,
         recipients
       };
     });

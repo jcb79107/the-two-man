@@ -4,9 +4,10 @@ interface EmailInviteButtonProps {
   href: string;
   onSend?: () => void;
   label?: string;
+  className?: string;
 }
 
-export function EmailInviteButton({ href, onSend, label = "Email invite" }: EmailInviteButtonProps) {
+export function EmailInviteButton({ href, onSend, label = "Email invite", className }: EmailInviteButtonProps) {
   function handleClick() {
     onSend?.();
     const openedWindow = window.open(href, "_blank", "noopener,noreferrer");
@@ -20,7 +21,10 @@ export function EmailInviteButton({ href, onSend, label = "Email invite" }: Emai
     <button
       type="button"
       onClick={handleClick}
-      className="rounded-full border border-fairway/15 bg-white px-3 py-2 text-xs font-medium text-ink"
+      className={
+        className ??
+        "rounded-full border border-fairway/15 bg-white px-3 py-2 text-xs font-medium text-ink"
+      }
     >
       {label}
     </button>

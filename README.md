@@ -24,6 +24,7 @@ Mobile-first tournament operating system for a season-long two-man net better-ba
 - Database schema drafted in [`prisma/schema.prisma`](./prisma/schema.prisma)
 - Seed data created for the 2026 tournament format
 - First scoring engine module lives in [`src/lib/scoring/engine.ts`](./src/lib/scoring/engine.ts)
+- Vercel deployment guide lives in [`docs/vercel-deployment.md`](./docs/vercel-deployment.md)
 
 ## Assumptions
 

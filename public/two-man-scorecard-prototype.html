@@ -1,0 +1,860 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>The Two Man - Match Scorecard Prototype</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f3ead7;
+        --panel: #fffcf7;
+        --panel-2: #f7f1e3;
+        --line: #dce7df;
+        --line-strong: #d7c28d;
+        --text: #112017;
+        --muted: rgba(17, 32, 23, 0.62);
+        --gold: #d9b86c;
+        --green: #1f6b4f;
+        --pine: #133b2c;
+        --team-a: #1f6b4f;
+        --team-b: #5f47a6;
+        --cell: 48px;
+        --label: 134px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        background: var(--bg);
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background:
+          radial-gradient(circle at top, rgba(31, 107, 79, 0.18), transparent 28%),
+          linear-gradient(180deg, #f6efe1 0%, #f2ead9 42%, #efe4d0 100%);
+        color: var(--text);
+        font-family: "Avenir Next", "Helvetica Neue", "Trebuchet MS", "Segoe UI", sans-serif;
+        letter-spacing: 0;
+      }
+
+      button {
+        color: inherit;
+        font: inherit;
+      }
+
+      .phone {
+        width: min(100%, 430px);
+        margin: 0 auto;
+        padding: 12px 12px 28px;
+      }
+
+      .app-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 2px 2px 12px;
+      }
+
+      .back-link {
+        display: inline-flex;
+        align-items: center;
+        min-height: 44px;
+        border: 1px solid rgba(31, 107, 79, 0.14);
+        border-radius: 999px;
+        padding: 0 14px;
+        background: rgba(255, 252, 247, 0.88);
+        color: rgba(17, 32, 23, 0.72);
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-decoration: none;
+        text-transform: uppercase;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+      }
+
+      .brand img {
+        width: 46px;
+        height: 46px;
+        object-fit: contain;
+        filter: drop-shadow(0 8px 16px rgba(17, 32, 23, 0.14));
+      }
+
+      .brand p {
+        margin: 0 0 3px;
+        color: rgba(31, 107, 79, 0.72);
+        font-size: 10px;
+        font-weight: 650;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+      }
+
+      .brand h1 {
+        margin: 0;
+        font-size: 18px;
+        line-height: 1;
+      }
+
+      .season {
+        min-height: 44px;
+        border: 1px solid rgba(31, 107, 79, 0.15);
+        border-radius: 999px;
+        padding: 10px 14px;
+        background: rgba(255, 252, 247, 0.88);
+        color: rgba(17, 32, 23, 0.72);
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+
+      .hero {
+        position: relative;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.7);
+        border-radius: 24px;
+        padding: 16px;
+        background:
+          linear-gradient(145deg, rgba(255, 252, 247, 0.96), rgba(247, 241, 227, 0.92)),
+          var(--panel);
+        box-shadow: 0 14px 34px rgba(17, 32, 23, 0.09);
+      }
+
+      .hero::before {
+        content: "";
+        position: absolute;
+        inset: -42% -28% auto auto;
+        width: 260px;
+        height: 260px;
+        border-radius: 999px;
+        background: rgba(217, 184, 108, 0.2);
+        filter: blur(16px);
+      }
+
+      .hero > * {
+        position: relative;
+      }
+
+      .kicker,
+      .eyebrow {
+        margin: 0;
+        color: var(--gold);
+        font-size: 11px;
+        font-weight: 650;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+      }
+
+      .winner-line {
+        display: grid;
+        gap: 8px;
+        margin-top: 8px;
+      }
+
+      .winner-line h2 {
+        margin: 0;
+        font-size: clamp(28px, 9vw, 38px);
+        line-height: 1.02;
+        letter-spacing: 0;
+      }
+
+      .winner-line p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 14px;
+        font-weight: 500;
+      }
+
+      .score-ribbon {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        align-items: stretch;
+        gap: 10px;
+        margin-top: 16px;
+      }
+
+      .team-tile {
+        display: grid;
+        grid-template-rows: auto auto 1fr auto;
+        min-width: 0;
+        min-height: 182px;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 12px;
+        background: #ffffff;
+      }
+
+      .team-tile.is-winner {
+        border-color: rgba(31, 107, 79, 0.28);
+        background: #e3f1ea;
+      }
+
+      .team-name {
+        margin: 0;
+        font-size: 14px;
+        font-weight: 700;
+        line-height: 1.12;
+      }
+
+      .team-meta {
+        margin: 8px 0 0;
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 650;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .team-score {
+        margin-top: 8px;
+        align-self: end;
+        font-size: 34px;
+        font-weight: 750;
+        line-height: 1;
+      }
+
+      .team-splits {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 4px;
+        margin-top: 10px;
+      }
+
+      .team-splits span {
+        display: grid;
+        gap: 2px;
+        border-radius: 10px;
+        background: rgba(255, 252, 247, 0.68);
+        padding: 6px;
+      }
+
+      .team-splits small {
+        color: var(--muted);
+        font-size: 9px;
+        font-weight: 650;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .team-splits strong {
+        color: var(--text);
+        font-size: 13px;
+        line-height: 1;
+      }
+
+      .course-card,
+      .scorecard-card {
+        margin-top: 14px;
+        border: 1px solid var(--line);
+        border-radius: 22px;
+        background: rgba(255, 252, 247, 0.84);
+        box-shadow: 0 14px 34px rgba(17, 32, 23, 0.09);
+      }
+
+      .course-card {
+        padding: 16px;
+      }
+
+      .course-card h2,
+      .scorecard-head h2 {
+        margin: 0;
+        font-size: 20px;
+        line-height: 1.1;
+      }
+
+      .course-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-top: 14px;
+      }
+
+      .course-stat {
+        border-radius: 14px;
+        padding: 12px;
+        background: #f7f1e3;
+      }
+
+      .course-stat:first-child {
+        grid-column: 1 / -1;
+      }
+
+      .course-stat span {
+        display: block;
+        color: var(--muted);
+        font-size: 10px;
+        font-weight: 650;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+      }
+
+      .course-stat strong {
+        display: block;
+        margin-top: 7px;
+        font-size: 16px;
+      }
+
+      .scorecard-card {
+        overflow: hidden;
+      }
+
+      .scorecard-head {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 16px 16px 12px;
+      }
+
+      .segment-tabs {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+        padding: 0 16px 14px;
+      }
+
+      .segment-tabs button {
+        min-height: 46px;
+        border: 1px solid rgba(31, 107, 79, 0.15);
+        border-radius: 999px;
+        background: #ffffff;
+        color: var(--muted);
+        font-weight: 700;
+      }
+
+      .segment-tabs button[aria-selected="true"] {
+        border-color: var(--pine);
+        background: var(--pine);
+        color: #ffffff;
+      }
+
+      .table-wrap {
+        overflow-x: auto;
+        overscroll-behavior-x: contain;
+        border-top: 1px solid var(--line);
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .score-table {
+        width: max-content;
+        min-width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+      }
+
+      .score-table th,
+      .score-table td {
+        min-width: var(--cell);
+        height: 50px;
+        border-right: 1px solid var(--line);
+        border-bottom: 1px solid var(--line);
+        padding: 0;
+        text-align: center;
+        vertical-align: middle;
+      }
+
+      .score-table th:first-child,
+      .score-table td:first-child {
+        position: sticky;
+        left: 0;
+        z-index: 4;
+        min-width: var(--label);
+        max-width: var(--label);
+        padding: 0 10px;
+        border-right: 1px solid var(--line-strong);
+        background: #fffaf0;
+        text-align: left;
+      }
+
+      .score-table thead th {
+        background: #f3ead7;
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .score-table thead th:first-child {
+        background: #f3ead7;
+      }
+
+      .row-label {
+        display: grid;
+        gap: 3px;
+      }
+
+      .row-title {
+        overflow: hidden;
+        color: var(--text);
+        font-size: 13px;
+        font-weight: 950;
+        line-height: 1.05;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .row-sub {
+        color: var(--muted);
+        font-size: 9px;
+        font-weight: 900;
+        letter-spacing: 0.13em;
+        text-transform: uppercase;
+      }
+
+      .meta-row td {
+        height: 34px;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .team-a-row td:first-child {
+        border-left: 4px solid var(--team-a);
+      }
+
+      .team-b-row td:first-child {
+        border-left: 4px solid var(--team-b);
+      }
+
+      .net-row td {
+        background: #fbf8f0;
+      }
+
+      .net-row.team-a-row td:not(:first-child) {
+        background: rgba(31, 107, 79, 0.08);
+      }
+
+      .net-row.team-b-row td:not(:first-child) {
+        background: rgba(95, 71, 166, 0.08);
+      }
+
+      .hole-cell,
+      .score-cell {
+        position: relative;
+        display: inline-grid;
+        place-items: center;
+        width: 44px;
+        min-height: 44px;
+      }
+
+      .hole-number {
+        display: grid;
+        place-items: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 999px;
+        background: rgba(31, 107, 79, 0.1);
+        color: var(--text);
+        font-weight: 950;
+      }
+
+      .stroke-badge {
+        position: absolute;
+        right: 3px;
+        top: 3px;
+        display: grid;
+        place-items: center;
+        min-width: 13px;
+        height: 13px;
+        border-radius: 999px;
+        background: var(--pine);
+        color: #fff;
+        font-size: 8px;
+        font-weight: 800;
+        line-height: 1;
+      }
+
+      .score {
+        display: grid;
+        place-items: center;
+        width: 31px;
+        height: 31px;
+        color: var(--text);
+        font-size: 17px;
+        font-weight: 950;
+      }
+
+      .score.used {
+        background: rgba(31, 107, 79, 0.08);
+        box-shadow: inset 0 0 0 2px rgba(31, 107, 79, 0.12);
+      }
+
+      .score.unused {
+        color: rgba(17, 32, 23, 0.42);
+      }
+
+      .score.birdie {
+        border: 2px solid var(--text);
+        border-radius: 999px;
+        color: var(--text);
+      }
+
+      .score.eagle {
+        border: 4px double var(--text);
+        border-radius: 999px;
+        color: var(--text);
+      }
+
+      .score.bogey {
+        border: 2px solid var(--text);
+        border-radius: 3px;
+        color: var(--text);
+      }
+
+      .score.double-bogey {
+        border: 4px double var(--text);
+        border-radius: 3px;
+        color: var(--text);
+      }
+
+      .score.net-win {
+        background: rgba(31, 107, 79, 0.14);
+      }
+
+      .total-cell {
+        min-width: 62px;
+        background: #f7f1e3;
+        color: var(--pine);
+        font-size: 18px;
+        font-weight: 750;
+      }
+
+      @media (min-width: 700px) {
+        .phone {
+          padding-top: 28px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="phone">
+      <header class="app-top">
+        <div class="brand">
+          <img src="two-man-logo.png" alt="" />
+          <div>
+            <h1>The Two Man</h1>
+            <p>2026 season</p>
+          </div>
+        </div>
+        <a class="back-link" href="/">Back</a>
+      </header>
+
+      <section class="hero" aria-labelledby="result-title">
+        <p class="kicker">Final result</p>
+        <div class="winner-line">
+          <h2 id="result-title">Barron &amp; Loewenstein wins</h2>
+          <p id="result-subtitle">Dry Run Golf Club • Apr 16, 2026</p>
+        </div>
+        <div class="score-ribbon" aria-label="Match score">
+          <div class="team-tile is-winner">
+            <p class="team-name">Barron &amp; Loewenstein</p>
+            <p class="team-meta">Winner</p>
+            <div class="team-score">9.5</div>
+            <div class="team-splits">
+              <span><small>Out</small><strong>-3</strong></span>
+              <span><small>In</small><strong>-4</strong></span>
+              <span><small>Total</small><strong>-7</strong></span>
+            </div>
+          </div>
+          <div class="team-tile">
+            <p class="team-name">Levin &amp; Sutker</p>
+            <p class="team-meta">Runner-up</p>
+            <div class="team-score">8.5</div>
+            <div class="team-splits">
+              <span><small>Out</small><strong>-4</strong></span>
+              <span><small>In</small><strong>-2</strong></span>
+              <span><small>Total</small><strong>-6</strong></span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="course-card" aria-labelledby="course-title">
+        <p class="eyebrow">Dry Run Golf Club</p>
+        <h2 id="course-title">Championship tees</h2>
+        <div class="course-grid">
+          <div class="course-stat">
+            <span>Tee</span>
+            <strong>Blue / 6,842 yds</strong>
+          </div>
+          <div class="course-stat">
+            <span>Date</span>
+            <strong>Apr 16, 2026</strong>
+          </div>
+          <div class="course-stat">
+            <span>Par</span>
+            <strong>72</strong>
+          </div>
+        </div>
+      </section>
+
+      <section class="scorecard-card" aria-labelledby="scorecard-title">
+        <div class="scorecard-head">
+          <div>
+            <p class="eyebrow">Official scorecard</p>
+            <h2 id="scorecard-title">Hole-by-hole</h2>
+          </div>
+        </div>
+        <div class="segment-tabs" role="tablist" aria-label="Scorecard nine">
+          <button type="button" data-segment="front" role="tab" aria-selected="true">Front 9</button>
+          <button type="button" data-segment="back" role="tab" aria-selected="false">Back 9</button>
+        </div>
+        <div class="table-wrap">
+          <table class="score-table" aria-describedby="scorecard-title">
+            <thead id="score-head"></thead>
+            <tbody id="score-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+    </main>
+
+    <script>
+      const holes = [
+        { n: 1, par: 4, yards: 423, hcp: 9 },
+        { n: 2, par: 4, yards: 447, hcp: 3 },
+        { n: 3, par: 4, yards: 392, hcp: 13 },
+        { n: 4, par: 3, yards: 184, hcp: 17 },
+        { n: 5, par: 5, yards: 551, hcp: 1 },
+        { n: 6, par: 4, yards: 426, hcp: 7 },
+        { n: 7, par: 5, yards: 538, hcp: 5 },
+        { n: 8, par: 3, yards: 173, hcp: 15 },
+        { n: 9, par: 4, yards: 412, hcp: 11 },
+        { n: 10, par: 4, yards: 421, hcp: 10 },
+        { n: 11, par: 4, yards: 463, hcp: 2 },
+        { n: 12, par: 3, yards: 201, hcp: 16 },
+        { n: 13, par: 5, yards: 565, hcp: 4 },
+        { n: 14, par: 4, yards: 437, hcp: 6 },
+        { n: 15, par: 4, yards: 389, hcp: 14 },
+        { n: 16, par: 3, yards: 191, hcp: 18 },
+        { n: 17, par: 4, yards: 451, hcp: 8 },
+        { n: 18, par: 5, yards: 476, hcp: 12 }
+      ];
+
+      const teams = {
+        a: {
+          name: "Barron & Loewenstein",
+          short: "BL",
+          color: "team-a",
+          players: [
+            { name: "Barron", scores: [4, 4, 4, 3, 4, 5, 5, 3, 4, 4, 5, 3, 4, 4, 3, 4, 4, 4] },
+            { name: "Loewenstein", scores: [5, 5, 3, 4, 5, 4, 4, 4, 4, 5, 4, 2, 5, 5, 4, 3, 5, 5] }
+          ],
+          strokes: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        },
+        b: {
+          name: "Levin & Sutker",
+          short: "LS",
+          color: "team-b",
+          players: [
+            { name: "Levin", scores: [5, 4, 5, 3, 5, 4, 6, 4, 4, 5, 6, 4, 5, 4, 5, 3, 4, 5] },
+            { name: "Sutker", scores: [4, 5, 4, 5, 6, 5, 5, 3, 5, 5, 6, 3, 4, 6, 4, 4, 5, 6] }
+          ],
+          strokes: [0, 1, 0, 0, 1, 1, 1, 0, 0, 0, 1, 0, 1, 1, 0, 0, 1, 0]
+        }
+      };
+
+      let activeSegment = "front";
+
+      const scoreHead = document.querySelector("#score-head");
+      const scoreBody = document.querySelector("#score-body");
+
+      function segmentRange() {
+        return activeSegment === "front" ? [0, 9] : [9, 18];
+      }
+
+      function scoreClass(score, par) {
+        const diff = score - par;
+        if (diff <= -2) return "eagle";
+        if (diff === -1) return "birdie";
+        if (diff === 1) return "bogey";
+        if (diff >= 2) return "double-bogey";
+        return "par";
+      }
+
+      function teamBest(teamKey, index) {
+        const team = teams[teamKey];
+        const gross = team.players.map((player, playerIndex) => ({
+          playerIndex,
+          name: player.name,
+          gross: player.scores[index],
+          net: player.scores[index] - team.strokes[index]
+        }));
+        gross.sort((x, y) => x.net - y.net || x.gross - y.gross);
+        return gross[0];
+      }
+
+      function matchByHole() {
+        let a = 0;
+        let b = 0;
+        return holes.map((hole, index) => {
+          const aBest = teamBest("a", index).net;
+          const bBest = teamBest("b", index).net;
+          if (aBest < bBest) a += 1;
+          if (bBest < aBest) b += 1;
+          if (aBest === bBest) {
+            a += 0.5;
+            b += 0.5;
+          }
+          return { hole: hole.n, aBest, bBest, a, b };
+        });
+      }
+
+      function totalsFor(teamKey, from = 0, to = 18) {
+        const gross = teams[teamKey].players.map((player) =>
+          player.scores.slice(from, to).reduce((sum, score) => sum + score, 0)
+        );
+        const bestBall = holes.slice(from, to).reduce((sum, hole, offset) => {
+          return sum + teamBest(teamKey, from + offset).net;
+        }, 0);
+        const par = holes.slice(from, to).reduce((sum, hole) => sum + hole.par, 0);
+        return { gross, bestBall, par, vsPar: bestBall - par };
+      }
+
+      function vsParText(value) {
+        if (value < 0) return String(value);
+        if (value > 0) return "+" + value;
+        return "E";
+      }
+
+      function notation(score, par, extra = "") {
+        return `<span class="score ${scoreClass(score, par)} ${extra}">${score}</span>`;
+      }
+
+      function renderHead() {
+        const [from, to] = segmentRange();
+        const segmentHoles = holes.slice(from, to);
+        const label = activeSegment === "front" ? "Out" : "In";
+        scoreHead.innerHTML = `
+          <tr>
+            <th>Hole</th>
+            ${segmentHoles.map((hole, offset) => `
+              <th>
+                <span class="hole-cell">
+                  <span class="hole-number">${hole.n}</span>
+                </span>
+              </th>
+            `).join("")}
+            <th class="total-cell">${label}</th>
+          </tr>
+        `;
+      }
+
+      function metaRow(label, values, total) {
+        return `
+          <tr class="meta-row">
+            <td><span class="row-title">${label}</span></td>
+            ${values.map((value) => `<td>${value}</td>`).join("")}
+            <td class="total-cell">${total}</td>
+          </tr>
+        `;
+      }
+
+      function playerRow(teamKey, player, playerIndex, from, to) {
+        const values = player.scores.slice(from, to);
+        const segmentTotal = values.reduce((sum, score) => sum + score, 0);
+        return `
+          <tr class="${teamKey === "a" ? "team-a-row" : "team-b-row"}">
+            <td>
+              <span class="row-label">
+                <span class="row-title">${player.name}</span>
+                <span class="row-sub">Gross${teams[teamKey].strokes.some(Boolean) ? " / net strokes" : ""}</span>
+              </span>
+            </td>
+            ${values.map((score, offset) => {
+              const index = from + offset;
+              const used = teamBest(teamKey, index).playerIndex === playerIndex ? "used" : "unused";
+              return `
+                <td>
+                  <span class="score-cell">
+                    ${notation(score, holes[index].par, used)}
+                    ${teams[teamKey].strokes[index] > 0 ? `<span class="stroke-badge">${teams[teamKey].strokes[index]}</span>` : ""}
+                  </span>
+                </td>
+              `;
+            }).join("")}
+            <td class="total-cell">${segmentTotal}</td>
+          </tr>
+        `;
+      }
+
+      function netRow(teamKey, from, to) {
+        const team = teams[teamKey];
+        const values = holes.slice(from, to).map((hole, offset) => {
+          const index = from + offset;
+          return teamBest(teamKey, index).net;
+        });
+        const total = values.reduce((sum, value) => sum + value, 0);
+        return `
+          <tr class="net-row ${teamKey === "a" ? "team-a-row" : "team-b-row"}">
+            <td>
+              <span class="row-label">
+                <span class="row-title">${team.short} best ball</span>
+                <span class="row-sub">Team net used</span>
+              </span>
+            </td>
+            ${values.map((value, offset) => {
+              const index = from + offset;
+              const aBest = teamBest("a", index).net;
+              const bBest = teamBest("b", index).net;
+              const win = (teamKey === "a" && aBest < bBest) || (teamKey === "b" && bBest < aBest);
+              return `
+                <td>
+                  <span class="score-cell">
+                    ${notation(value, holes[index].par, win ? "used net-win" : "used")}
+                  </span>
+                </td>
+              `;
+            }).join("")}
+            <td class="total-cell">${total}</td>
+          </tr>
+        `;
+      }
+
+      function renderBody() {
+        const [from, to] = segmentRange();
+        const segmentHoles = holes.slice(from, to);
+        scoreBody.innerHTML = [
+          metaRow("HCP", segmentHoles.map((hole) => hole.hcp), ""),
+          metaRow("Yards", segmentHoles.map((hole) => hole.yards), segmentHoles.reduce((sum, hole) => sum + hole.yards, 0)),
+          metaRow("Par", segmentHoles.map((hole) => hole.par), segmentHoles.reduce((sum, hole) => sum + hole.par, 0)),
+          playerRow("a", teams.a.players[0], 0, from, to),
+          playerRow("a", teams.a.players[1], 1, from, to),
+          netRow("a", from, to),
+          playerRow("b", teams.b.players[0], 0, from, to),
+          playerRow("b", teams.b.players[1], 1, from, to),
+          netRow("b", from, to)
+        ].join("");
+      }
+
+      function render() {
+        renderHead();
+        renderBody();
+      }
+
+      document.querySelectorAll("[data-segment]").forEach((button) => {
+        button.addEventListener("click", () => {
+          activeSegment = button.dataset.segment;
+          document.querySelectorAll("[data-segment]").forEach((tab) => {
+            tab.setAttribute("aria-selected", String(tab === button));
+          });
+          render();
+        });
+      });
+
+      render();
+    </script>
+  </body>
+</html>

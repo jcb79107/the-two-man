@@ -3,11 +3,21 @@
 import { Fragment, useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { ROUTES } from "@/lib/api/routes";
+import { PublicMatchScorecard } from "@/components/public-match-scorecard";
+import { RulesJudgeIcon } from "@/components/rules-judge-icon";
 import {
-  RULES_JUDGE_LABEL,
   RULES_JUDGE_URL
 } from "@/lib/content/rules-judge";
 import type { PrivateMatchView } from "@/lib/server/matches";
+import {
+  ScorecardTableFrame,
+  getScorecardSegmentHoles,
+  scorecardBodyCellClass,
+  scorecardHeaderCellClass,
+  scorecardLabelCellClass,
+  scorecardScoreMarkClass,
+  scorecardScoreStyle
+} from "@/components/scorecard-table";
 
 interface PrivateMatchWorkspaceProps {
   initialData: PrivateMatchView;
@@ -20,6 +30,9 @@ type ManualHoleInput = {
   par: string;
   strokeIndex: string;
 };
+
+const MANUAL_COURSE_ID = "__manual_course__";
+const MANUAL_TEE_ID = "__manual_tee__";
 
 type LocalDraftPayload = {
   courseId: string;
@@ -43,6 +56,14 @@ function buildHoleTemplate(
     }));
   }
 
+  return Array.from({ length: 18 }, (_, index) => ({
+    holeNumber: index + 1,
+    par: "",
+    strokeIndex: ""
+  }));
+}
+
+function buildBlankManualHoleTemplate(): ManualHoleInput[] {
   return Array.from({ length: 18 }, (_, index) => ({
     holeNumber: index + 1,
     par: "",
@@ -101,38 +122,6 @@ function hasCompletedManualHoleInputs(holes: ManualHoleInput[] | undefined) {
   return new Set(strokeIndexes).size === 18;
 }
 
-function scoreStyleForValue(score: string, par: number | undefined, compact = false) {
-  const gross = Number(score);
-
-  if (!score || !Number.isFinite(gross) || par == null) {
-    return "rounded-none border-2 border-[#b9b9b9] bg-white text-ink";
-  }
-
-  const delta = gross - par;
-
-  if (delta <= -2) {
-    return compact
-      ? "rounded-full border-[1.5px] border-[#7b7b7b] bg-white text-ink shadow-[0_0_0_2px_white,0_0_0_3.5px_#7b7b7b]"
-      : "rounded-full border-[3px] border-[#7b7b7b] bg-white text-ink shadow-[inset_0_0_0_4px_white,inset_0_0_0_7px_#7b7b7b]";
-  }
-
-  if (delta === -1) {
-    return "rounded-full border-[3px] border-[#7b7b7b] bg-white text-ink";
-  }
-
-  if (delta === 0) {
-    return "rounded-none border-2 border-transparent bg-white text-ink shadow-none";
-  }
-
-  if (delta === 1) {
-    return "rounded-none border-[3px] border-[#7b7b7b] bg-white text-ink";
-  }
-
-  return compact
-    ? "rounded-none border-[1.5px] border-[#7b7b7b] bg-white text-ink shadow-[0_0_0_2px_white,0_0_0_3.5px_#7b7b7b]"
-    : "rounded-none border-[3px] border-[#7b7b7b] bg-white text-ink shadow-[inset_0_0_0_4px_white,inset_0_0_0_7px_#7b7b7b]";
-}
-
 function getTeamBroadcastStyles(teamIndex: number) {
   return teamIndex % 2 === 0
     ? {
@@ -165,6 +154,32 @@ function parseEnteredScore(score: string | null | undefined) {
   const parsed = Number(score);
 
   return Number.isFinite(parsed) ? parsed : null;
+}
+
+function formatEditableVsPar(value: number | null | undefined) {
+  if (value == null) {
+    return "E";
+  }
+
+  if (value === 0) {
+    return "E";
+  }
+
+  return value > 0 ? `+${value}` : String(value);
+}
+
+function scorecardDisplayName(name: string) {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  return parts.at(-1) ?? name;
+}
+
+function scorecardTeamInitials(name: string) {
+  return name
+    .split(/\s+|&/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join("");
 }
 
 export function PrivateMatchWorkspace({
@@ -203,6 +218,16 @@ export function PrivateMatchWorkspace({
   );
   const [courseSearchQuery, setCourseSearchQuery] = useState("");
   const [courseSearchState, setCourseSearchState] = useState("");
+  const [manualSetupOpen, setManualSetupOpen] = useState(false);
+  const [manualCourseName, setManualCourseName] = useState("");
+  const [manualCourseCity, setManualCourseCity] = useState("");
+  const [manualCourseState, setManualCourseState] = useState("");
+  const [manualTeeName, setManualTeeName] = useState("Men's tees");
+  const [manualCourseRating, setManualCourseRating] = useState("");
+  const [manualSlope, setManualSlope] = useState("");
+  const [manualCourseHoles, setManualCourseHoles] = useState<ManualHoleInput[]>(() =>
+    buildBlankManualHoleTemplate()
+  );
   const [playoffWinnerTeamId, setPlayoffWinnerTeamId] = useState(
     initialData.match.winningTeamId ?? ""
   );
@@ -236,6 +261,7 @@ export function PrivateMatchWorkspace({
   const [scoreSegment, setScoreSegment] = useState<"front" | "back">("front");
   const [selectedHoleNumber, setSelectedHoleNumber] = useState(1);
   const [isScoringFieldActive, setIsScoringFieldActive] = useState(false);
+  const [setupConfirmationChecked, setSetupConfirmationChecked] = useState(false);
   const [playerEndorsements, setPlayerEndorsements] = useState<Record<string, boolean>>(() =>
     Object.fromEntries(initialData.players.map((player) => [player.playerId, false]))
   );
@@ -246,8 +272,10 @@ export function PrivateMatchWorkspace({
   const canAdminOverridePostedCard = adminMode && pageMode === "scorecard";
   const isScorecardReadOnly = data.isPublished && !canAdminOverridePostedCard;
 
-  const selectedCourse =
-    data.courses.find((course) => course.id === courseId) ?? data.courses[0] ?? null;
+  const selectedCourse = courseId
+    ? data.courses.find((course) => course.id === courseId) ?? null
+    : null;
+  const manualCourseIsSelected = courseId === MANUAL_COURSE_ID;
   const courseLoaded = selectedCourse != null;
   const selectedCourseHasTeeData = (selectedCourse?.tees.length ?? 0) > 0;
   const teamGroups = Array.from(
@@ -300,46 +328,19 @@ export function PrivateMatchWorkspace({
     selectedCourseHasTeeData &&
     setupPlayers.every((player) => player.handicapIndex !== "" && player.teeId !== "") &&
     missingHoleInputsAreReady;
+  const canProceedToScorecard = canGenerateScorecard && setupConfirmationChecked;
   const holesByPlayerId = new Map(
     data.setupPreview?.players.map((player) => [
       player.playerId,
       selectedCourse?.tees.find((tee) => tee.id === player.teeId)?.holes ?? []
     ]) ?? []
   );
-  const visibleHoleNumbers = scoreSegment === "front" ? [1, 2, 3, 4, 5, 6, 7, 8, 9] : [10, 11, 12, 13, 14, 15, 16, 17, 18];
+  const visibleHoleNumbers = getScorecardSegmentHoles(scoreSegment);
   const frontNineHoleNumbers = [1, 2, 3, 4, 5, 6, 7, 8, 9];
   const backNineHoleNumbers = [10, 11, 12, 13, 14, 15, 16, 17, 18];
   const broadcastSaveLabel = data.isPublished && !canAdminOverridePostedCard ? "FINAL" : draftStatus ? "AUTOSAVED" : "LIVE";
   const showRestoredDraftBanner = draftStatus?.startsWith("Restored") ?? false;
-  const isCompactScorecard = isScorecardReadOnly || !isScoringFieldActive;
-  const scorecardGridClass =
-    scoreSegment === "front"
-      ? isCompactScorecard
-        ? "grid grid-cols-[92px_repeat(9,minmax(24px,1fr))_38px] sm:grid-cols-[160px_repeat(9,minmax(78px,1fr))_96px]"
-        : "grid grid-cols-[160px_repeat(9,minmax(78px,1fr))_96px]"
-      : isCompactScorecard
-        ? "grid grid-cols-[92px_repeat(9,minmax(24px,1fr))_38px_38px] sm:grid-cols-[160px_repeat(9,minmax(78px,1fr))_96px_96px]"
-        : "grid grid-cols-[160px_repeat(9,minmax(78px,1fr))_96px_96px]";
-  const scorecardMinWidth =
-    scoreSegment === "front"
-      ? isCompactScorecard
-        ? 346
-        : 1000
-      : isCompactScorecard
-        ? 384
-        : 1096;
-  const tableHeaderCellClass = isCompactScorecard
-    ? "px-1.5 py-2 text-center text-sm font-semibold sm:px-3 sm:py-4 sm:text-xl"
-    : "px-3 py-4 text-center text-xl font-semibold";
-  const tableLabelCellClass = isCompactScorecard
-    ? "px-2 py-2.5 text-[11px] sm:px-4 sm:py-4 sm:text-lg"
-    : "px-4 py-4 text-lg";
-  const tableBodyCellClass = isCompactScorecard
-    ? "px-1.5 py-2 text-center sm:px-3 sm:py-3"
-    : "px-3 py-3 text-center";
-  const scoreCircleSizeClass = isCompactScorecard
-    ? "h-7 w-7 text-[14px] leading-none tracking-[-0.02em] sm:h-12 sm:w-12 sm:text-xl"
-    : "h-12 w-12 text-xl";
+  const showScorecardEditHint = !isScorecardReadOnly && !isScoringFieldActive;
   const baseHoleMetaByNumber = new Map(
     (holesByPlayerId.get(data.players[0]?.playerId ?? "") ?? []).map((hole) => [hole.holeNumber, hole])
   );
@@ -445,6 +446,42 @@ export function PrivateMatchWorkspace({
     const allHoleNumbers = Array.from(
       new Set(players.flatMap((playerCard) => playerCard.holes.map((hole) => hole.holeNumber)))
     ).sort((left, right) => left - right);
+    const betterBallSegmentSummary = (holeNumbers: number[]) =>
+      holeNumbers.reduce(
+        (summary, holeNumber) => {
+          const holeNets = players
+            .map((playerCard) => {
+              const gross = parseEnteredScore(
+                scoreRows.find((hole) => hole.holeNumber === holeNumber)?.scores[playerCard.player.playerId]
+              );
+              const strokes = playerCard.preview?.strokesByHole[holeNumber] ?? 0;
+              return gross != null ? gross - strokes : null;
+            })
+            .filter((value): value is number => value != null);
+          const par =
+            players
+              .flatMap((playerCard) => playerCard.holes)
+              .find((hole) => hole.holeNumber === holeNumber)?.par ??
+            baseHoleMetaByNumber.get(holeNumber)?.par ??
+            null;
+
+          if (holeNets.length === 0 || par == null) {
+            return summary;
+          }
+
+          const bestNet = Math.min(...holeNets);
+
+          return {
+            holes: summary.holes + 1,
+            net: summary.net + bestNet,
+            par: summary.par + par
+          };
+        },
+        { holes: 0, net: 0, par: 0 }
+      );
+    const frontNineBetterBallSummary = betterBallSegmentSummary(frontNineHoleNumbers);
+    const backNineBetterBallSummary = betterBallSegmentSummary(backNineHoleNumbers);
+    const overallBetterBallSummary = betterBallSegmentSummary(allHoleNumbers);
     const overallBetterBallNetTotal = allHoleNumbers.reduce((total, holeNumber) => {
       const holeNets = players
         .map((playerCard) => {
@@ -496,10 +533,89 @@ export function PrivateMatchWorkspace({
       frontNineBetterBallNetTotal,
       backNineBetterBallNetTotal,
       overallBetterBallNetTotal,
+      frontNineToPar:
+        frontNineBetterBallSummary.holes > 0
+          ? frontNineBetterBallSummary.net - frontNineBetterBallSummary.par
+          : null,
+      backNineToPar:
+        backNineBetterBallSummary.holes > 0
+          ? backNineBetterBallSummary.net - backNineBetterBallSummary.par
+          : null,
+      overallToPar:
+        overallBetterBallSummary.holes > 0
+          ? overallBetterBallSummary.net - overallBetterBallSummary.par
+          : null,
       betterBallToPar:
         enteredBetterBallHoles > 0 ? enteredBetterBallNetTotal - enteredBetterBallParTotal : null
     };
   });
+  const publishedScorecardView =
+    data.scorecard && data.setupPreview
+      ? (() => {
+          const scoredHolesByNumber = new Map(
+            data.scorecard.holes.map((hole) => [hole.holeNumber, hole])
+          );
+          const allHoleMeta = Array.from(baseHoleMetaByNumber.values()).sort(
+            (left, right) => left.holeNumber - right.holeNumber
+          );
+          const courseLocation = selectedCourse
+            ? [selectedCourse.city, selectedCourse.state].filter(Boolean).join(", ") || "Course TBD"
+            : "Course TBD";
+
+          return {
+            teams: teamGroups.map((team, teamIndex) => ({
+              id: team.teamId,
+              name: team.teamName,
+              tone: (teamIndex % 2 === 0 ? "pine" : "purple") as "pine" | "purple",
+              players: team.players.map((player) => {
+                const preview = previewByPlayerId.get(player.playerId);
+
+                return {
+                  playerId: player.playerId,
+                  playerName: player.playerName,
+                  teamId: player.teamId,
+                  teeName: preview?.teeName ?? "Tee",
+                  handicapIndex: preview?.handicapIndex ?? player.handicapIndex ?? 0,
+                  matchStrokeCount: preview?.matchStrokeCount ?? 0,
+                  strokesByHole: preview?.strokesByHole ?? {},
+                  grossByHole: Object.fromEntries(
+                    scoreRows.map((hole) => [
+                      hole.holeNumber,
+                      parseEnteredScore(hole.scores[player.playerId]) ?? 0
+                    ])
+                  ),
+                  netByHole: Object.fromEntries(
+                    scoreRows.map((hole) => {
+                      const scored = scoredHolesByNumber.get(hole.holeNumber);
+                      const gross = parseEnteredScore(hole.scores[player.playerId]);
+                      const strokes = preview?.strokesByHole[hole.holeNumber] ?? 0;
+
+                      return [
+                        hole.holeNumber,
+                        scored?.playerNetScores[player.playerId] ?? (gross != null ? gross - strokes : null)
+                      ];
+                    })
+                  )
+                };
+              })
+            })),
+            holes: allHoleMeta.map((hole) => {
+              const scored = scoredHolesByNumber.get(hole.holeNumber);
+
+              return {
+                holeNumber: hole.holeNumber,
+                par: hole.par,
+                strokeIndex: hole.strokeIndex,
+                yardage: hole.yardage ?? null,
+                teamPoints: scored?.teamPoints ?? {},
+                teamBetterBallNet: scored?.teamBetterBallNet ?? {},
+                winningTeamId: scored?.winningTeamId ?? null
+              };
+            }),
+            courseLocation
+          };
+        })()
+      : null;
 
   useEffect(() => {
     if (hasRestoredDraftRef.current || (data.isPublished && !canAdminOverridePostedCard) || typeof window === "undefined") {
@@ -547,12 +663,38 @@ export function PrivateMatchWorkspace({
   }
 
   useEffect(() => {
+    if (data.isPublished || !selectedCourse?.tees.length) {
+      return;
+    }
+
+    const teeIds = new Set(selectedCourse.tees.map((tee) => tee.id));
+    const defaultTeeId = selectedCourse.tees[0]?.id ?? "";
+
+    setSetupPlayers((current) => {
+      let changed = false;
+      const next = current.map((player) => {
+        if (player.teeId && teeIds.has(player.teeId)) {
+          return player;
+        }
+
+        changed = true;
+        return {
+          ...player,
+          teeId: defaultTeeId
+        };
+      });
+
+      return changed ? next : current;
+    });
+  }, [data.isPublished, selectedCourse]);
+
+  useEffect(() => {
     setManualTeeHoles((current) => {
       const required = buildMissingTeeHoleState(data.courses, courseId, setupPlayers);
       const next = { ...required };
 
       for (const [teeId, holes] of Object.entries(required)) {
-        next[teeId] = current[teeId] ?? holes;
+        next[teeId] = current[teeId]?.length === 18 ? current[teeId] : holes;
       }
 
       return next;
@@ -595,6 +737,7 @@ export function PrivateMatchWorkspace({
   }, [data.players]);
 
   function handleSetupPlayerChange(playerId: string, field: "handicapIndex" | "teeId", value: string) {
+    setSetupConfirmationChecked(false);
     setSetupPlayers((current) =>
       current.map((player) =>
         player.playerId === playerId
@@ -635,9 +778,13 @@ export function PrivateMatchWorkspace({
     field: "par" | "strokeIndex",
     value: string
   ) {
+    setSetupConfirmationChecked(false);
     setManualTeeHoles((current) => ({
       ...current,
-      [teeId]: (current[teeId] ?? []).map((hole) =>
+      [teeId]: (current[teeId]?.length === 18
+        ? current[teeId]
+        : buildHoleTemplate(selectedCourse?.tees.find((tee) => tee.id === teeId)?.holes ?? [])
+      ).map((hole) =>
         hole.holeNumber === holeNumber
           ? {
               ...hole,
@@ -648,7 +795,95 @@ export function PrivateMatchWorkspace({
     }));
   }
 
+  function handleManualCourseHoleChange(
+    holeNumber: number,
+    field: "par" | "strokeIndex",
+    value: string
+  ) {
+    setSetupConfirmationChecked(false);
+    setManualCourseHoles((current) =>
+      current.map((hole) =>
+        hole.holeNumber === holeNumber
+          ? {
+              ...hole,
+              [field]: value.replace(/\D/g, "").slice(0, 2)
+            }
+          : hole
+      )
+    );
+  }
+
+  function applyManualCourse() {
+    const normalizedName = manualCourseName.trim();
+    const normalizedTeeName = manualTeeName.trim();
+    const rating = Number(manualCourseRating);
+    const slope = Number(manualSlope);
+    const parTotal = manualCourseHoles.reduce((total, hole) => total + Number(hole.par), 0);
+
+    if (!normalizedName) {
+      setErrorMessage("Add the course name before using manual setup.");
+      return;
+    }
+
+    if (!normalizedTeeName) {
+      setErrorMessage("Add the tee name before using manual setup.");
+      return;
+    }
+
+    if (!Number.isFinite(rating) || rating < 50 || rating > 85) {
+      setErrorMessage("Manual setup needs a valid course rating.");
+      return;
+    }
+
+    if (!Number.isInteger(slope) || slope < 55 || slope > 155) {
+      setErrorMessage("Manual setup needs a valid slope rating.");
+      return;
+    }
+
+    if (!hasCompletedManualHoleInputs(manualCourseHoles)) {
+      setErrorMessage("Manual setup needs all 18 par values and unique handicap indexes from 1 to 18.");
+      return;
+    }
+
+    const manualCourse: PrivateMatchView["courses"][number] = {
+      id: MANUAL_COURSE_ID,
+      name: normalizedName,
+      city: manualCourseCity.trim() || null,
+      state: manualCourseState.trim().toUpperCase() || null,
+      tees: [
+        {
+          id: MANUAL_TEE_ID,
+          name: normalizedTeeName,
+          gender: "MEN",
+          par: parTotal,
+          slope,
+          courseRating: rating,
+          holes: manualCourseHoles.map((hole) => ({
+            holeNumber: hole.holeNumber,
+            par: Number(hole.par),
+            strokeIndex: Number(hole.strokeIndex)
+          }))
+        }
+      ]
+    };
+
+    const nextCourses = mergeCourses(
+      data.courses.filter((course) => course.id !== MANUAL_COURSE_ID),
+      [manualCourse]
+    );
+
+    setData((current) => ({
+      ...current,
+      courses: nextCourses
+    }));
+    setCourseSearchResults([]);
+    applySelectedCourse(MANUAL_COURSE_ID, nextCourses);
+    setManualTeeHoles({});
+    setErrorMessage(null);
+  }
+
   function applySelectedCourse(nextCourseId: string, availableCourses: PrivateMatchView["courses"]) {
+    setSetupConfirmationChecked(false);
     setCourseId(nextCourseId);
     setSetupPlayers((current) =>
       current.map((player) => ({
@@ -696,6 +931,7 @@ export function PrivateMatchWorkspace({
       }))
     );
     setErrorMessage(null);
+    setSetupConfirmationChecked(false);
   }
 
   function handleEndorsementChange(playerId: string, checked: boolean) {
@@ -737,6 +973,22 @@ export function PrivateMatchWorkspace({
             handicapIndex: Number(player.handicapIndex),
             teeId: player.teeId
           })),
+          manualCourse:
+            manualCourseIsSelected && selectedCourse
+              ? {
+                  name: manualCourseName.trim() || selectedCourse.name,
+                  city: manualCourseCity.trim(),
+                  state: manualCourseState.trim().toUpperCase(),
+                  teeName: manualTeeName.trim() || selectedCourse.tees[0]?.name,
+                  courseRating: Number(manualCourseRating || selectedCourse.tees[0]?.courseRating),
+                  slope: Number(manualSlope || selectedCourse.tees[0]?.slope),
+                  holes: manualCourseHoles.map((hole) => ({
+                    holeNumber: hole.holeNumber,
+                    par: Number(hole.par),
+                    strokeIndex: Number(hole.strokeIndex)
+                  }))
+                }
+              : null,
           teeHoleOverrides: missingHoleTees.map((tee) => ({
             teeId: tee.id,
             holes: (manualTeeHoles[tee.id] ?? buildHoleTemplate(tee.holes)).map((hole) => ({
@@ -794,10 +1046,19 @@ export function PrivateMatchWorkspace({
           throw new Error("No matching course was found. Try a broader name or add the state.");
         }
 
+        const mergedCourses = mergeCourses(data.courses, courses);
+        const shouldAutoSelectCourse =
+          !courseId || !mergedCourses.some((course) => course.id === courseId);
+
         setData((current) => ({
           ...current,
           courses: mergeCourses(current.courses, courses)
         }));
+
+        if (shouldAutoSelectCourse) {
+          applySelectedCourse(courses[0].id, mergedCourses);
+        }
+
         setCourseSearchResults(courses);
         setErrorMessage(null);
       } catch (error) {
@@ -926,6 +1187,43 @@ export function PrivateMatchWorkspace({
         </div>
       ) : null}
 
+      {data.setupComplete && pageMode === "scorecard" && !isScorecardReadOnly ? (
+        <a
+          href={RULES_JUDGE_URL}
+          target="_blank"
+          rel="noreferrer"
+          className="grid min-h-16 grid-cols-[44px_1fr_auto] items-center gap-3 rounded-[24px] border border-pine/15 bg-white px-4 py-3 text-ink shadow-[0_10px_24px_rgba(17,32,23,0.08)]"
+        >
+          <span className="grid h-11 w-11 place-items-center rounded-2xl bg-pine text-white">
+            <RulesJudgeIcon className="h-5 w-5" />
+          </span>
+          <span>
+            <span className="block text-[10px] font-semibold uppercase tracking-[0.22em] text-fairway/72">
+              Rules judge
+            </span>
+            <span className="mt-0.5 block text-sm font-semibold text-ink">Launch live rules help</span>
+          </span>
+          <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-pine">
+            Open
+          </span>
+        </a>
+      ) : null}
+
+      {pageMode === "scorecard" && isScorecardReadOnly && publishedScorecardView ? (
+        <PublicMatchScorecard
+          roundLabel={data.match.roundLabel}
+          status={data.match.status}
+          resultLabel={null}
+          courseName={selectedCourse?.name ?? "Course TBD"}
+          courseLocation={publishedScorecardView.courseLocation}
+          playedOnLabel={data.match.playedOn ?? "Date pending"}
+          teams={publishedScorecardView.teams}
+          summaries={data.scorecard?.teamSummaries ?? []}
+          holes={publishedScorecardView.holes}
+          backHref={adminMode ? "/admin?section=scorecards" : ROUTES.tournamentHome(data.match.tournamentSlug)}
+        />
+      ) : null}
+
       {pageMode === "setup" ? (
         <details className="rounded-2xl border border-mist bg-white px-4 py-2.5 text-sm text-ink/72">
           <summary className="cursor-pointer list-none text-sm font-semibold text-ink">
@@ -940,30 +1238,30 @@ export function PrivateMatchWorkspace({
       ) : null}
 
       {pageMode === "setup" ? (
-        <section className="overflow-hidden rounded-[28px] border border-white/60 bg-pine text-white shadow-[0_18px_42px_rgba(17,32,23,0.16)]">
-          <div className="grid gap-4 px-4 py-4 sm:grid-cols-[1.2fr_0.8fr] sm:px-5 sm:py-5">
-            <div>
+        <section className="rounded-[28px] border border-white/70 bg-[linear-gradient(145deg,rgba(255,252,247,0.98),rgba(247,241,227,0.94))] p-4 shadow-[0_14px_34px_rgba(17,32,23,0.08)]">
+          <div className="grid gap-4 sm:grid-cols-[1.25fr_0.75fr]">
+            <div className="min-w-0">
               <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-gold">
                 {data.match.stageLabel}
               </p>
-              <h2 className="mt-2 text-[1.7rem] font-semibold leading-tight text-balance sm:text-2xl">
+              <h2 className="mt-2 text-[1.85rem] font-semibold leading-[1.04] text-ink text-balance sm:text-3xl">
                 {data.match.homeTeamName} vs {data.match.awayTeamName}
               </h2>
-              <p className="mt-2 text-sm leading-6 text-white/78">
-                {selectedCourse ? selectedCourse.name : "Choose a course and tees to unlock the card."}
+              <p className="mt-3 text-sm font-medium leading-6 text-ink/64">
+                {selectedCourse ? selectedCourse.name : "Find the course, set the tees, then open the card."}
               </p>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-2 sm:content-start">
-              <div className="rounded-2xl border border-white/12 bg-white/8 p-4">
-                <p className="text-xs text-white/62">Status</p>
-                <p className="mt-2 text-lg font-semibold text-white">
+            <div className="grid grid-cols-2 gap-2 sm:content-start">
+              <div className="rounded-2xl border border-mist bg-white px-3 py-3">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink/46">Status</p>
+                <p className="mt-1 text-base font-semibold text-ink">
                   {data.isPublished ? "Published" : data.match.status}
                 </p>
               </div>
-              <div className="rounded-2xl border border-white/12 bg-white/8 p-4">
-                <p className="text-xs text-white/62">Progress</p>
-                <p className="mt-2 text-lg font-semibold text-white">{scoreProgressLabel}</p>
+              <div className="rounded-2xl border border-mist bg-white px-3 py-3">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink/46">Progress</p>
+                <p className="mt-1 text-base font-semibold text-ink">{scoreProgressLabel}</p>
               </div>
             </div>
           </div>
@@ -978,31 +1276,22 @@ export function PrivateMatchWorkspace({
                 Step 1
               </p>
             <h2 className="mt-1.5 text-[1.6rem] font-semibold text-ink sm:text-2xl">Round setup</h2>
-            <p className="mt-2 text-sm leading-6 text-ink/72">Enter all four current indexes, then pick the course and tees.</p>
+            <p className="mt-2 text-sm leading-6 text-ink/72">Search the course first. Manual setup is only the backup if lookup fails.</p>
             </div>
-          {data.setupComplete ? (
-            <button
-              type="button"
-              onClick={() => navigateToPage("scorecard")}
-              className="rounded-full border border-fairway/15 bg-white px-4 py-2 text-sm font-medium text-ink"
-            >
-              Open scorecard
-            </button>
-          ) : null}
         </div>
 
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
-          <div className="rounded-[24px] border border-dashed border-fairway/16 bg-sand p-4 sm:col-span-2">
+          <div className="rounded-[24px] border border-mist bg-[#fbf7ec] p-4 sm:col-span-2">
             <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-fairway/70">
-              Course lookup
+              Find the course
             </p>
-            <div className="mt-3 grid gap-3 sm:grid-cols-[1.3fr_120px_auto]">
+            <div className="mt-3 grid grid-cols-[1fr_76px] gap-2 sm:grid-cols-[1.3fr_120px_auto]">
               <input
                 type="text"
                 value={courseSearchQuery}
                 disabled={data.isPublished || isSearchingCourses}
                 onChange={(event) => setCourseSearchQuery(event.target.value)}
-                placeholder="Search any course"
+                placeholder="Course name"
                 className="rounded-2xl border border-mist bg-white px-4 py-3"
               />
               <input
@@ -1017,16 +1306,163 @@ export function PrivateMatchWorkspace({
                 type="button"
                 disabled={data.isPublished || isSearchingCourses}
                 onClick={handleCourseSearch}
-                className="rounded-full bg-pine px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+                className="col-span-2 min-h-12 rounded-full bg-pine px-4 py-2 text-sm font-semibold text-white disabled:opacity-60 sm:col-span-1"
               >
                 {isSearchingCourses ? "Searching..." : "Search courses"}
               </button>
             </div>
-            <p className="mt-3 text-sm leading-6 text-ink/68">
-              Search pulls course, tee, rating, slope, and scorecard-row data into Fairway Match.
-              If hole-by-hole rows are still missing, you can enter them once from the physical card
-              below as a fallback.
+            <p className="mt-3 text-sm leading-6 text-ink/64">
+              Try the shortest recognizable name first. If it misses, add “Golf Club” or the city.
             </p>
+            <div className="mt-4 rounded-[22px] border border-dashed border-[#d7c28d] bg-white/70 p-3">
+              <button
+                type="button"
+                disabled={data.isPublished}
+                onClick={() => setManualSetupOpen((current) => !current)}
+                className="flex w-full items-center justify-between gap-3 text-left"
+              >
+                <span>
+                  <span className="block text-[11px] font-semibold uppercase tracking-[0.2em] text-[#8a6b08]">
+                    Plan B
+                  </span>
+                  <span className="mt-1 block text-sm font-semibold text-ink">
+                    Course not found? Use manual setup.
+                  </span>
+                </span>
+                <span className="rounded-full border border-[#d7c28d] bg-white px-3 py-1.5 text-xs font-semibold text-[#8a6b08]">
+                  {manualSetupOpen ? "Close" : "Manual"}
+                </span>
+              </button>
+
+              {manualSetupOpen ? (
+                <div className="mt-4 space-y-4 border-t border-[#ead59a] pt-4">
+                  <p className="text-sm leading-6 text-ink/70">
+                    Use this only if search cannot find the course. Copy the course rating, slope,
+                    par row, and handicap row from the physical scorecard.
+                  </p>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <label className="grid gap-1 text-sm sm:col-span-2">
+                      <span className="text-ink/70">Course name</span>
+                      <input
+                        type="text"
+                        value={manualCourseName}
+                        disabled={data.isPublished}
+                        onChange={(event) => setManualCourseName(event.target.value)}
+                        placeholder="Course name"
+                        className="rounded-2xl border border-mist bg-white px-4 py-3"
+                      />
+                    </label>
+                    <label className="grid gap-1 text-sm">
+                      <span className="text-ink/70">City</span>
+                      <input
+                        type="text"
+                        value={manualCourseCity}
+                        disabled={data.isPublished}
+                        onChange={(event) => setManualCourseCity(event.target.value)}
+                        placeholder="City"
+                        className="rounded-2xl border border-mist bg-white px-4 py-3"
+                      />
+                    </label>
+                    <label className="grid gap-1 text-sm">
+                      <span className="text-ink/70">State</span>
+                      <input
+                        type="text"
+                        value={manualCourseState}
+                        disabled={data.isPublished}
+                        onChange={(event) => setManualCourseState(event.target.value.toUpperCase().slice(0, 2))}
+                        placeholder="IL"
+                        className="rounded-2xl border border-mist bg-white px-4 py-3"
+                      />
+                    </label>
+                    <label className="grid gap-1 text-sm">
+                      <span className="text-ink/70">Tee name</span>
+                      <input
+                        type="text"
+                        value={manualTeeName}
+                        disabled={data.isPublished}
+                        onChange={(event) => setManualTeeName(event.target.value)}
+                        placeholder="Blue tees"
+                        className="rounded-2xl border border-mist bg-white px-4 py-3"
+                      />
+                    </label>
+                    <div className="grid grid-cols-2 gap-3">
+                      <label className="grid gap-1 text-sm">
+                        <span className="text-ink/70">Rating</span>
+                        <input
+                          type="number"
+                          step="0.1"
+                          value={manualCourseRating}
+                          disabled={data.isPublished}
+                          onChange={(event) => setManualCourseRating(event.target.value)}
+                          placeholder="71.6"
+                          className="rounded-2xl border border-mist bg-white px-4 py-3"
+                        />
+                      </label>
+                      <label className="grid gap-1 text-sm">
+                        <span className="text-ink/70">Slope</span>
+                        <input
+                          type="number"
+                          value={manualSlope}
+                          disabled={data.isPublished}
+                          onChange={(event) => setManualSlope(event.target.value.replace(/\D/g, "").slice(0, 3))}
+                          placeholder="127"
+                          className="rounded-2xl border border-mist bg-white px-4 py-3"
+                        />
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="overflow-hidden rounded-2xl border border-[#ead59a] bg-white">
+                    <div className="grid grid-cols-[64px_1fr_1fr] gap-2 border-b border-[#ead59a] bg-[#f6edd0] px-3 py-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#8a6b08]">
+                      <span>Hole</span>
+                      <span>Par</span>
+                      <span>HCP</span>
+                    </div>
+                    <div className="grid gap-2 px-3 py-3">
+                      {manualCourseHoles.map((hole) => (
+                        <div
+                          key={`manual-course-hole-${hole.holeNumber}`}
+                          className="grid grid-cols-[64px_1fr_1fr] items-center gap-2"
+                        >
+                          <span className="text-sm font-semibold text-ink">{hole.holeNumber}</span>
+                          <input
+                            type="number"
+                            min="3"
+                            max="6"
+                            value={hole.par}
+                            disabled={data.isPublished}
+                            onChange={(event) =>
+                              handleManualCourseHoleChange(hole.holeNumber, "par", event.target.value)
+                            }
+                            className="min-w-0 rounded-xl border border-mist bg-white px-3 py-2"
+                          />
+                          <input
+                            type="number"
+                            min="1"
+                            max="18"
+                            value={hole.strokeIndex}
+                            disabled={data.isPublished}
+                            onChange={(event) =>
+                              handleManualCourseHoleChange(hole.holeNumber, "strokeIndex", event.target.value)
+                            }
+                            className="min-w-0 rounded-xl border border-mist bg-white px-3 py-2"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    disabled={data.isPublished}
+                    onClick={applyManualCourse}
+                    className="min-h-11 w-full rounded-full bg-[#8a6b08] px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+                  >
+                    Use manual course setup
+                  </button>
+                </div>
+              ) : null}
+            </div>
             {courseSearchResults.length > 0 ? (
               <div className="mt-4 space-y-3">
                 {courseSearchResults.map((course) => (
@@ -1055,9 +1491,8 @@ export function PrivateMatchWorkspace({
         </div>
 
         {!courseLoaded ? (
-          <div className="mt-4 rounded-[24px] border border-dashed border-mist bg-white px-4 py-6 text-sm leading-6 text-ink/72">
-            Search and select a course first. Once course and tee data are loaded, the round
-            setup fields and scorecard generator will unlock.
+          <div className="mt-4 rounded-[24px] border border-dashed border-mist bg-white px-4 py-5 text-sm leading-6 text-ink/68">
+            Pick a course to unlock tee selections and handicap indexes. If search is down, use the manual setup backup above.
           </div>
         ) : (
           <>
@@ -1082,37 +1517,35 @@ export function PrivateMatchWorkspace({
               </label>
             </div>
 
-            <div className="mt-4 space-y-4">
+            <div className="mt-4 space-y-3">
               {teamGroups.map((team) => (
-                <div key={team.teamId} className="rounded-[26px] border border-mist bg-sand p-4">
+                <div key={team.teamId} className="rounded-[24px] border border-mist bg-[#fbf7ec] p-3">
                   <div className="flex items-center justify-between gap-3">
                     <div>
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-fairway/68">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-fairway/68">
                         Team
                       </p>
-                      <p className="mt-2 text-xl font-semibold text-ink">{team.teamName}</p>
+                      <p className="mt-1 text-lg font-semibold text-ink">{team.teamName}</p>
                     </div>
                   </div>
 
-                  <div className="mt-4 grid gap-3">
+                  <div className="mt-3 grid gap-2">
                     {team.players.map((player) => {
                       const setupPlayer = setupPlayers.find((entry) => entry.playerId === player.playerId);
                       const preview = previewByPlayerId.get(player.playerId);
 
                       return (
-                        <div key={player.playerId} className="rounded-2xl border border-mist bg-white p-4">
-                          <div className="flex items-start justify-between gap-3">
-                            <div>
-                              <p className="text-lg font-semibold text-ink">{player.playerName}</p>
-                              <p className="text-sm text-ink/62">
-                                {preview
-                                  ? `${preview.matchStrokeCount} strokes in match`
-                                  : "Set index + tee to preview strokes"}
-                              </p>
-                            </div>
+                        <div key={player.playerId} className="rounded-2xl border border-mist bg-white p-3">
+                          <div className="flex items-center justify-between gap-3">
+                            <p className="text-base font-semibold text-ink">{player.playerName}</p>
+                            {preview ? (
+                              <span className="rounded-full bg-[#eef8f1] px-3 py-1 text-[11px] font-semibold text-pine">
+                                {preview.matchStrokeCount} strokes
+                              </span>
+                            ) : null}
                           </div>
 
-                          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                          <div className="mt-3 grid gap-2 sm:grid-cols-[0.7fr_1.3fr]">
                             <label className="grid gap-1 text-sm">
                               <span className="text-ink/70">Handicap Index</span>
                               <input
@@ -1227,26 +1660,42 @@ export function PrivateMatchWorkspace({
             ) : null}
 
             {!data.isPublished ? (
-              <div className="mt-4 flex items-center justify-between gap-3 rounded-2xl bg-sand px-4 py-3">
+              <div className="mt-4 grid gap-3 rounded-[24px] border border-mist bg-[#fbf7ec] px-4 py-4">
                 <div className="space-y-2">
-                  <p className="text-sm text-ink/72">
-                    Save this once the foursome agrees on the four current indexes, course, and tees.
-                  </p>
+                  <label className="flex items-start gap-3 rounded-2xl border border-[#d8c27a] bg-[#fff7dd] px-3 py-3 text-sm text-ink">
+                    <input
+                      type="checkbox"
+                      checked={setupConfirmationChecked}
+                      onChange={(event) => setSetupConfirmationChecked(event.target.checked)}
+                      className="mt-1 h-4 w-4 rounded border-mist"
+                    />
+                    <span className="leading-6">
+                      We confirmed today&apos;s Handicap Indexes, course, and tees for all four players.
+                    </span>
+                  </label>
                   {!canGenerateScorecard ? (
                     <div className="space-y-1 text-xs text-ink/65">
                       {setupBlockers.map((blocker) => (
                         <p key={blocker}>{blocker}</p>
                       ))}
                     </div>
+                  ) : !setupConfirmationChecked ? (
+                    <div className="space-y-1 text-xs text-ink/65">
+                      <p>Confirm the day-of indexes and tees above before the scorecard unlocks.</p>
+                    </div>
                   ) : null}
                 </div>
                 <button
                   type="button"
-                  disabled={isPending || !canGenerateScorecard}
+                  disabled={isPending || !canProceedToScorecard}
                   onClick={handleSetupSubmit}
-                  className="rounded-full bg-pine px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+                  className="min-h-12 w-full rounded-full bg-pine px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
                 >
-                  {isPending ? "Saving setup..." : data.setupComplete ? "Update setup" : "Generate scorecard"}
+                  {isPending
+                    ? "Saving setup..."
+                    : data.setupComplete
+                      ? "Confirm setup and open scorecard"
+                      : "Confirm setup and generate scorecard"}
                 </button>
               </div>
             ) : null}
@@ -1305,44 +1754,80 @@ export function PrivateMatchWorkspace({
         </section>
       ) : null}
 
-      {data.setupComplete && pageMode === "scorecard" ? (
-        <section className="overflow-hidden rounded-[28px] border border-[#d7c28d] bg-[#f7efd8] shadow-[0_18px_40px_rgba(76,58,26,0.14)]">
-          <div className="border-b border-[#5c574f] bg-[#6b6760] px-4 py-3 text-white">
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-white/60">
-                  {data.match.stageLabel}
-                </p>
-                <h2 className="mt-1.5 text-[1.6rem] font-semibold text-white sm:text-2xl">
-                  {data.match.homeTeamName} vs {data.match.awayTeamName}
-                </h2>
-                <p className="mt-1.5 text-sm text-white/78">
-                  {selectedCourse?.name ?? "Course not set"} • {scoreProgressLabel}
-                </p>
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="rounded-xl border border-white/10 bg-black/10 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.24em] text-white/78">
-                    {data.isPublished ? (canAdminOverridePostedCard ? "Admin override" : "Final") : data.match.status}
-                  </span>
-                  {(!data.isPublished || canAdminOverridePostedCard) && draftStatus ? (
-                    <span className="rounded-xl border border-white/10 bg-black/10 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.24em] text-white/78">
-                      {broadcastSaveLabel}
-                    </span>
-                  ) : null}
-                </div>
-                {!data.isPublished ? (
-                  <button
-                    type="button"
-                    onClick={() => navigateToPage("setup")}
-                    className="rounded-full border border-white/18 bg-white px-4 py-2 text-sm font-semibold text-ink"
-                  >
-                    Edit setup
-                  </button>
-                ) : null}
-              </div>
+      {data.setupComplete && pageMode === "scorecard" && (!data.isPublished || canAdminOverridePostedCard) ? (
+        <section className="overflow-hidden rounded-[28px] border border-white/70 bg-[linear-gradient(145deg,rgba(255,252,247,0.98),rgba(247,241,227,0.94))] p-4 shadow-[0_14px_34px_rgba(17,32,23,0.09)]">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#c5a250]">
+                {data.match.stageLabel}
+              </p>
+              <h2 className="mt-3 text-[2.05rem] font-semibold leading-[1.02] tracking-normal text-ink sm:text-[2.5rem]">
+                {data.match.homeTeamName} vs {data.match.awayTeamName}
+              </h2>
+              <p className="mt-3 text-sm font-medium leading-6 text-ink/64">
+                {selectedCourse?.name ?? "Course not set"} • {scoreProgressLabel}
+              </p>
             </div>
+            <div className="flex shrink-0 flex-col items-end gap-2">
+              <span className="px-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-ink/54">
+                {data.isPublished ? (canAdminOverridePostedCard ? "Admin edit" : "Final") : data.match.status}
+              </span>
+              {(!data.isPublished || canAdminOverridePostedCard) && draftStatus ? (
+                <span className="rounded-full bg-[#eef8f1] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-pine">
+                  {broadcastSaveLabel}
+                </span>
+              ) : null}
+              {!data.isPublished ? (
+                <button
+                  type="button"
+                  onClick={() => navigateToPage("setup")}
+                  className="rounded-full border border-pine/15 bg-white px-3 py-2 text-xs font-semibold text-ink"
+                >
+                  Edit setup
+                </button>
+              ) : null}
+            </div>
+          </div>
 
+          <div className="mt-5 grid grid-cols-2 items-stretch gap-2">
+            {teamScorecards.map((teamCard) => (
+              <article
+                key={`summary-${teamCard.team.teamId}`}
+                className={`grid min-h-[11.5rem] grid-rows-[auto_auto_1fr_auto] justify-items-center rounded-[20px] border p-3 text-center ${
+                  teamCard.teamIndex % 2 === 0
+                    ? "border-[#b4d4c5] bg-[#e3f1ea]"
+                    : "border-[#d7cdf1] bg-[#f0ebfb]"
+                }`}
+              >
+                <p className="max-w-full text-base font-semibold leading-tight text-ink">
+                  {teamCard.team.teamName}
+                </p>
+                <p className="mt-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-ink/54">
+                  Team net
+                </p>
+                <p className="self-end text-[2.55rem] font-semibold leading-none text-ink">
+                  {teamCard.betterBallToPar == null
+                    ? "E"
+                    : `${teamCard.betterBallToPar >= 0 ? "+" : ""}${teamCard.betterBallToPar}`}
+                </p>
+                <div className="mt-3 grid grid-cols-3 gap-1">
+                  {[
+                    ["Out", teamCard.frontNineToPar],
+                    ["In", teamCard.backNineToPar],
+                    ["Total", teamCard.overallToPar]
+                  ].map(([label, value]) => (
+                    <span key={label as string} className="rounded-xl bg-white/70 px-1.5 py-1.5 text-center">
+                      <span className="block text-[8px] font-semibold uppercase tracking-[0.12em] text-ink/46">
+                        {label}
+                      </span>
+                      <strong className="mt-0.5 block text-xs text-ink">
+                        {formatEditableVsPar(value as number | null)}
+                      </strong>
+                    </span>
+                  ))}
+                </div>
+              </article>
+            ))}
           </div>
 
           {requiresPlayoffWinnerSelection ? (
@@ -1370,35 +1855,7 @@ export function PrivateMatchWorkspace({
             </div>
           ) : null}
 
-          <div className="space-y-4 px-4 py-4">
-            <div className="grid gap-3 sm:grid-cols-2">
-              {teamScorecards.map((teamCard) => (
-                <div
-                  key={`summary-${teamCard.team.teamId}`}
-                  className={`rounded-[22px] border p-4 ${teamCard.styles.accentBorder} ${teamCard.styles.accentSurface}`}
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <p className={`text-[11px] font-semibold uppercase tracking-[0.22em] ${teamCard.styles.accentText}`}>
-                        {teamCard.team.teamName}
-                      </p>
-                      <p className="mt-1 text-sm text-ink/70">
-                        {teamCard.enteredBetterBallHoles || 0} holes posted
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-xs uppercase tracking-[0.2em] text-ink/50">Team net</p>
-                      <p className="mt-1 text-3xl font-semibold text-ink leading-none">
-                        {teamCard.betterBallToPar == null
-                          ? "E"
-                          : `${teamCard.betterBallToPar >= 0 ? "+" : ""}${teamCard.betterBallToPar}`}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
+          <div className="mt-5 space-y-4">
             <div className="rounded-[28px] border border-[#d7c28d] bg-white shadow-[0_12px_28px_rgba(76,58,26,0.08)]">
               <div className="border-b border-[#e9d8ac] bg-[#fbf5e6] px-4 py-3">
                 <div className="flex flex-wrap items-center gap-2">
@@ -1432,7 +1889,7 @@ export function PrivateMatchWorkspace({
                   </button>
                   {!isScorecardReadOnly ? (
                     <div className="ml-auto flex flex-wrap gap-2">
-                      {isCompactScorecard ? (
+                      {showScorecardEditHint ? (
                         <span className="rounded-full border border-[#d7c28d] bg-white px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/62">
                           Tap a score to edit
                         </span>
@@ -1456,10 +1913,8 @@ export function PrivateMatchWorkspace({
                 </div>
               </div>
 
-              <div className="overflow-x-auto overscroll-x-contain pb-2">
-                <div style={{ minWidth: scorecardMinWidth }}>
-                  <div className={scorecardGridClass}>
-                    <div className={`border-b border-r border-[#d7c28d] bg-[#7a766f] font-semibold text-white ${tableLabelCellClass}`}>
+              <ScorecardTableFrame segment={scoreSegment}>
+                    <div className={`sticky left-0 z-10 border-b border-r border-[#d7c28d] bg-[#f2ead9] text-ink/58 ${scorecardLabelCellClass}`}>
                       Hole
                     </div>
                     {visibleHoleNumbers.map((holeNumber) => (
@@ -1467,40 +1922,96 @@ export function PrivateMatchWorkspace({
                         key={`hole-heading-${holeNumber}`}
                         type="button"
                         onClick={() => setSelectedHoleNumber(holeNumber)}
-                        className={`border-b border-r border-[#d7c28d] bg-[#7a766f] text-white transition ${tableHeaderCellClass}`}
+                        className={`border-b border-r border-mist bg-[#f2ead9] transition ${scorecardHeaderCellClass}`}
                       >
-                        {holeNumber}
+                        <span className="mx-auto flex h-8 w-8 items-center justify-center rounded-full bg-pine/10 text-sm font-semibold text-ink">
+                          {holeNumber}
+                        </span>
                       </button>
                     ))}
                     {scoreSegment === "front" ? (
-                      <div className={`border-b border-r border-[#d7c28d] bg-[#7a766f] text-white ${tableHeaderCellClass}`}>
+                      <div className={`border-b border-r border-mist bg-[#f2ead9] text-ink ${scorecardHeaderCellClass}`}>
                         Out
                       </div>
                     ) : (
                       <>
-                        <div className={`border-b border-r border-[#d7c28d] bg-[#7a766f] text-white ${tableHeaderCellClass}`}>
+                        <div className={`border-b border-r border-mist bg-[#f2ead9] text-ink ${scorecardHeaderCellClass}`}>
                           In
                         </div>
-                        <div className={`border-b border-r border-[#d7c28d] bg-[#7a766f] text-white ${tableHeaderCellClass}`}>
-                          Tot
+                        <div className={`border-b border-r border-mist bg-[#f2ead9] text-ink ${scorecardHeaderCellClass}`}>
+                          Total
                         </div>
                       </>
                     )}
 
-                    {teamScorecards.map((teamCard, teamCardIndex) => (
+                    {[
+                      {
+                        label: "HCP",
+                        values: visibleHoleNumbers.map((holeNumber) => baseHoleMetaByNumber.get(holeNumber)?.strokeIndex ?? "—"),
+                        segmentTotal: "",
+                        roundTotal: ""
+                      },
+                      {
+                        label: "Yards",
+                        values: visibleHoleNumbers.map((holeNumber) => baseHoleMetaByNumber.get(holeNumber)?.yardage ?? "—"),
+                        segmentTotal: visibleHoleNumbers.reduce(
+                          (total, holeNumber) => total + (baseHoleMetaByNumber.get(holeNumber)?.yardage ?? 0),
+                          0
+                        ),
+                        roundTotal: Array.from(baseHoleMetaByNumber.values()).reduce(
+                          (total, hole) => total + (hole.yardage ?? 0),
+                          0
+                        )
+                      },
+                      {
+                        label: "Par",
+                        values: visibleHoleNumbers.map((holeNumber) => baseHoleMetaByNumber.get(holeNumber)?.par ?? "—"),
+                        segmentTotal: visibleHoleNumbers.reduce(
+                          (total, holeNumber) => total + (baseHoleMetaByNumber.get(holeNumber)?.par ?? 0),
+                          0
+                        ),
+                        roundTotal: Array.from(baseHoleMetaByNumber.values()).reduce(
+                          (total, hole) => total + (hole.par ?? 0),
+                          0
+                        )
+                      }
+                    ].map(({ label, values, segmentTotal, roundTotal }) => (
+                      <Fragment key={`meta-${label}`}>
+                        <div className="sticky left-0 z-10 border-b border-r border-[#d7c28d] bg-[#fffaf0] px-3 py-3 text-sm font-semibold text-ink">
+                          {label}
+                        </div>
+                        {values.map((value, index) => (
+                          <button
+                            key={`meta-${label}-${visibleHoleNumbers[index]}`}
+                            type="button"
+                            onClick={() => setSelectedHoleNumber(visibleHoleNumbers[index] ?? 1)}
+                            className="border-b border-r border-mist bg-white px-1 py-3 text-center text-sm font-semibold text-ink/64"
+                          >
+                            {value}
+                          </button>
+                        ))}
+                        <div className="border-b border-r border-mist bg-[#f7f1e3] px-2 py-3 text-center text-sm font-semibold text-ink">
+                          {segmentTotal}
+                        </div>
+                        {scoreSegment === "back" ? (
+                          <div className="border-b border-r border-mist bg-[#efe7d6] px-2 py-3 text-center text-sm font-semibold text-ink">
+                            {roundTotal}
+                          </div>
+                        ) : null}
+                      </Fragment>
+                    ))}
+
+                    {teamScorecards.map((teamCard) => (
                       <Fragment key={`team-block-${teamCard.team.teamId}`}>
                         {teamCard.players.map((playerCard) => (
                           <Fragment key={`${teamCard.team.teamId}-${playerCard.player.playerId}`}>
-                            <div className={`border-b border-r border-[#d7c28d] bg-white ${isCompactScorecard ? "px-2 py-2 sm:px-4 sm:py-4" : "px-4 py-4"}`}>
-                              <p className={`${isCompactScorecard ? "text-[11px] leading-tight sm:text-sm" : "text-sm"} font-semibold text-ink`}>
-                                {playerCard.player.playerName}
+                            <div className="sticky left-0 z-10 border-b border-r border-[#d7c28d] bg-[#fffaf0] px-3 py-3">
+                              <p className="truncate text-sm font-semibold leading-tight text-ink">
+                                {scorecardDisplayName(playerCard.player.playerName)}
                               </p>
-                              <div className={`mt-1.5 flex items-center gap-2 text-ink/56 ${isCompactScorecard ? "text-[10px] sm:text-xs" : "text-xs"}`}>
-                                <span className="rounded-full border border-mist px-2 py-0.5 font-medium text-ink/72">
-                                  Gross
-                                </span>
-                                <span>{playerCard.preview?.matchStrokeCount ?? 0} strokes</span>
-                              </div>
+                              <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-ink/54">
+                                Gross
+                              </p>
                             </div>
                             {visibleHoleNumbers.map((holeNumber) => {
                               const holeMeta = playerCard.holes.find((hole) => hole.holeNumber === holeNumber);
@@ -1510,7 +2021,7 @@ export function PrivateMatchWorkspace({
                               return (
                                 <div
                                   key={`${playerCard.player.playerId}-gross-${holeNumber}`}
-                                  className={`border-b border-r border-[#d7c28d] bg-white ${tableBodyCellClass}`}
+                                  className={`border-b border-r border-mist bg-white ${scorecardBodyCellClass}`}
                                 >
                                   <div className="relative mx-auto w-fit">
                                     {strokeCount > 0 ? (
@@ -1533,10 +2044,10 @@ export function PrivateMatchWorkspace({
                                       onChange={(event) =>
                                         handleScoreChange(holeNumber, playerCard.player.playerId, event.target.value)
                                       }
-                                      className={`mx-auto flex items-center justify-center border-2 text-center font-semibold outline-none ${scoreCircleSizeClass} ${scoreStyleForValue(
+                                      className={`mx-auto flex items-center justify-center border-2 text-center font-semibold outline-none transition focus:ring-2 focus:ring-pine/35 ${scorecardScoreMarkClass} ${scorecardScoreStyle(
                                         String(score),
                                         holeMeta?.par,
-                                        isCompactScorecard
+                                        true
                                       )}`}
                                     />
                                   </div>
@@ -1544,20 +2055,20 @@ export function PrivateMatchWorkspace({
                               );
                             })}
                             {scoreSegment === "front" ? (
-                              <div className={`border-b border-r border-[#d7c28d] bg-white ${tableBodyCellClass}`}>
-                                <span className={`mx-auto flex items-center justify-center font-semibold text-ink ${scoreCircleSizeClass}`}>
+                              <div className={`border-b border-r border-mist bg-[#f7f1e3] ${scorecardBodyCellClass}`}>
+                                <span className={`mx-auto flex items-center justify-center font-semibold text-ink ${scorecardScoreMarkClass}`}>
                                   {playerCard.frontNineNetTotal}
                                 </span>
                               </div>
                             ) : (
                               <>
-                                <div className={`border-b border-r border-[#d7c28d] bg-white ${tableBodyCellClass}`}>
-                                  <span className={`mx-auto flex items-center justify-center font-semibold text-ink ${scoreCircleSizeClass}`}>
+                                <div className={`border-b border-r border-mist bg-[#f7f1e3] ${scorecardBodyCellClass}`}>
+                                  <span className={`mx-auto flex items-center justify-center font-semibold text-ink ${scorecardScoreMarkClass}`}>
                                     {playerCard.backNineNetTotal}
                                   </span>
                                 </div>
-                                <div className={`border-b border-r border-[#d7c28d] bg-white ${tableBodyCellClass}`}>
-                                  <span className={`mx-auto flex items-center justify-center font-semibold text-ink ${scoreCircleSizeClass}`}>
+                                <div className={`border-b border-r border-mist bg-[#efe7d6] ${scorecardBodyCellClass}`}>
+                                  <span className={`mx-auto flex items-center justify-center font-semibold text-ink ${scorecardScoreMarkClass}`}>
                                     {playerCard.netTotal}
                                   </span>
                                 </div>
@@ -1566,117 +2077,51 @@ export function PrivateMatchWorkspace({
                           </Fragment>
                         ))}
 
-                        <div className={`border-b border-r font-semibold uppercase tracking-[0.18em] ${teamCard.styles.bestBallStrong} ${isCompactScorecard ? "px-2 py-2 text-[11px] sm:px-4 sm:py-4 sm:text-sm" : "px-4 py-4 text-sm"}`}>
-                          {teamCard.team.teamName} Net
+                        <div className={`sticky left-0 z-10 border-b border-r border-[#d7c28d] px-3 py-3 ${teamCard.styles.accentSurface}`}>
+                          <p className="truncate text-sm font-semibold text-ink">
+                            {scorecardTeamInitials(teamCard.team.teamName)} best ball
+                          </p>
+                          <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-ink/54">
+                            Team net used
+                          </p>
                         </div>
                         {teamCard.holeSummaries.map((holeSummary) => (
                           <div
                             key={`${teamCard.team.teamId}-team-net-${holeSummary.holeNumber}`}
-                            className={`border-b border-r text-center ${teamCard.styles.teamNetRowFill} ${tableBodyCellClass}`}
+                            className={`border-b border-r border-mist bg-white text-center ${scorecardBodyCellClass}`}
                           >
                             <span
-                              className={`mx-auto flex items-center justify-center font-semibold ${scoreCircleSizeClass} ${
+                              className={`mx-auto flex items-center justify-center border-2 font-semibold ${scorecardScoreMarkClass} ${
                                 holeSummary.bestNet == null ? "text-current/35" : "text-current"
-                              }`}
+                              } ${scorecardScoreStyle(holeSummary.bestNet, holeSummary.par ?? undefined, true)}`}
                             >
                               {holeSummary.bestNet ?? ""}
                             </span>
                           </div>
                         ))}
                         {scoreSegment === "front" ? (
-                          <div className={`border-b border-r text-center ${teamCard.styles.teamNetRowFill} ${tableBodyCellClass}`}>
-                            <span className={`mx-auto flex items-center justify-center font-semibold text-current ${scoreCircleSizeClass}`}>
+                          <div className={`border-b border-r border-mist text-center ${teamCard.styles.accentSurface} ${scorecardBodyCellClass}`}>
+                            <span className={`mx-auto flex items-center justify-center font-semibold text-ink ${scorecardScoreMarkClass}`}>
                               {teamCard.frontNineBetterBallNetTotal}
                             </span>
                           </div>
                         ) : (
                           <>
-                            <div className={`border-b border-r text-center ${teamCard.styles.teamNetRowFill} ${tableBodyCellClass}`}>
-                              <span className={`mx-auto flex items-center justify-center font-semibold text-current ${scoreCircleSizeClass}`}>
+                            <div className={`border-b border-r border-mist text-center ${teamCard.styles.accentSurface} ${scorecardBodyCellClass}`}>
+                              <span className={`mx-auto flex items-center justify-center font-semibold text-ink ${scorecardScoreMarkClass}`}>
                                 {teamCard.backNineBetterBallNetTotal}
                               </span>
                             </div>
-                            <div className={`border-b border-r text-center ${teamCard.styles.teamNetRowFill} ${tableBodyCellClass}`}>
-                              <span className={`mx-auto flex items-center justify-center font-semibold text-current ${scoreCircleSizeClass}`}>
+                            <div className={`border-b border-r border-mist text-center ${teamCard.styles.accentSurface} ${scorecardBodyCellClass}`}>
+                              <span className={`mx-auto flex items-center justify-center font-semibold text-ink ${scorecardScoreMarkClass}`}>
                                 {teamCard.overallBetterBallNetTotal}
                               </span>
                             </div>
                           </>
                         )}
-
-                        {teamCardIndex === 0 ? (
-                          <Fragment>
-                            <div className={`border-b border-r border-[#b9c8d9] bg-[linear-gradient(180deg,#dfe9f4_0%,#c8d7e8_100%)] font-semibold text-[#23405f] shadow-[inset_0_1px_0_rgba(255,255,255,0.72),inset_0_-1px_0_rgba(35,64,95,0.12)] ${tableLabelCellClass}`}>
-                              HDCP
-                            </div>
-                            {visibleHoleNumbers.map((holeNumber) => (
-                              <button
-                                key={`hdcp-${holeNumber}`}
-                                type="button"
-                                onClick={() => setSelectedHoleNumber(holeNumber)}
-                                className={`border-b border-r border-[#b9c8d9] bg-[linear-gradient(180deg,#f3f7fb_0%,#e3edf7_100%)] font-semibold text-[#23405f] ${tableHeaderCellClass}`}
-                              >
-                                {baseHoleMetaByNumber.get(holeNumber)?.strokeIndex ?? "—"}
-                              </button>
-                            ))}
-                            {scoreSegment === "front" ? (
-                              <div className={`border-b border-r border-[#b9c8d9] bg-[linear-gradient(180deg,#f3f7fb_0%,#e3edf7_100%)] font-semibold text-[#23405f] ${tableHeaderCellClass}`}>
-                                Out
-                              </div>
-                            ) : (
-                              <>
-                                <div className={`border-b border-r border-[#b9c8d9] bg-[linear-gradient(180deg,#f3f7fb_0%,#e3edf7_100%)] font-semibold text-[#23405f] ${tableHeaderCellClass}`}>
-                                  In
-                                </div>
-                                <div className={`border-b border-r border-[#b9c8d9] bg-[linear-gradient(180deg,#f3f7fb_0%,#e3edf7_100%)] font-semibold text-[#23405f] ${tableHeaderCellClass}`}>
-                                  Tot
-                                </div>
-                              </>
-                            )}
-
-                            <div className={`border-b border-r border-[#d7c28d] bg-[linear-gradient(180deg,#f4e5b3_0%,#ead28b_100%)] font-semibold text-ink shadow-[inset_0_1px_0_rgba(255,255,255,0.6),inset_0_-1px_0_rgba(138,106,9,0.12)] ${tableLabelCellClass}`}>
-                              Par
-                            </div>
-                            {visibleHoleNumbers.map((holeNumber) => (
-                              <button
-                                key={`par-${holeNumber}`}
-                                type="button"
-                                onClick={() => setSelectedHoleNumber(holeNumber)}
-                                className={`border-b border-r border-[#d7c28d] bg-[linear-gradient(180deg,#f9edc1_0%,#efdda4_100%)] font-semibold text-ink ${tableHeaderCellClass}`}
-                              >
-                                {baseHoleMetaByNumber.get(holeNumber)?.par ?? "—"}
-                              </button>
-                            ))}
-                            {scoreSegment === "front" ? (
-                              <div className={`border-b border-r border-[#d7c28d] bg-[linear-gradient(180deg,#f9edc1_0%,#efdda4_100%)] font-semibold text-ink ${tableHeaderCellClass}`}>
-                                {frontNineHoleNumbers.reduce(
-                                  (total, holeNumber) => total + (baseHoleMetaByNumber.get(holeNumber)?.par ?? 0),
-                                  0
-                                )}
-                              </div>
-                            ) : (
-                              <>
-                                <div className={`border-b border-r border-[#d7c28d] bg-[linear-gradient(180deg,#f9edc1_0%,#efdda4_100%)] font-semibold text-ink ${tableHeaderCellClass}`}>
-                                  {backNineHoleNumbers.reduce(
-                                    (total, holeNumber) => total + (baseHoleMetaByNumber.get(holeNumber)?.par ?? 0),
-                                    0
-                                  )}
-                                </div>
-                                <div className={`border-b border-r border-[#d7c28d] bg-[linear-gradient(180deg,#f9edc1_0%,#efdda4_100%)] font-semibold text-ink ${tableHeaderCellClass}`}>
-                                  {Array.from(baseHoleMetaByNumber.values()).reduce(
-                                    (total, hole) => total + (hole.par ?? 0),
-                                    0
-                                  )}
-                                </div>
-                              </>
-                            )}
-                          </Fragment>
-                        ) : null}
                       </Fragment>
                     ))}
-                  </div>
-                </div>
-              </div>
+              </ScorecardTableFrame>
             </div>
           </div>
 
@@ -1745,17 +2190,6 @@ export function PrivateMatchWorkspace({
         </section>
       ) : null}
 
-      {data.setupComplete && pageMode === "scorecard" && !isScorecardReadOnly ? (
-        <a
-          href={RULES_JUDGE_URL}
-          target="_blank"
-          rel="noreferrer"
-          className="fixed bottom-[calc(env(safe-area-inset-bottom)+5.75rem)] left-4 z-30 rounded-full bg-[#183f31] px-4 py-3 text-sm font-semibold text-white shadow-[0_16px_32px_rgba(17,32,23,0.22)] sm:left-auto sm:right-4"
-        >
-          {RULES_JUDGE_LABEL}
-        </a>
-      ) : null}
-
       {data.isPublished && submittedThisSession ? (
         <section className="rounded-[28px] border border-pine/15 bg-[linear-gradient(180deg,#f3fbf6_0%,#e6f3ea_100%)] p-5 shadow-sm">
           <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-pine/70">
@@ -1788,7 +2222,7 @@ export function PrivateMatchWorkspace({
         </section>
       ) : null}
 
-      {data.scorecard ? (
+      {data.scorecard && !publishedScorecardView ? (
         <section className="rounded-[28px] border border-mist bg-white p-4 shadow-sm">
           <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-fairway/70">
             Result

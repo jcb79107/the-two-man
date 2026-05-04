@@ -321,22 +321,6 @@ function buildComputedFeed(input: {
         })
       );
 
-      if (match.stage !== "POD_PLAY") {
-        events.push(
-          buildComputedFeedEvent({
-            id: `computed-bracket-${match.id}`,
-            tournamentId: input.tournamentId,
-            type: "BRACKET_UPDATED",
-            occurredAt: match.finalizedAt ?? match.submittedAt ?? match.updatedAt,
-            icon: "🔥",
-            title: `${match.roundLabel} is final`,
-            body: `${winnerTeamName} advanced out of ${match.roundLabel.toLowerCase()}.`,
-            matchId: match.id,
-            teamIds: [match.homeTeamId, match.awayTeamId].filter((value): value is string => Boolean(value))
-          })
-        );
-      }
-
       continue;
     }
 
@@ -380,19 +364,22 @@ function buildComputedFeed(input: {
   }
 
   if (input.seeds.length === 8) {
+    const podPlayEventTimes = input.matches
+      .filter((match) => match.stage === "POD_PLAY")
+      .map((match) => (match.finalizedAt ?? match.submittedAt ?? match.updatedAt).getTime());
+    const latestPodPlayEventTime =
+      podPlayEventTimes.length > 0
+        ? Math.max(...podPlayEventTimes)
+        : input.matches.length > 0
+          ? Math.max(...input.matches.map((match) => match.updatedAt.getTime()))
+          : 0;
+
     events.push(
       buildComputedFeedEvent({
         id: "computed-playoffs-set",
         tournamentId: input.tournamentId,
         type: "PLAYOFFS_SET",
-        occurredAt: new Date(
-          Math.max(
-            ...input.matches
-              .filter((match) => match.stage === "POD_PLAY")
-              .map((match) => (match.finalizedAt ?? match.submittedAt ?? match.updatedAt).getTime()),
-            Date.now()
-          )
-        ),
+        occurredAt: new Date(latestPodPlayEventTime),
         icon: "🏆",
         title: `${input.bracketLabel ?? "Playoffs"} set`,
         body: `${input.seeds[0]?.teamName ?? "Seed 1"} leads the eight-team knockout field.`
@@ -440,8 +427,7 @@ function buildComputedFeed(input: {
   }
 
   return events
-    .sort((left, right) => new Date(right.occurredAt).getTime() - new Date(left.occurredAt).getTime())
-    .slice(0, 20);
+    .sort((left, right) => new Date(right.occurredAt).getTime() - new Date(left.occurredAt).getTime());
 }
 
 export async function getPublicTournamentState(slug: string) {
@@ -826,42 +812,81 @@ export async function getPublicMatchState(slug: string, matchId: string) {
   }
 
   const computed = tournamentState.summariesByMatchId.get(match.id);
+  const matchCourse = "course" in match ? match.course : null;
+  const homeTeam = "homeTeam" in match ? match.homeTeam : null;
+  const awayTeam = "awayTeam" in match ? match.awayTeam : null;
+  const playerSelections = "playerSelections" in match ? match.playerSelections : [];
+  const holeScores = "holeScores" in match ? match.holeScores : [];
+  const playedOn =
+    match.finalizedAt instanceof Date
+      ? match.finalizedAt.toISOString()
+      : match.submittedAt instanceof Date
+        ? match.submittedAt.toISOString()
+        : match.scheduledAt instanceof Date
+          ? match.scheduledAt.toISOString()
+          : typeof match.scheduledAt === "string"
+            ? match.scheduledAt
+            : null;
 
   return {
     tournamentName: tournamentState.tournament.name,
     tournamentStartDate: tournamentState.tournament.startDate.toISOString(),
     match: buildMatchShell({
-      match,
-      courseName: match.course?.name ?? null,
+      match: {
+        ...match,
+        podId: match.podId ?? null,
+        bracketId: match.bracketId ?? null,
+        bracketRoundId: match.bracketRoundId ?? null,
+        scheduledAt: match.scheduledAt instanceof Date
+          ? match.scheduledAt
+          : match.scheduledAt
+            ? new Date(match.scheduledAt)
+            : null,
+        winningTeamId: match.winningTeamId ?? null,
+        courseId: match.courseId ?? null,
+        homeSeedNumber: match.homeSeedNumber ?? null,
+        awaySeedNumber: match.awaySeedNumber ?? null,
+        homeSeedLabel: match.homeSeedLabel ?? null,
+        awaySeedLabel: match.awaySeedLabel ?? null,
+        advancesToMatchId: match.advancesToMatchId ?? null,
+        advancesToSlot: match.advancesToSlot ?? null
+      },
+      courseName: matchCourse?.name ?? null,
       resultLabel: buildResultLabel(computed?.teamSummaries ?? [], tournamentState.teamNames, match.winningTeamId)
     }),
-    playedOn: match.finalizedAt?.toISOString() ?? match.submittedAt?.toISOString() ?? match.scheduledAt?.toISOString() ?? null,
-    course: match.course
+    playedOn,
+    course: matchCourse
       ? {
-          id: match.course.id,
-          name: match.course.name,
-          city: match.course.city,
-          state: match.course.state
+          id: matchCourse.id,
+          name: matchCourse.name,
+          city: matchCourse.city,
+          state: matchCourse.state
         }
       : null,
-    homeTeam: match.homeTeam,
-    awayTeam: match.awayTeam,
+    homeTeam,
+    awayTeam,
     scorecard: computed
       ? {
           ...computed,
-          holeMeta: (match.playerSelections[0]?.tee.holes ?? []).map((hole) => ({
+          holeMeta: (playerSelections[0]?.tee.holes ?? []).map((hole) => ({
             holeNumber: hole.holeNumber,
             par: hole.par,
             strokeIndex: hole.strokeIndex,
             yardage: hole.yardage ?? null
           })),
-          players: match.playerSelections.map((selection) => {
+          players: playerSelections.map((selection) => {
             const grossByHole = Object.fromEntries(
-              match.holeScores
+              holeScores
                 .filter((holeScore) => holeScore.playerId === selection.playerId)
                 .map((holeScore) => [holeScore.holeNumber, holeScore.grossScore])
             );
-            const snapshot = computed.players.find((player) => player.playerId === selection.playerId);
+            const snapshot = computed.players.find(
+              (player: {
+                playerId: string;
+                matchStrokeCount?: number;
+                strokesByHole?: Record<number, number>;
+              }) => player.playerId === selection.playerId
+            );
 
             return {
               playerId: selection.playerId,
@@ -873,7 +898,12 @@ export async function getPublicMatchState(slug: string, matchId: string) {
               strokesByHole: snapshot?.strokesByHole ?? {},
               grossByHole,
               netByHole: Object.fromEntries(
-                computed.holes.map((hole) => [hole.holeNumber, hole.playerNetScores[selection.playerId] ?? null])
+                computed.holes.map(
+                  (hole: { holeNumber: number; playerNetScores: Record<string, number | null> }) => [
+                    hole.holeNumber,
+                    hole.playerNetScores[selection.playerId] ?? null
+                  ]
+                )
               )
             };
           })

@@ -161,6 +161,37 @@ describe("match scoring", () => {
       true
     );
   });
+
+  it("uses the scorecard handicap row for relative match strokes after allowance", () => {
+    const holes = Array.from({ length: 18 }, (_, index) => ({
+      holeNumber: index + 1,
+      par: 4,
+      strokeIndex: index + 1
+    }));
+    const result = scoreMatch({
+      players: buildThreeHoleInput().players.map((player, index) => ({
+        ...player,
+        handicapIndex: index === 0 ? 0 : index === 1 ? 10 : index === 2 ? 5 : 5,
+        holes
+      })),
+      holeScores: holes.map((hole) => ({
+        holeNumber: hole.holeNumber,
+        scores: {
+          a1: 4,
+          a2: 4,
+          b1: 4,
+          b2: 4
+        }
+      }))
+    });
+    const tenIndexPlayer = result.players.find((player) => player.playerId === "a2");
+
+    expect(result.lowPlayerId).toBe("a1");
+    expect(tenIndexPlayer?.matchStrokeCount).toBe(9);
+    expect(tenIndexPlayer?.strokesByHole[1]).toBe(1);
+    expect(tenIndexPlayer?.strokesByHole[9]).toBe(1);
+    expect(tenIndexPlayer?.strokesByHole[10]).toBe(0);
+  });
 });
 
 describe("forfeits", () => {

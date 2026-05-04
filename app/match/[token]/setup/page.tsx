@@ -20,7 +20,7 @@ export default async function PrivateMatchSetupPage({
   }
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-4 px-4 py-4 pb-28 sm:px-6">
+    <main className="mx-auto flex min-h-screen w-full max-w-[620px] flex-col gap-4 px-4 py-4 pb-28 sm:px-6">
       <SectionCard title="Setup">
         <div className="space-y-2.5">
           <div className="flex flex-wrap items-center gap-2.5">

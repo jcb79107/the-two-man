@@ -71,39 +71,10 @@ function compareRows(left: AllTeamsRow, right: AllTeamsRow, sortKey: SortKey, di
 }
 
 export function AllTeamsTable({ rows }: AllTeamsTableProps) {
-  const [query, setQuery] = useState("");
-  const [podFilter, setPodFilter] = useState("all");
-  const [statusFilter, setStatusFilter] = useState("all");
   const [sortKey, setSortKey] = useState<SortKey>("wins");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
 
-  const podOptions = Array.from(new Set(rows.map((row) => row.podName))).sort((left, right) =>
-    left.localeCompare(right)
-  );
-
-  const filteredRows = rows
-    .filter((row) => row.teamName.toLowerCase().includes(query.trim().toLowerCase()))
-    .filter((row) => (podFilter === "all" ? true : row.podName === podFilter))
-    .filter((row) => {
-      if (statusFilter === "all") {
-        return true;
-      }
-
-      if (statusFilter === "projected") {
-        return row.markerCode === "PB";
-      }
-
-      if (statusFilter === "clinched") {
-        return row.markerCode === "X" || row.markerCode === "Y";
-      }
-
-      if (statusFilter === "eliminated") {
-        return row.markerCode === "E";
-      }
-
-      return row.markerCode == null;
-    })
-    .sort((left, right) => compareRows(left, right, sortKey, sortDirection));
+  const sortedRows = [...rows].sort((left, right) => compareRows(left, right, sortKey, sortDirection));
 
   function toggleSort(nextKey: SortKey) {
     if (sortKey === nextKey) {
@@ -117,54 +88,20 @@ export function AllTeamsTable({ rows }: AllTeamsTableProps) {
 
   return (
     <div className="space-y-4">
-      <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_180px_180px]">
-        <label className="space-y-1.5">
-          <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-fairway/72">Search</span>
-          <input
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search team"
-            className="w-full rounded-2xl border border-mist bg-white px-4 py-3 text-sm text-ink outline-none transition placeholder:text-ink/40 focus:border-pine/35"
-          />
-        </label>
-
-        <label className="space-y-1.5">
-          <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-fairway/72">Pod</span>
-          <select
-            value={podFilter}
-            onChange={(event) => setPodFilter(event.target.value)}
-            className="w-full rounded-2xl border border-mist bg-white px-4 py-3 text-sm text-ink outline-none transition focus:border-pine/35"
-          >
-            <option value="all">All pods</option>
-            {podOptions.map((podName) => (
-              <option key={podName} value={podName}>
-                {podName}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label className="space-y-1.5">
-          <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-fairway/72">Status</span>
-          <select
-            value={statusFilter}
-            onChange={(event) => setStatusFilter(event.target.value)}
-            className="w-full rounded-2xl border border-mist bg-white px-4 py-3 text-sm text-ink outline-none transition focus:border-pine/35"
-          >
-            <option value="all">All teams</option>
-            <option value="projected">Projected</option>
-            <option value="clinched">Clinched</option>
-            <option value="eliminated">Eliminated</option>
-            <option value="live-race">Live race</option>
-          </select>
-        </label>
-      </div>
-
-      <div className="flex flex-wrap gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-fairway/74">
-        <span className="rounded-full bg-[#e3f1ea] px-3 py-1 text-[#174f38]">Y clinched pod</span>
-        <span className="rounded-full bg-[#dff0ea] px-3 py-1 text-[#123f2d]">X clinched wildcard</span>
-        <span className="rounded-full bg-[#efe7ff] px-3 py-1 text-[#5f47a6]">PB projected</span>
-        <span className="rounded-full bg-[#f8e5e0] px-3 py-1 text-[#8f4b3b]">E eliminated</span>
+      <div className="grid grid-cols-2 gap-2 rounded-[20px] border border-mist/80 bg-white/70 p-2 text-[11px] font-semibold uppercase tracking-[0.13em] text-fairway/74 sm:grid-cols-4">
+        {[
+          ["Y", "Clinched pod", "bg-[#e3f1ea] text-[#174f38]"],
+          ["X", "Clinched wildcard", "bg-[#dff0ea] text-[#123f2d]"],
+          ["PB", "Projected", "bg-[#efe7ff] text-[#5f47a6]"],
+          ["E", "Eliminated", "bg-[#f8e5e0] text-[#8f4b3b]"]
+        ].map(([code, label, classes]) => (
+          <div key={code} className="flex min-h-10 items-center gap-2 rounded-[16px] bg-white px-2.5 py-2">
+            <span className={`inline-flex h-7 min-w-7 items-center justify-center rounded-full px-2 ${classes}`}>
+              {code}
+            </span>
+            <span className="min-w-0 leading-tight">{label}</span>
+          </div>
+        ))}
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-mist bg-white">
@@ -196,7 +133,7 @@ export function AllTeamsTable({ rows }: AllTeamsTableProps) {
               </tr>
             </thead>
             <tbody>
-              {filteredRows.map((row) => (
+              {sortedRows.map((row) => (
                 <tr key={row.teamId} className="border-t border-mist/80">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
@@ -224,9 +161,9 @@ export function AllTeamsTable({ rows }: AllTeamsTableProps) {
           </table>
         </div>
 
-        {filteredRows.length === 0 ? (
+        {sortedRows.length === 0 ? (
           <div className="border-t border-mist/80 px-4 py-6 text-sm text-ink/66">
-            No teams match the current search or filters.
+            No teams are available yet.
           </div>
         ) : null}
       </div>

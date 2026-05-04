@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { AllTeamsTable, type AllTeamsRow } from "@/components/all-teams-table";
+import { PodWinnerIcon } from "@/components/pod-winner-icon";
 import { PublicNav } from "@/components/public-nav";
 import { SectionCard } from "@/components/section-card";
 import { StandingsTable } from "@/components/standings-table";
@@ -162,36 +163,39 @@ export default async function TournamentStandingsPage({
   return (
     <>
       <PublicNav slug={slug} seasonIsLive={new Date(state.tournament.startDate) <= new Date()} />
-      <main className="mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-4 px-4 py-5 pb-24 sm:px-6 lg:px-8">
-        <SectionCard title={`${state.tournament.name} standings`}>
-          <p className="max-w-3xl text-sm leading-6 text-ink/76">
+      <main className="mx-auto flex min-h-screen w-full max-w-[620px] flex-col gap-4 px-4 py-5 pb-24 sm:px-6">
+        <SectionCard title="Standings">
+          <p className="max-w-[620px] text-sm leading-6 text-ink/76">
             Pods are sorted by record, hole points, holes won, then total net better-ball.
           </p>
 
-          <div className="mt-4 flex gap-2 overflow-x-auto pb-1">
+          <div className="mt-5 grid grid-cols-3 gap-1.5 rounded-[24px] bg-sand/78 p-1.5">
             <a
               href={`/tournament/${slug}/standings`}
-              className={`whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold transition ${
-                currentTab === "pods" ? "bg-pine text-white" : "bg-sand text-fairway/80"
+              className={`flex min-h-14 items-center justify-center rounded-[19px] px-3 text-center text-[15px] font-semibold leading-tight transition sm:text-base ${
+                currentTab === "pods" ? "bg-pine text-white shadow-[0_8px_18px_rgba(17,32,23,0.18)]" : "text-fairway/82"
               }`}
             >
-              Pod standings
+              <span className="sm:hidden">Pods</span>
+              <span className="hidden sm:inline">Pod standings</span>
             </a>
             <a
               href={`/tournament/${slug}/standings?tab=playoff`}
-              className={`whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold transition ${
-                currentTab === "playoff" ? "bg-pine text-white" : "bg-sand text-fairway/80"
+              className={`flex min-h-14 items-center justify-center rounded-[19px] px-3 text-center text-[15px] font-semibold leading-tight transition sm:text-base ${
+                currentTab === "playoff" ? "bg-pine text-white shadow-[0_8px_18px_rgba(17,32,23,0.18)]" : "text-fairway/82"
               }`}
             >
-              Playoff picture
+              <span className="sm:hidden">Playoff</span>
+              <span className="hidden sm:inline">Playoff picture</span>
             </a>
             <a
               href={`/tournament/${slug}/standings?tab=teams`}
-              className={`whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold transition ${
-                currentTab === "teams" ? "bg-pine text-white" : "bg-sand text-fairway/80"
+              className={`flex min-h-14 items-center justify-center rounded-[19px] px-3 text-center text-[15px] font-semibold leading-tight transition sm:text-base ${
+                currentTab === "teams" ? "bg-pine text-white shadow-[0_8px_18px_rgba(17,32,23,0.18)]" : "text-fairway/82"
               }`}
             >
-              All teams
+              <span className="sm:hidden">Teams</span>
+              <span className="hidden sm:inline">All teams</span>
             </a>
           </div>
         </SectionCard>
@@ -199,11 +203,15 @@ export default async function TournamentStandingsPage({
         {currentTab === "pods" ? (
           <>
             {hasPostedPodPlayResults ? (
-              <section className="grid gap-4 xl:grid-cols-2">
+              <section className="grid gap-4">
                 {state.podStandings.map(({ pod, rows }) => (
                   <SectionCard key={pod.id} title={pod.name}>
                     <StandingsTable
                       rows={rows}
+                      markerTeamIds={rows
+                        .filter((row) => wildCardTeamIds.has(row.teamId))
+                        .map((row) => row.teamId)}
+                      markerLabel={playoffFieldIsSet ? "Clinched wildcard" : "Current wild card"}
                       winnerTeamIds={rows[0] ? [rows[0].teamId] : []}
                       winnerLabel={playoffFieldIsSet ? "Pod winner" : "Current pod leader"}
                     />
@@ -211,47 +219,37 @@ export default async function TournamentStandingsPage({
                 ))}
               </section>
             ) : (
-              <SectionCard title="Standings open after the first official card">
-                <div className="rounded-[26px] border border-dashed border-[#d8c07d]/55 bg-[linear-gradient(135deg,#fff7e5_0%,#f6edd7_100%)] px-5 py-5 sm:px-6 sm:py-6">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="rounded-full bg-white/90 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8a6b08]">
-                      Opening day
-                    </span>
-                    <span className="text-sm text-ink/66">{completedPodPlayCount} official cards posted</span>
-                  </div>
-
-                  <p className="mt-4 text-lg font-semibold text-ink">
-                    Pod tables will appear once the first pod-play match is completed and posted.
+              <SectionCard
+                title="Opening day standings"
+                action={
+                  <span className="rounded-full bg-[#fff4d8] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#8a6b08]">
+                    {completedPodPlayCount} cards posted
+                  </span>
+                }
+              >
+                <div className="rounded-[24px] border border-mist bg-white px-4 py-4">
+                  <p className="text-lg font-semibold leading-tight text-ink">
+                    The board unlocks after the first final scorecard.
                   </p>
-                  <p className="mt-2 max-w-2xl text-sm leading-6 text-ink/72">
-                    Until then, every team is still level. As soon as the first official result lands, this page will
-                    start sorting each pod by record, hole points, holes won, and total net better-ball.
+                  <p className="mt-2 text-sm leading-6 text-ink/70">
+                    Once a pod-play result is posted, each pod will sort by record, hole points,
+                    holes won, then total net better-ball.
                   </p>
 
-                  <div className="mt-5 grid gap-3 sm:grid-cols-3">
-                    <div className="rounded-[22px] border border-white/70 bg-white/75 px-4 py-4">
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-fairway/72">
+                  <div className="mt-4 grid grid-cols-2 gap-2">
+                    <div className="rounded-2xl bg-sand px-3 py-3">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-fairway/64">
                         Field
                       </p>
-                      <p className="mt-2 text-base font-semibold text-ink">
-                        {state.podStandings.length} pods, {state.standings.length} teams
+                      <p className="mt-1 text-sm font-semibold text-ink">
+                        {state.podStandings.length} pods / {state.standings.length} teams
                       </p>
                     </div>
-                    <div className="rounded-[22px] border border-white/70 bg-white/75 px-4 py-4">
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-fairway/72">
-                        Wild cards
+                    <div className="rounded-2xl bg-sand px-3 py-3">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-fairway/64">
+                        Playoff cut
                       </p>
-                      <p className="mt-2 text-base font-semibold text-ink">
-                        The top 2 non-pod winners join the playoff field.
-                      </p>
-                    </div>
-                    <div className="rounded-[22px] border border-white/70 bg-white/75 px-4 py-4">
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-fairway/72">
-                        Next step
-                      </p>
-                      <p className="mt-2 text-base font-semibold text-ink">
-                        Post the first official card to start the board.
-                      </p>
+                      <p className="mt-1 text-sm font-semibold text-ink">6 winners + 2 wild cards</p>
                     </div>
                   </div>
                 </div>
@@ -305,27 +303,28 @@ export default async function TournamentStandingsPage({
                                   : "bg-[#efe7ff] text-[#5f47a6]"
                               }`}
                             >
+                              {entry.typeTone === "winner" ? <PodWinnerIcon className="h-3 w-3" /> : null}
                               {entry.typeTone === "wildcard" ? <WildcardHatIcon className="h-3 w-3" /> : null}
                               {entry.typeLabel}
                             </span>
                           </div>
-                          <div className="mt-4 grid grid-cols-4 gap-2 md:contents">
-                            <div className="rounded-2xl bg-sand px-3 py-3 md:rounded-none md:bg-transparent md:px-3 md:py-4">
-                              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-fairway/68 md:hidden">Record</p>
+                          <div className="mt-4 grid grid-cols-4 overflow-hidden rounded-2xl border border-mist bg-sand/45 md:contents md:overflow-visible md:rounded-none md:border-0 md:bg-transparent">
+                            <div className="border-r border-mist px-2.5 py-2.5 last:border-r-0 md:rounded-none md:border-r-0 md:bg-transparent md:px-3 md:py-4">
+                              <p className="text-[9px] font-semibold uppercase tracking-[0.12em] text-fairway/62 md:hidden">Rec</p>
                               <p className="mt-1 text-sm font-semibold text-ink md:mt-0">
                                 {entry.wins}-{entry.losses}-{entry.ties}
                               </p>
                             </div>
-                            <div className="rounded-2xl bg-sand px-3 py-3 md:rounded-none md:bg-transparent md:px-3 md:py-4">
-                              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-fairway/68 md:hidden">Hole Pts</p>
+                            <div className="border-r border-mist px-2.5 py-2.5 last:border-r-0 md:rounded-none md:border-r-0 md:bg-transparent md:px-3 md:py-4">
+                              <p className="text-[9px] font-semibold uppercase tracking-[0.12em] text-fairway/62 md:hidden">Pts</p>
                               <p className="mt-1 text-sm font-semibold text-ink md:mt-0">{entry.holePoints}</p>
                             </div>
-                            <div className="rounded-2xl bg-sand px-3 py-3 md:rounded-none md:bg-transparent md:px-3 md:py-4">
-                              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-fairway/68 md:hidden">Holes Won</p>
+                            <div className="border-r border-mist px-2.5 py-2.5 last:border-r-0 md:rounded-none md:border-r-0 md:bg-transparent md:px-3 md:py-4">
+                              <p className="text-[9px] font-semibold uppercase tracking-[0.12em] text-fairway/62 md:hidden">Won</p>
                               <p className="mt-1 text-sm font-semibold text-ink md:mt-0">{entry.holesWon}</p>
                             </div>
-                            <div className="rounded-2xl bg-sand px-3 py-3 md:rounded-none md:bg-transparent md:px-3 md:py-4">
-                              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-fairway/68 md:hidden">Total Net BB</p>
+                            <div className="px-2.5 py-2.5 md:rounded-none md:bg-transparent md:px-3 md:py-4">
+                              <p className="text-[9px] font-semibold uppercase tracking-[0.12em] text-fairway/62 md:hidden">Net</p>
                               <p className="mt-1 text-sm font-semibold text-ink md:mt-0">{entry.totalNetBetterBall ?? "-"}</p>
                             </div>
                           </div>
@@ -335,11 +334,25 @@ export default async function TournamentStandingsPage({
                   </div>
                 </>
               ) : (
-                <div className="rounded-[26px] border border-dashed border-[#d8c07d]/55 bg-[linear-gradient(135deg,#fff7e5_0%,#f6edd7_100%)] px-5 py-5 sm:px-6 sm:py-6">
-                  <p className="text-lg font-semibold text-ink">The playoff field will build itself once pod results start posting.</p>
-                  <p className="mt-2 max-w-2xl text-sm leading-6 text-ink/72">
-                    Once the first official pod result lands, this board starts projecting the eight-team field.
+                <div className="rounded-[24px] border border-mist bg-white px-4 py-4">
+                  <p className="text-lg font-semibold leading-tight text-ink">
+                    The playoff picture starts after pod play posts.
                   </p>
+                  <p className="mt-2 text-sm leading-6 text-ink/70">
+                    This view will stay quiet until there are official results to rank. Then it will
+                    show pod winners, wild cards, and the current eight-team field.
+                  </p>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <span className="rounded-full bg-[#e3f1ea] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#174f38]">
+                      Pod winners
+                    </span>
+                    <span className="rounded-full bg-[#efe7ff] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#5f47a6]">
+                      Wild cards
+                    </span>
+                    <span className="rounded-full bg-sand px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-fairway/70">
+                      Eight-team field
+                    </span>
+                  </div>
                 </div>
               )}
             </SectionCard>

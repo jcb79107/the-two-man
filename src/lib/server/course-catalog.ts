@@ -259,6 +259,166 @@ export function serializeCourses(
 }
 
 const MAX_SEARCH_RESULTS_TO_PERSIST = 12;
+const MAX_STORED_SEARCH_RESULTS = 12;
+
+function scoreStoredCourseMatch(
+  course: {
+    name: string;
+    city: string | null;
+    state: string | null;
+    tees: Array<{ holes: Array<unknown> }>;
+  },
+  query: { name: string; state?: string }
+) {
+  const queryText = normalizeText(query.name);
+  const queryTokens = queryText.split(" ").filter(Boolean);
+  const courseText = normalizeText([course.name, course.city, course.state].filter(Boolean).join(" "));
+  const courseTokens = new Set(courseText.split(" ").filter(Boolean));
+
+  let score = 0;
+
+  if (courseText.includes(queryText)) {
+    score += 8;
+  }
+
+  for (const token of queryTokens) {
+    if (courseTokens.has(token)) {
+      score += 3;
+    } else if (courseText.includes(token)) {
+      score += 1;
+    }
+  }
+
+  if (query.state && course.state?.toUpperCase() === query.state.toUpperCase()) {
+    score += 4;
+  }
+
+  const fullTeeCount = course.tees.filter((tee) => tee.holes.length === 18).length;
+  score += Math.min(fullTeeCount, 3);
+
+  return score;
+}
+
+async function searchStoredCourseCatalog(query: { name: string; state?: string }) {
+  const normalizedName = normalizeText(query.name);
+  const tokens = normalizedName.split(" ").filter((token) => token.length >= 3);
+  const primaryToken = tokens[0] ?? normalizedName;
+
+  if (!primaryToken) {
+    return [];
+  }
+
+  const courses = await db.course.findMany({
+    where: {
+      AND: [
+        query.state
+          ? {
+              OR: [
+                {
+                  state: {
+                    equals: query.state,
+                    mode: "insensitive"
+                  }
+                },
+                {
+                  state: null
+                }
+              ]
+            }
+          : {},
+        {
+          OR: [
+            {
+              name: {
+                contains: query.name,
+                mode: "insensitive"
+              }
+            },
+            {
+              city: {
+                contains: query.name,
+                mode: "insensitive"
+              }
+            },
+            {
+              name: {
+                contains: primaryToken,
+                mode: "insensitive"
+              }
+            },
+            {
+              city: {
+                contains: primaryToken,
+                mode: "insensitive"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    include: {
+      tees: {
+        orderBy: {
+          name: "asc"
+        },
+        include: {
+          holes: {
+            orderBy: {
+              holeNumber: "asc"
+            }
+          }
+        }
+      }
+    }
+  });
+
+  return courses
+    .map((course) => ({
+      course,
+      score: scoreStoredCourseMatch(course, query)
+    }))
+    .filter((entry) => entry.score > 0)
+    .sort((left, right) => {
+      if (right.score !== left.score) {
+        return right.score - left.score;
+      }
+
+      const rightFullTees = right.course.tees.filter((tee) => tee.holes.length === 18).length;
+      const leftFullTees = left.course.tees.filter((tee) => tee.holes.length === 18).length;
+
+      if (rightFullTees !== leftFullTees) {
+        return rightFullTees - leftFullTees;
+      }
+
+      if (right.course.tees.length !== left.course.tees.length) {
+        return right.course.tees.length - left.course.tees.length;
+      }
+
+      return left.course.name.localeCompare(right.course.name);
+    })
+    .reduce<typeof courses>((deduped, entry) => {
+      const key = [
+        normalizeText(entry.course.name),
+        normalizeText(entry.course.city),
+        entry.course.state?.toUpperCase() ?? ""
+      ].join(":");
+
+      if (!deduped.some((course) => {
+        const existingKey = [
+          normalizeText(course.name),
+          normalizeText(course.city),
+          course.state?.toUpperCase() ?? ""
+        ].join(":");
+
+        return existingKey === key;
+      })) {
+        deduped.push(entry.course);
+      }
+
+      return deduped;
+    }, [])
+    .slice(0, MAX_STORED_SEARCH_RESULTS);
+}
 
 async function upsertCourseLookupResult(result: CourseLookupResult) {
   const providerKey = normalizeProviderKey(result.provider, result.externalCourseId);
@@ -294,7 +454,7 @@ async function upsertCourseLookupResult(result: CourseLookupResult) {
     const teeId = `${courseId}-${tee.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
     const hydratedHoles = hydrateTeeHolesFromSiblings(tee, result.tees);
 
-    await db.courseTee.upsert({
+    const persistedTee = await db.courseTee.upsert({
       where: {
         courseId_name: {
           courseId,
@@ -325,7 +485,7 @@ async function upsertCourseLookupResult(result: CourseLookupResult) {
         await db.courseHole.upsert({
           where: {
             courseTeeId_holeNumber: {
-              courseTeeId: teeId,
+              courseTeeId: persistedTee.id,
               holeNumber: hole.holeNumber
             }
           },
@@ -335,8 +495,8 @@ async function upsertCourseLookupResult(result: CourseLookupResult) {
             yardage: hole.yardage ?? null
           },
           create: {
-            id: `${teeId}-hole-${hole.holeNumber}`,
-            courseTeeId: teeId,
+            id: `${persistedTee.id}-hole-${hole.holeNumber}`,
+            courseTeeId: persistedTee.id,
             holeNumber: hole.holeNumber,
             par: hole.par,
             strokeIndex: hole.strokeIndex,
@@ -399,13 +559,17 @@ export async function searchCourseCatalog(query: { name: string; state?: string 
     persistedCourses.push(await upsertCourseLookupResult(result));
   }
 
-  return serializeCourses(
-    persistedCourses.filter(
-      (
-        course
-      ): course is NonNullable<typeof course> => Boolean(course)
-    )
-  );
+  if (persistedCourses.length > 0) {
+    return serializeCourses(
+      persistedCourses.filter(
+        (
+          course
+        ): course is NonNullable<typeof course> => Boolean(course)
+      )
+    );
+  }
+
+  return serializeCourses(await searchStoredCourseCatalog(query));
 }
 
 export async function getStoredCourseCatalog() {

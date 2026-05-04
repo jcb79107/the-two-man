@@ -19,11 +19,15 @@ export function PublicNav({ slug, seasonIsLive = false }: PublicNavProps) {
     { label: "Standings", href: ROUTES.tournamentStandings(slug) },
     { label: "Bracket", href: ROUTES.tournamentBracket(slug) }
   ];
+  const desktopLinks = [
+    ...links,
+    { label: "Rules", href: ROUTES.tournamentRules(slug) }
+  ];
 
   return (
     <>
       <header className="sticky top-0 z-30 border-b border-white/65 bg-[#f6efe1]/84 px-4 py-2.5 pt-[max(0.625rem,env(safe-area-inset-top))] backdrop-blur sm:px-6 sm:py-3 lg:px-8">
-        <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4">
+        <div className="mx-auto flex w-full max-w-[620px] items-center justify-between gap-4">
           <Link href={ROUTES.home} className="flex min-w-0 items-center gap-2.5 sm:gap-3">
             <TwoManLogo
               className="h-10 w-10 shrink-0 sm:h-12 sm:w-12"
@@ -33,7 +37,7 @@ export function PublicNav({ slug, seasonIsLive = false }: PublicNavProps) {
               <p className="truncate text-[15px] font-semibold text-ink sm:text-base">The Two Man</p>
               <div className="flex items-center gap-2 leading-none">
                 <p className="truncate text-[10px] font-medium uppercase tracking-[0.22em] text-fairway/72 sm:text-xs sm:tracking-[0.24em]">
-                  2026 season tracker
+                  2026 season
                 </p>
                 {seasonIsLive ? (
                   <span className="rounded-full bg-[#1c4f3a] px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.18em] text-white sm:px-2.5 sm:py-1 sm:text-[10px] sm:tracking-[0.2em]">
@@ -44,22 +48,8 @@ export function PublicNav({ slug, seasonIsLive = false }: PublicNavProps) {
             </div>
           </Link>
 
-          <div className="hidden items-center gap-2 md:flex">
-            <Link
-              href={ROUTES.tournamentRules(slug)}
-              className={clsx(
-                "rounded-full px-4 py-2 text-sm font-medium transition",
-                pathname === ROUTES.tournamentRules(slug)
-                  ? "bg-pine text-white shadow-card"
-                  : "bg-white/88 text-ink/75 hover:text-ink"
-              )}
-            >
-              Rules
-            </Link>
-          </div>
-
-          <nav className="hidden items-center gap-2 md:flex">
-            {links.map((link) => {
+          <nav className="hidden items-center gap-1.5 rounded-full border border-white/70 bg-white/55 p-1 shadow-[0_10px_28px_rgba(17,32,23,0.06)] md:flex">
+            {desktopLinks.map((link) => {
               const active = link.label === "Home" ? isHomePath : pathname === link.href;
 
               return (
@@ -67,10 +57,10 @@ export function PublicNav({ slug, seasonIsLive = false }: PublicNavProps) {
                   key={link.href}
                   href={link.href}
                   className={clsx(
-                    "rounded-full px-4 py-2 text-sm font-medium transition",
+                    "focus-ring rounded-full px-4 py-2 text-sm font-medium transition",
                     active
                       ? "bg-pine text-white shadow-card"
-                      : "bg-white/88 text-ink/75 hover:text-ink"
+                      : "text-ink/72 hover:bg-white/80 hover:text-ink"
                   )}
                 >
                   {link.label}
@@ -81,7 +71,7 @@ export function PublicNav({ slug, seasonIsLive = false }: PublicNavProps) {
 
           <Link
             href={ROUTES.tournamentRules(slug)}
-            className="rounded-full border border-fairway/15 bg-white/88 px-3 py-1.5 text-xs font-medium text-ink/82 md:hidden"
+            className="focus-ring rounded-full border border-fairway/15 bg-white/88 px-3 py-1.5 text-xs font-medium text-ink/82 md:hidden"
           >
             Rules
           </Link>
@@ -98,8 +88,8 @@ export function PublicNav({ slug, seasonIsLive = false }: PublicNavProps) {
                 key={link.href}
                 href={link.href}
                 className={clsx(
-                  "rounded-2xl px-3 py-2 text-center text-[13px] font-medium transition",
-                  active ? "bg-pine text-white" : "bg-sand text-ink/75"
+                  "focus-ring min-h-11 rounded-[18px] px-3 py-2.5 text-center text-[13px] font-semibold transition",
+                  active ? "bg-pine text-white shadow-[0_10px_18px_rgba(17,32,23,0.16)]" : "bg-sand/82 text-ink/72"
                 )}
               >
                 {link.label}

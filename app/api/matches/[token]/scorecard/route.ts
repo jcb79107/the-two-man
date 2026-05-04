@@ -17,6 +17,9 @@ function badRequest(message: string) {
   return NextResponse.json({ error: message }, { status: 400 });
 }
 
+const MANUAL_COURSE_ID = "__manual_course__";
+const MANUAL_TEE_ID = "__manual_tee__";
+
 function validateHoleOverrides(
   input: unknown
 ): Array<{
@@ -74,6 +77,63 @@ function validateHoleOverrides(
       holes: holes.sort((left, right) => left.holeNumber - right.holeNumber)
     };
   });
+}
+
+function validateManualCourse(input: unknown) {
+  if (!input || typeof input !== "object") {
+    throw new Error("Manual course setup is missing.");
+  }
+
+  const source = input as {
+    name?: unknown;
+    city?: unknown;
+    state?: unknown;
+    teeName?: unknown;
+    courseRating?: unknown;
+    slope?: unknown;
+    holes?: unknown;
+  };
+  const name = String(source.name ?? "").trim();
+  const city = String(source.city ?? "").trim();
+  const state = String(source.state ?? "").trim().toUpperCase().slice(0, 2);
+  const teeName = String(source.teeName ?? "").trim();
+  const courseRating = Number(source.courseRating);
+  const slope = Number(source.slope);
+  const holes = validateHoleOverrides([
+    {
+      teeId: MANUAL_TEE_ID,
+      holes: source.holes
+    }
+  ])[0]?.holes;
+
+  if (!name) {
+    throw new Error("Manual course setup needs a course name.");
+  }
+
+  if (!teeName) {
+    throw new Error("Manual course setup needs a tee name.");
+  }
+
+  if (!Number.isFinite(courseRating) || courseRating < 50 || courseRating > 85) {
+    throw new Error("Manual course setup needs a valid course rating.");
+  }
+
+  if (!Number.isInteger(slope) || slope < 55 || slope > 155) {
+    throw new Error("Manual course setup needs a valid slope rating.");
+  }
+
+  const par = holes.reduce((total, hole) => total + hole.par, 0);
+
+  return {
+    name,
+    city: city || null,
+    state: state || null,
+    teeName,
+    courseRating,
+    slope,
+    par,
+    holes
+  };
 }
 
 async function loadMatchForUpdate(token: string) {
@@ -179,8 +239,8 @@ export async function POST(
     const rosterIds = new Set(rosterPlayers.map((player) => player.playerId));
 
     if (action === "setup") {
-      const courseId = String(body?.courseId ?? "").trim();
-      const players = Array.isArray(body?.players)
+      let courseId = String(body?.courseId ?? "").trim();
+      let players = Array.isArray(body?.players)
         ? (body.players as Array<{ playerId?: unknown; handicapIndex?: unknown; teeId?: unknown }>)
         : [];
       const teeHoleOverrides = validateHoleOverrides(body?.teeHoleOverrides);
@@ -193,7 +253,6 @@ export async function POST(
         return badRequest("All four players must be configured.");
       }
 
-      const teeIds = players.map((player) => String(player?.teeId ?? ""));
       const uniquePlayerIds = new Set(players.map((player) => String(player?.playerId ?? "")));
 
       if (uniquePlayerIds.size !== 4) {
@@ -203,6 +262,80 @@ export async function POST(
       if (players.some((player) => !rosterIds.has(String(player?.playerId ?? "")))) {
         return badRequest("Setup contains a player who is not part of this match.");
       }
+
+      if (courseId === MANUAL_COURSE_ID) {
+        const manualCourse = validateManualCourse(body?.manualCourse);
+        const manualCourseId = `manual-course-${match.id}`;
+        const manualTeeId = `${manualCourseId}-tee`;
+
+        await db.course.upsert({
+          where: {
+            id: manualCourseId
+          },
+          update: {
+            name: manualCourse.name,
+            city: manualCourse.city,
+            state: manualCourse.state
+          },
+          create: {
+            id: manualCourseId,
+            providerKey: `manual:${match.id}`,
+            name: manualCourse.name,
+            city: manualCourse.city,
+            state: manualCourse.state,
+            country: "US"
+          }
+        });
+
+        await db.courseTee.upsert({
+          where: {
+            courseId_name: {
+              courseId: manualCourseId,
+              name: manualCourse.teeName
+            }
+          },
+          update: {
+            gender: "MEN",
+            par: manualCourse.par,
+            slope: manualCourse.slope,
+            courseRating: decimal(manualCourse.courseRating)
+          },
+          create: {
+            id: manualTeeId,
+            courseId: manualCourseId,
+            providerKey: `manual:${match.id}:tee`,
+            name: manualCourse.teeName,
+            gender: "MEN",
+            par: manualCourse.par,
+            slope: manualCourse.slope,
+            courseRating: decimal(manualCourse.courseRating)
+          }
+        });
+
+        await db.courseHole.deleteMany({
+          where: {
+            courseTeeId: manualTeeId
+          }
+        });
+
+        await db.courseHole.createMany({
+          data: manualCourse.holes.map((hole) => ({
+            id: `${manualTeeId}-hole-${hole.holeNumber}`,
+            courseTeeId: manualTeeId,
+            holeNumber: hole.holeNumber,
+            par: hole.par,
+            strokeIndex: hole.strokeIndex
+          }))
+        });
+
+        courseId = manualCourseId;
+        players = players.map((player) => ({
+          ...player,
+          teeId: String(player?.teeId ?? "") === MANUAL_TEE_ID ? manualTeeId : player.teeId
+        }));
+      }
+
+      const teeIds = players.map((player) => String(player?.teeId ?? ""));
 
       const course = await db.course.findUnique({
         where: {

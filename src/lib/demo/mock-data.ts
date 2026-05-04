@@ -21,24 +21,24 @@ const STANDARD_PARS = [4, 4, 3, 5, 4, 4, 3, 4, 4, 4, 3, 5, 4, 4, 3, 4, 5, 4];
 const STANDARD_STROKE_INDEX = [11, 17, 13, 1, 3, 15, 9, 5, 7, 12, 18, 14, 2, 4, 16, 10, 6, 8];
 const POD_LETTERS = ["A", "B", "C", "D", "E", "F"] as const;
 const TEAM_NAMES = [
-  "Cedar & Co",
-  "Pin Seekers",
-  "Match Merchants",
-  "Stableford Rejects",
-  "Green Jackets",
-  "Fairway Finders",
-  "Press Box",
-  "Dogleg Society",
-  "Tap-In Union",
-  "Rough Justice",
-  "Wedge Issue",
-  "Flight Plan",
-  "Birdie Dept",
-  "Bunker Hill",
-  "Flag Hunters",
-  "Sand Savers",
-  "Sunday Pairing",
-  "Back Nine Club"
+  "Baer & Cadden",
+  "Grant & Rausch",
+  "Agins & Deutsch",
+  "Wellek & Dlugie",
+  "Nankin & Sacks",
+  "Lieberman & Pickus",
+  "Levin & Sutker",
+  "Isaacson & Levin",
+  "Wasserman & Schwartz",
+  "Malkin & Jolcolver",
+  "Daitch & Reimer",
+  "Saltzman & Weltmann",
+  "Barron & Loewenstein",
+  "Loewenstein & Loewenstein",
+  "Holway & Chase",
+  "Stone & Stone",
+  "Barsi & Abrahams",
+  "Rabin & Taitz"
 ];
 const POD_MATCH_ONE_DAYS = [3, 6, 9, 12, 15, 18];
 const POD_MATCH_TWO_DAYS = [7, 10, 13, 16, 19, 22];
@@ -136,17 +136,24 @@ export const demoCourses: CourseProfile[] = [
 
 export const demoPods: PodProfile[] = POD_LETTERS.map((letter, index) => ({
   id: `pod-${letter.toLowerCase()}`,
-  name: `Pod ${letter}`,
+  name: `Pod ${index + 1}`,
   order: index + 1,
   teamIds: TEAM_NAMES.slice(index * 3, index * 3 + 3).map(
     (_, teamIndex) => `team-${String(index * 3 + teamIndex + 1).padStart(2, "0")}`
   )
 }));
 
+function teamPlayerLastNames(teamName: string) {
+  const names = teamName.split("&").map((part) => part.trim()).filter(Boolean);
+
+  return [names[0] ?? "Player", names[1] ?? "Player"];
+}
+
 export const demoTeams: TeamProfile[] = TEAM_NAMES.map((teamName, index) => {
   const teamNumber = index + 1;
   const podLetter = POD_LETTERS[Math.floor(index / 3)];
   const teamId = `team-${String(teamNumber).padStart(2, "0")}`;
+  const [playerOneLastName, playerTwoLastName] = teamPlayerLastNames(teamName);
 
   return {
     id: teamId,
@@ -155,9 +162,9 @@ export const demoTeams: TeamProfile[] = TEAM_NAMES.map((teamName, index) => {
     players: [
       {
         id: `${teamId}-player-a`,
-        firstName: "Player",
-        lastName: `${String(teamNumber).padStart(2, "0")}A`,
-        displayName: `Player ${String(teamNumber).padStart(2, "0")}A`,
+        firstName: playerOneLastName,
+        lastName: playerOneLastName,
+        displayName: playerOneLastName,
         email: `player${String(teamNumber).padStart(2, "0")}a@fairwaymatch.dev`,
         handicapIndex: Number((7.4 + index * 0.8).toFixed(1)),
         ghinNumber: `1000${String(teamNumber).padStart(2, "0")}1`,
@@ -166,9 +173,9 @@ export const demoTeams: TeamProfile[] = TEAM_NAMES.map((teamName, index) => {
       },
       {
         id: `${teamId}-player-b`,
-        firstName: "Player",
-        lastName: `${String(teamNumber).padStart(2, "0")}B`,
-        displayName: `Player ${String(teamNumber).padStart(2, "0")}B`,
+        firstName: playerTwoLastName,
+        lastName: playerTwoLastName,
+        displayName: playerTwoLastName,
         email: `player${String(teamNumber).padStart(2, "0")}b@fairwaymatch.dev`,
         handicapIndex: Number((11.2 + index * 0.7).toFixed(1)),
         ghinNumber: `1000${String(teamNumber).padStart(2, "0")}2`,

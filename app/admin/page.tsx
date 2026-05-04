@@ -2,6 +2,7 @@ import Link from "next/link";
 import { unstable_noStore as noStore } from "next/cache";
 import { AdminMatchOpsList } from "@/components/admin-match-ops-list";
 import { FormSubmitButton } from "@/components/form-submit-button";
+import { LocalTimestamp } from "@/components/local-timestamp";
 import { SectionCard } from "@/components/section-card";
 import { TwoManLogo } from "@/components/two-man-logo";
 import { isAdminAuthConfigured, isAdminAuthenticated } from "@/lib/server/admin-auth";
@@ -9,25 +10,20 @@ import { getAdminDashboardData } from "@/lib/server/admin";
 import { ROUTES } from "@/lib/api/routes";
 import {
   adminLoginAction,
-  generatePodMatchLinksAction,
-  resetTeamSeedsAction,
-  saveBracketSettingsAction,
-  saveTournamentAction,
-  syncBracketAction,
-  updatePlayerAction,
-  updateTeamSeedAction
+  generatePodMatchLinksAction
 } from "./actions";
 
 export const dynamic = "force-dynamic";
 
-type AdminSectionKey = "overview" | "match-ops" | "field" | "tournament";
+type AdminSectionKey = "overview" | "email-manager" | "scorecards";
 
 function normalizeAdminSection(value?: string): AdminSectionKey {
   switch (value) {
-    case "match-ops":
-    case "field":
-    case "tournament":
+    case "email-manager":
+    case "scorecards":
       return value;
+    case "match-ops":
+      return "scorecards";
     default:
       return "overview";
   }
@@ -88,23 +84,6 @@ function buildEmailInviteHref(match: {
   composeUrl.searchParams.set("body", body);
 
   return composeUrl.toString();
-}
-
-function formatAuditTimestamp(value: string) {
-  return new Date(value).toLocaleString("en-US", {
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit"
-  });
-}
-
-function formatAuditTimestampCompact(value: string) {
-  return new Date(value).toLocaleString("en-US", {
-    month: "short",
-    day: "numeric",
-    hour: "numeric"
-  });
 }
 
 function buildAdminMatchLabel(match: {
@@ -179,6 +158,30 @@ function matchesQuery(searchQuery: string, ...values: Array<string | null | unde
   return haystack.includes(searchQuery);
 }
 
+function scorecardPriority(status: string) {
+  switch (status) {
+    case "SUBMITTED":
+      return 0;
+    case "REOPENED":
+      return 1;
+    case "IN_PROGRESS":
+      return 2;
+    case "READY":
+      return 3;
+    case "FINAL":
+    case "FORFEIT":
+      return 4;
+    default:
+      return 5;
+  }
+}
+
+function buildAdminScorecardPath(row: { privateUrl: string; statusCode: string }) {
+  const privatePath = row.privateUrl.replace(/^https?:\/\/[^/]+/, "");
+
+  return row.statusCode === "FINAL" || row.statusCode === "FORFEIT" ? `${privatePath}?admin=1` : privatePath;
+}
+
 function FlashBanner({
   kind,
   message
@@ -207,14 +210,13 @@ function AdminSectionNav({
 }) {
   const links = [
     { section: "overview", label: "Activity" },
-    { section: "match-ops", label: "Match Ops" },
-    { section: "field", label: "Field" },
-    { section: "tournament", label: "Tournament" }
-  ] satisfies Array<{ section: AdminSectionKey; label: string }>;
+    { section: "email-manager", label: "Email manager", mobileLabel: "Emails" },
+    { section: "scorecards", label: "Scorecards", mobileLabel: "Cards" }
+  ] satisfies Array<{ section: AdminSectionKey; label: string; mobileLabel?: string }>;
 
   return (
-    <nav className="sticky top-[76px] z-20 rounded-[24px] border border-white/70 bg-[#f6efe1]/92 p-2 shadow-[0_16px_34px_rgba(17,32,23,0.08)] backdrop-blur">
-      <div className="flex justify-center gap-2 overflow-x-auto pb-0.5">
+    <nav className="sticky top-3 z-20 rounded-[22px] border border-[#d8c07d]/45 bg-white/90 p-1 shadow-[0_12px_28px_rgba(17,32,23,0.1)] backdrop-blur">
+      <div className="grid grid-cols-3 gap-1.5">
         {links.map((link) => {
           const active = link.section === activeSection;
 
@@ -222,13 +224,15 @@ function AdminSectionNav({
             <a
               key={link.section}
               href={`/admin?section=${link.section}`}
+              aria-current={active ? "page" : undefined}
               className={
                 active
-                  ? "min-w-fit whitespace-nowrap rounded-full bg-pine px-4 py-2 text-center text-sm font-medium text-white shadow-card"
-                  : "min-w-fit whitespace-nowrap rounded-full bg-white/88 px-4 py-2 text-center text-sm font-medium text-ink/78 transition hover:text-ink"
+                  ? "focus-ring flex min-h-10 items-center justify-center rounded-[18px] bg-pine px-2 text-center text-[12px] font-semibold leading-tight text-white shadow-[0_8px_18px_rgba(17,32,23,0.16)] sm:min-h-11 sm:text-sm"
+                  : "focus-ring flex min-h-10 items-center justify-center rounded-[18px] border border-transparent px-2 text-center text-[12px] font-semibold leading-tight text-ink/68 transition hover:border-mist hover:bg-sand/70 hover:text-ink sm:min-h-11 sm:text-sm"
               }
             >
-              {link.label}
+              <span className="sm:hidden">{"mobileLabel" in link ? link.mobileLabel : link.label}</span>
+              <span className="hidden sm:inline">{link.label}</span>
             </a>
           );
         })}
@@ -254,16 +258,19 @@ function AdminLoginCard({
         {configured ? (
           <form action={adminLoginAction} className="flex items-center gap-3">
             <label className="sr-only" htmlFor="admin-password">
-              Password
+              Admin passcode
             </label>
             <div className={`flex-1 rounded-[22px] border ${kind === "error" ? "border-[#d48f8f]" : "border-mist"} bg-white`}>
               <input
                 id="admin-password"
                 name="password"
                 type="password"
-                autoComplete="current-password"
-                placeholder="Password"
-                aria-label="Password"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={4}
+                autoComplete="one-time-code"
+                placeholder="4-digit passcode"
+                aria-label="Admin passcode"
                 className="w-full rounded-[22px] bg-transparent px-4 py-3 text-sm text-ink outline-none placeholder:text-ink/38"
               />
             </div>
@@ -303,7 +310,6 @@ export default async function AdminPage({
 
   const data = await getAdminDashboardData();
   const activeSection = normalizeAdminSection(params?.section);
-  const fieldPanel = params?.panel === "players" ? "players" : "seeds";
   const searchQuery = (params?.q ?? "").trim().toLowerCase();
   const requestedLimit = Number.parseInt(params?.limit ?? "12", 10);
   const activityVisibleCount = Number.isFinite(requestedLimit) && requestedLimit > 0 ? requestedLimit : 12;
@@ -327,31 +333,10 @@ export default async function AdminPage({
       match.overrideNote
     )
   );
-  const filteredTeams = data.teams.filter((team) =>
-    matchesQuery(searchQuery, team.name, team.podName, team.slotNumber ? `slot ${team.slotNumber}` : null)
-  );
-  const filteredPlayers = data.players.filter((player) =>
-    matchesQuery(searchQuery, player.firstName, player.lastName, player.email, player.teamName, player.podName)
-  );
-  const showTournamentSettings =
-    !searchQuery || matchesQuery(searchQuery, "tournament settings", "name", "slug", "season", "start date", "end date");
-  const showBracketSettings =
-    !searchQuery ||
-    matchesQuery(
-      searchQuery,
-      "bracket settings",
-      data.bracket?.label,
-      "qualifier count",
-      "sync bracket shell",
-      "pod field",
-      "bracket rounds"
-    );
   const searchPlaceholder =
-    activeSection === "match-ops"
-      ? "Search matches, teams, pods, or status"
-      : activeSection === "field"
-        ? "Search players, teams, pods, or slots"
-        : "Search tournament or bracket settings";
+    activeSection === "email-manager"
+      ? "Search invites, teams, pods, or missing emails"
+      : "Search scorecards, teams, pods, or status";
   const activityItems = [
     ...data.recentAuditLog
       .filter((entry) => {
@@ -441,10 +426,14 @@ export default async function AdminPage({
     const privateUrl = `${appUrl}${ROUTES.privateMatch(match.privateToken)}`;
     const inviteMessage = buildMatchInviteMessage(match, privateUrl);
     const emailInviteHref = buildEmailInviteHref(match, privateUrl);
+    const recipientEmails = match.recipients
+      .map((recipient) => recipient.email?.trim().toLowerCase() ?? "")
+      .filter(Boolean);
     const missingRecipientNames = match.recipients
       .filter((recipient) => !recipient.email)
       .map((recipient) => recipient.displayName);
     const hasAssignedTeams = Boolean(match.homeTeamId && match.awayTeamId);
+    const displayTimestamp = match.finalizedAt ?? match.submittedAt ?? match.scheduledAt ?? match.updatedAt ?? match.createdAt;
 
     return {
       id: match.id,
@@ -453,10 +442,14 @@ export default async function AdminPage({
       statusLabel: match.status.replaceAll("_", " "),
       statusTone: statusTone(match.status),
       matchup: `${match.homeTeamName ?? "TBD"} vs ${match.awayTeamName ?? "TBD"}`,
-      meta: `${match.roundLabel} • ${match.podName ?? "Playoff"}${match.playedOn ? ` • ${match.playedOn}` : ""}`,
+      meta: `${match.roundLabel} • ${match.podName ?? "Playoff"}`,
+      timestamp: displayTimestamp,
       privateUrl,
       inviteMessage,
       emailInviteHref,
+      recipientEmails,
+      setupComplete: match.setupComplete,
+      scoreEntryCount: match.scoreEntryCount,
       publicUrl:
         match.status === "FINAL" || match.status === "FORFEIT"
           ? `${appUrl}${ROUTES.publicMatch(data.tournament?.slug ?? "fairway-match-2026", match.publicScorecardSlug)}`
@@ -465,43 +458,62 @@ export default async function AdminPage({
       missingRecipientNames
     };
   });
+  const priorityScorecards = matchOpsRows
+    .filter((row) => row.hasAssignedTeams)
+    .sort((left, right) => {
+      const statusDelta = scorecardPriority(left.statusCode) - scorecardPriority(right.statusCode);
+      if (statusDelta !== 0) {
+        return statusDelta;
+      }
+
+      return left.matchup.localeCompare(right.matchup);
+    })
+    .slice(0, 6);
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-[1600px] flex-col gap-5 px-4 py-6 sm:px-6 lg:px-8">
+    <main className="mx-auto flex min-h-screen w-full max-w-[620px] flex-col gap-5 px-4 py-6 sm:px-6">
       <FlashBanner kind={params?.kind} message={params?.message} />
 
-      <section className="overflow-hidden rounded-[28px] border border-[#d8c07d]/60 bg-[linear-gradient(135deg,#f7f1e3_0%,#efdfb0_100%)] text-ink shadow-[0_20px_50px_rgba(17,32,23,0.12)]">
-        <div className="flex flex-col gap-3 px-4 py-4 md:px-6 md:py-5">
-          <div className="flex items-center gap-3">
-            <TwoManLogo className="h-11 w-11 shrink-0 md:h-12 md:w-12" />
+      <section className="rounded-[24px] border border-white/75 bg-white/88 p-4 text-ink shadow-[0_14px_34px_rgba(17,32,23,0.09)] backdrop-blur md:rounded-[28px] md:p-5">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[#d8c07d]/45 bg-sand/70 md:h-14 md:w-14">
+              <TwoManLogo className="h-10 w-10 md:h-12 md:w-12" />
+            </div>
             <div className="min-w-0">
-              <h1 className="text-[1.8rem] font-semibold leading-tight text-pine md:text-3xl">
-                The Two Man admin
+              <p className="label-caps text-fairway/66">
+                Commissioner desk
+              </p>
+              <h1 className="mt-1 truncate text-2xl font-semibold leading-tight text-pine md:text-3xl">
+                The Two Man
               </h1>
             </div>
           </div>
-
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="rounded-full border border-white/70 bg-white/78 px-3 py-1.5 text-sm text-ink/76">
-              <span className="mr-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-fairway/62">Live</span>
-              <span className="font-semibold text-[#8a6b08]">{liveCount}</span>
-            </div>
-            <div className="rounded-full border border-white/70 bg-white/78 px-3 py-1.5 text-sm text-ink/76">
-              <span className="mr-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-fairway/62">Final</span>
-              <span className="font-semibold text-fairway">{finalCount}</span>
-            </div>
-            <div className="rounded-full border border-white/70 bg-white/78 px-3 py-1.5 text-sm text-ink/76">
-              <span className="mr-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-fairway/62">Needs</span>
-              <span className="font-semibold text-[#5b4696]">{attentionCount}</span>
-            </div>
-          </div>
-
-          {!data.databaseReady ? (
-            <div className="rounded-2xl border border-[#f4b8b8] bg-[#fff1f1] px-4 py-3 text-sm text-[#a33b3b]">
-              Database connection is not ready. Current error: {data.databaseError}
-            </div>
-          ) : null}
+          <span className="rounded-full border border-fairway/15 bg-sand px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-ink/64">
+            Admin
+          </span>
         </div>
+
+        <div className="mt-4 grid grid-cols-3 overflow-hidden rounded-[18px] border border-mist bg-[#fbf8f0]">
+          <div className="border-r border-mist px-3 py-3">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-fairway/62">Live</p>
+            <p className="mt-1 text-2xl font-semibold leading-none text-[#8a6b08]">{liveCount}</p>
+          </div>
+          <div className="border-r border-mist px-3 py-3">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-fairway/62">Final</p>
+            <p className="mt-1 text-2xl font-semibold leading-none text-fairway">{finalCount}</p>
+          </div>
+          <div className="px-3 py-3">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-fairway/62">Needs</p>
+            <p className="mt-1 text-2xl font-semibold leading-none text-[#5b4696]">{attentionCount}</p>
+          </div>
+        </div>
+
+        {!data.databaseReady ? (
+          <div className="mt-4 rounded-2xl border border-[#f4b8b8] bg-[#fff1f1] px-4 py-3 text-sm text-[#a33b3b]">
+            Database connection is not ready. Current error: {data.databaseError}
+          </div>
+        ) : null}
       </section>
 
       <AdminSectionNav activeSection={activeSection} />
@@ -537,42 +549,74 @@ export default async function AdminPage({
           activeSection === "overview" ? "grid gap-4" : "hidden"
         }
       >
-        <SectionCard title="Activity">
+        <SectionCard
+          title="Score rescue"
+          action={
+            <Link
+              href="/admin?section=scorecards"
+              className="rounded-full border border-fairway/15 bg-sand px-3 py-1.5 text-xs font-medium text-ink"
+            >
+              All scorecards
+            </Link>
+          }
+        >
+          {priorityScorecards.length === 0 ? (
+            <div className="rounded-2xl border border-mist bg-white px-3 py-4 text-sm text-ink/62">
+              No active scorecards yet.
+            </div>
+          ) : (
+            <div className="overflow-hidden rounded-2xl border border-mist bg-white">
+              {priorityScorecards.map((row) => (
+                <div
+                  key={`rescue-${row.id}`}
+                  className="grid grid-cols-[1fr_auto] gap-3 border-b border-mist/70 px-3 py-2.5 last:border-b-0"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold leading-5 text-ink">{row.matchup}</p>
+                    <p className="mt-0.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-fairway/68">
+                      {row.statusLabel} / {row.stageLabel}
+                    </p>
+                    <p className="mt-0.5 text-xs leading-5 text-ink/58">
+                      {row.meta}
+                      {" • "}
+                      <LocalTimestamp value={row.timestamp} />
+                    </p>
+                  </div>
+                  <Link
+                    href={buildAdminScorecardPath(row)}
+                    className="self-start text-xs font-semibold text-pine underline-offset-4 hover:underline"
+                  >
+                    Open
+                  </Link>
+                </div>
+              ))}
+            </div>
+          )}
+        </SectionCard>
+
+        <SectionCard title="Latest activity">
           {activityItems.length === 0 ? (
             <div className="text-sm text-ink/62">No app activity yet.</div>
           ) : (
             <div className="space-y-4">
-              <div className="overflow-hidden">
-                <table className="w-full table-fixed border-collapse text-left">
-                <thead>
-                  <tr className="border-b border-mist text-[11px] font-semibold uppercase tracking-[0.24em] text-fairway/70">
-                    <th className="w-[88px] px-2 py-3 font-semibold sm:w-[120px]">Time</th>
-                    <th className="px-2 py-3 font-semibold">Activity</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {pagedActivityItems.map((item) => (
-                    <tr key={item.id} className="border-b border-mist/70 align-top last:border-b-0">
-                      <td className="px-2 py-3 text-xs text-ink/62 sm:text-sm">
-                        <span className="sm:hidden">{formatAuditTimestampCompact(item.at)}</span>
-                        <span className="hidden sm:inline">{formatAuditTimestamp(item.at)}</span>
-                      </td>
-                      <td className="px-2 py-3 text-xs text-ink sm:text-sm">
-                        <p className="leading-5">
-                          <span className="font-semibold text-ink">{item.event}</span>
-                          {" • "}
-                          <span className="font-medium text-ink">{item.matchLabel}</span>
-                        </p>
-                        <p className="mt-1 text-[11px] leading-4 text-ink/58 sm:text-xs">
-                          {item.detail}
-                          {" • "}
-                          {item.source}
-                        </p>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-                </table>
+              <div className="overflow-hidden rounded-2xl border border-mist bg-white">
+                {pagedActivityItems.map((item) => (
+                  <div
+                    key={item.id}
+                    className="grid grid-cols-[1fr_auto] gap-3 border-b border-mist/70 px-3 py-2.5 last:border-b-0"
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold leading-5 text-ink">{item.matchLabel}</p>
+                      <p className="mt-0.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-fairway/68">
+                        {item.event} / {item.source}
+                      </p>
+                      <p className="mt-0.5 truncate text-xs leading-5 text-ink/58">{item.detail}</p>
+                    </div>
+                    <p className="max-w-[9.25rem] shrink-0 text-right text-[11px] leading-4 text-ink/52 sm:max-w-none">
+                      <LocalTimestamp value={item.at} />
+                    </p>
+                  </div>
+                ))}
               </div>
               {hasMoreActivity ? (
                 <div className="flex items-center justify-between gap-3 border-t border-mist/70 pt-3">
@@ -596,373 +640,42 @@ export default async function AdminPage({
         </SectionCard>
       </section>
 
-      <section
-        className={
-          activeSection === "tournament"
-            ? "grid gap-4 2xl:grid-cols-[0.8fr_1.2fr]"
-            : "hidden"
-        }
-      >
-        {!showTournamentSettings && !showBracketSettings ? (
-          <div className="rounded-[24px] border border-mist bg-white px-4 py-6 text-sm text-ink/62 xl:col-span-2">
-            No tournament settings match this search.
-          </div>
-        ) : null}
+      <section className={activeSection === "email-manager" ? "grid gap-4" : "hidden"}>
         <SectionCard
-          className={showTournamentSettings ? "" : "hidden"}
-          title="Tournament settings"
-          action={
-            <Link
-              href={ROUTES.home}
-              className="rounded-full border border-fairway/15 bg-sand px-3 py-1.5 text-xs font-medium text-ink"
-            >
-              Preview public side
-            </Link>
-          }
-        >
-          <form action={saveTournamentAction} className="grid gap-3">
-            <label className="grid gap-1 text-sm">
-              <span className="text-ink/70">Tournament name</span>
-              <input
-                name="name"
-                defaultValue={data.tournament?.name ?? "The Two Man"}
-                className="rounded-2xl border border-mist bg-white px-4 py-3"
-              />
-            </label>
-            <label className="grid gap-1 text-sm">
-              <span className="text-ink/70">Slug</span>
-              <input
-                name="slug"
-                defaultValue={data.tournament?.slug ?? "fairway-match-2026"}
-                className="rounded-2xl border border-mist bg-white px-4 py-3"
-              />
-            </label>
-            <div className="grid gap-3 sm:grid-cols-3">
-              <label className="grid gap-1 text-sm">
-                <span className="text-ink/70">Season year</span>
-                <input
-                  name="seasonYear"
-                  type="number"
-                  defaultValue={data.tournament?.seasonYear ?? 2026}
-                  className="rounded-2xl border border-mist bg-white px-4 py-3"
-                />
-              </label>
-              <label className="grid gap-1 text-sm">
-                <span className="text-ink/70">Start date</span>
-                <input
-                  name="startDate"
-                  type="date"
-                  defaultValue={data.tournament?.startDate ?? "2026-05-01"}
-                  className="rounded-2xl border border-mist bg-white px-4 py-3"
-                />
-              </label>
-              <label className="grid gap-1 text-sm">
-                <span className="text-ink/70">End date</span>
-                <input
-                  name="endDate"
-                  type="date"
-                  defaultValue={data.tournament?.endDate ?? "2026-10-01"}
-                  className="rounded-2xl border border-mist bg-white px-4 py-3"
-                />
-              </label>
-            </div>
-            <div className="pt-2">
-              <FormSubmitButton label="Save tournament" pendingLabel="Saving tournament..." />
-            </div>
-          </form>
-        </SectionCard>
-
-        <SectionCard
-          className={showBracketSettings ? "" : "hidden"}
-          title="Bracket settings"
-        >
-          <div className="grid gap-4 lg:grid-cols-[0.9fr_1.1fr]">
-            <form action={saveBracketSettingsAction} className="grid gap-3">
-              <label className="grid gap-1 text-sm">
-                <span className="text-ink/70">Bracket label</span>
-                <input
-                  name="label"
-                  defaultValue={data.bracket?.label ?? "Championship Bracket"}
-                  className="rounded-2xl border border-mist bg-white px-4 py-3"
-                />
-              </label>
-              <label className="grid gap-1 text-sm">
-                <span className="text-ink/70">Qualifier count</span>
-                <input
-                  name="qualifierCount"
-                  type="number"
-                  defaultValue={data.bracket?.qualifierCount ?? 8}
-                  className="rounded-2xl border border-mist bg-white px-4 py-3"
-                />
-              </label>
-              <Link
-                href={data.tournament ? ROUTES.tournamentBracket(data.tournament.slug) : ROUTES.home}
-                className="inline-flex w-fit rounded-full border border-fairway/15 bg-white px-3 py-2 text-xs font-medium text-ink"
-              >
-                Open public bracket view
-              </Link>
-              <div className="pt-1">
-                <FormSubmitButton label="Save bracket" pendingLabel="Saving bracket..." />
-              </div>
-            </form>
-
-            <form action={syncBracketAction}>
-              <div className="rounded-2xl border border-dashed border-fairway/16 bg-white px-4 py-4">
-                <p className="text-sm font-semibold text-ink">Materialize the live playoff board</p>
-                <p className="mt-2 text-sm leading-6 text-ink/68">
-                  Build or refresh the quarterfinal, semifinal, and championship shells from the
-                  latest standings and published results.
-                </p>
-                <div className="mt-3">
-                  <FormSubmitButton label="Sync bracket shell" pendingLabel="Syncing bracket..." />
-                </div>
-              </div>
-            </form>
-
-            <div className="space-y-3">
-              <div className="rounded-[24px] border border-mist bg-white p-4">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-fairway/68">
-                  Bracket rounds
-                </p>
-                <div className="mt-3 space-y-2">
-                  {(data.bracket?.rounds ?? []).filter((round) =>
-                    matchesQuery(searchQuery, round.label, round.stage)
-                  ).map((round) => (
-                    <div
-                      key={round.id}
-                      className="flex items-center justify-between rounded-2xl bg-sand px-3 py-3 text-sm"
-                    >
-                      <div>
-                        <p className="font-semibold text-ink">{round.label}</p>
-                        <p className="text-ink/62">{round.stage}</p>
-                      </div>
-                      <span className="rounded-full bg-white px-3 py-1 text-xs text-ink/70">
-                        {round.matchCount} matches
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="rounded-[24px] border border-mist bg-white p-4">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-fairway/68">
-                  Pod field
-                </p>
-                <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                  {data.pods.filter((pod) =>
-                    matchesQuery(
-                      searchQuery,
-                      pod.name,
-                      ...pod.teams.map((team) => team.teamName)
-                    )
-                  ).map((pod) => (
-                    <div key={pod.id} className="rounded-2xl bg-sand p-3">
-                      <p className="font-semibold text-ink">{pod.name}</p>
-                      <div className="mt-2 space-y-2">
-                        {pod.teams.map((team) => (
-                          <div
-                            key={team.teamId}
-                            className="flex items-center justify-between rounded-xl bg-white px-3 py-2 text-sm"
-                          >
-                            <span className="font-medium text-ink">{team.teamName}</span>
-                            <span className="text-ink/55">Slot {team.slotNumber}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </SectionCard>
-      </section>
-
-      <section className={activeSection === "match-ops" ? "grid gap-4" : "hidden"}>
-        <SectionCard
-          title="Match ops"
-          eyebrow="Send and open"
+          title="Email manager"
+          eyebrow="Invite field"
           action={
             <form action={generatePodMatchLinksAction}>
-              <FormSubmitButton
-                label={data.matchLinks.length > 0 ? "Generate missing links" : "Generate pod match links"}
-                pendingLabel="Generating..."
-              />
+              <FormSubmitButton label="Generate links" pendingLabel="Generating..." />
             </form>
           }
         >
           {data.matchLinks.length === 0 ? (
             <div className="rounded-[24px] border border-dashed border-mist bg-sand px-4 py-6 text-sm leading-6 text-ink/72">
               No pod match links exist yet. Generate them once and this page will give you a fast
-              way to copy links, draft invites, and open a prefilled email for each matchup.
+              way to send each group its private scorecard invite.
             </div>
           ) : (
-            <AdminMatchOpsList rows={matchOpsRows} />
+            <AdminMatchOpsList rows={matchOpsRows} mode="email" />
           )}
         </SectionCard>
       </section>
 
-      <>
-        <nav
-          className={
-            activeSection === "field"
-              ? "sticky top-[76px] z-20 rounded-[28px] border border-white/70 bg-[#f6efe1]/92 p-3 shadow-[0_16px_34px_rgba(17,32,23,0.08)] backdrop-blur"
-              : "hidden"
-          }
-        >
-          <div className="grid grid-cols-2 gap-2">
-            <a
-              href="/admin?section=field&panel=seeds"
-              className={
-                fieldPanel === "seeds"
-                  ? "rounded-full bg-pine px-4 py-2.5 text-center text-sm font-medium text-white shadow-card"
-                  : "rounded-full bg-white/88 px-4 py-2.5 text-center text-sm font-medium text-ink/78 transition hover:text-ink"
-              }
-            >
-              Seed overrides
-            </a>
-            <a
-              href="/admin?section=field&panel=players"
-              className={
-                fieldPanel === "players"
-                  ? "rounded-full bg-pine px-4 py-2.5 text-center text-sm font-medium text-white shadow-card"
-                  : "rounded-full bg-white/88 px-4 py-2.5 text-center text-sm font-medium text-ink/78 transition hover:text-ink"
-              }
-            >
-              Player names
-            </a>
-          </div>
-        </nav>
-
+      <section className={activeSection === "scorecards" ? "grid gap-4" : "hidden"}>
         <SectionCard
-          title="Seed overrides"
-          className={activeSection === "field" && fieldPanel === "seeds" ? "" : "hidden"}
-          action={
-            <form action={resetTeamSeedsAction}>
-              <button
-                type="submit"
-                className="rounded-full border border-fairway/15 bg-sand px-3 py-1.5 text-xs font-medium text-ink"
-              >
-                Reset to auto
-              </button>
-            </form>
-          }
+          title="Scorecard manager"
+          eyebrow="Review and fix"
         >
-          <div className="overflow-hidden rounded-[26px] border border-mist bg-white">
-            <div className="hidden grid-cols-[1.4fr_0.8fr_100px_90px] gap-3 border-b border-mist bg-sand px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-fairway/70 lg:grid">
-              <span>Team</span>
-              <span>Pod</span>
-              <span>Seed</span>
-              <span>Save</span>
+          {data.matchLinks.length === 0 ? (
+            <div className="rounded-[24px] border border-dashed border-mist bg-sand px-4 py-6 text-sm leading-6 text-ink/72">
+              No scorecards exist yet. Generate match links from Email manager, then come back here to fill empty cards or review final cards.
             </div>
-
-            <div>
-              {filteredTeams.length === 0 ? (
-                <div className="px-4 py-6 text-sm text-ink/62">No teams match this search.</div>
-              ) : (
-                filteredTeams.map((team) => (
-                  <form
-                    key={team.id}
-                    action={updateTeamSeedAction}
-                    className="grid gap-3 border-t border-mist/70 px-4 py-4 first:border-t-0 lg:grid-cols-[1.4fr_0.8fr_100px_90px] lg:items-center"
-                  >
-                    <input type="hidden" name="teamId" value={team.id} />
-
-                    <div className="rounded-2xl bg-sand px-3 py-2.5 text-sm font-medium text-ink">
-                      {team.name}
-                    </div>
-
-                    <div className="rounded-2xl bg-sand px-3 py-2.5 text-sm text-ink/72">
-                      {team.podName ?? "No pod"}
-                    </div>
-
-                    <label className="grid gap-1 text-sm">
-                      <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-ink/50 lg:hidden">
-                        Seed
-                      </span>
-                      <input
-                        name="seedNumber"
-                        type="number"
-                        min="1"
-                        max="18"
-                        defaultValue={team.seedNumber ?? ""}
-                        placeholder="Auto"
-                        className="rounded-2xl border border-mist bg-white px-3 py-2.5"
-                      />
-                    </label>
-
-                    <div className="flex items-center">
-                      <FormSubmitButton label="Save" pendingLabel="Saving..." />
-                    </div>
-                  </form>
-                ))
-              )}
-            </div>
-          </div>
+          ) : (
+            <AdminMatchOpsList rows={matchOpsRows} mode="scorecards" />
+          )}
         </SectionCard>
+      </section>
 
-        <SectionCard
-          title="Player names"
-          className={activeSection === "field" && fieldPanel === "players" ? "" : "hidden"}
-        >
-          <div className="overflow-hidden rounded-[26px] border border-mist bg-white">
-            <div className="hidden grid-cols-[140px_140px_1fr_90px] gap-3 border-b border-mist bg-sand px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-fairway/70 lg:grid">
-              <span>First</span>
-              <span>Last</span>
-              <span>Team</span>
-              <span>Save</span>
-            </div>
-
-            <div>
-              {filteredPlayers.length === 0 ? (
-                <div className="px-4 py-6 text-sm text-ink/62">No players match this search.</div>
-              ) : (
-                filteredPlayers.map((player) => (
-                  <form
-                    key={player.id}
-                    action={updatePlayerAction}
-                    className="grid gap-3 border-t border-mist/70 px-4 py-4 first:border-t-0 lg:grid-cols-[140px_140px_1fr_90px] lg:items-center"
-                  >
-                    <input type="hidden" name="playerId" value={player.id} />
-                    <input type="hidden" name="email" value={player.email ?? ""} />
-
-                    <label className="grid gap-1 text-sm">
-                      <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-ink/50 lg:hidden">
-                        First
-                      </span>
-                      <input
-                        name="firstName"
-                        defaultValue={player.firstName}
-                        className="rounded-2xl border border-mist bg-white px-3 py-2.5"
-                      />
-                    </label>
-
-                    <label className="grid gap-1 text-sm">
-                      <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-ink/50 lg:hidden">
-                        Last
-                      </span>
-                      <input
-                        name="lastName"
-                        defaultValue={player.lastName}
-                        className="rounded-2xl border border-mist bg-white px-3 py-2.5"
-                      />
-                    </label>
-
-                    <div className="rounded-2xl bg-sand px-3 py-2.5 text-sm text-ink/72">
-                      <p className="font-medium text-ink">{player.teamName ?? "No team"}</p>
-                      <p>{player.podName ?? "No pod"}</p>
-                    </div>
-
-                    <div className="flex items-center">
-                      <FormSubmitButton label="Save" pendingLabel="Saving..." />
-                    </div>
-                  </form>
-                ))
-              )}
-            </div>
-          </div>
-        </SectionCard>
-      </>
     </main>
   );
 }

@@ -6,9 +6,10 @@ interface CopyButtonProps {
   value: string;
   label?: string;
   onCopy?: () => void;
+  className?: string;
 }
 
-export function CopyButton({ value, label = "Copy", onCopy }: CopyButtonProps) {
+export function CopyButton({ value, label = "Copy", onCopy, className }: CopyButtonProps) {
   const [copied, setCopied] = useState(false);
 
   async function handleCopy() {
@@ -26,7 +27,10 @@ export function CopyButton({ value, label = "Copy", onCopy }: CopyButtonProps) {
     <button
       type="button"
       onClick={handleCopy}
-      className="rounded-full border border-fairway/15 bg-white px-3 py-2 text-xs font-medium text-ink"
+      className={
+        className ??
+        "rounded-full border border-fairway/15 bg-white px-3 py-2 text-xs font-medium text-ink"
+      }
     >
       {copied ? "Copied" : label}
     </button>

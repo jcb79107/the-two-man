@@ -55,7 +55,7 @@ a {
   h2,
   h3,
   h4 {
-    letter-spacing: -0.03em;
+    letter-spacing: 0;
   }
 
   input,
@@ -81,6 +81,22 @@ a {
   .surface-glass {
     background: rgba(255, 252, 247, 0.84);
     backdrop-filter: blur(18px);
+  }
+
+  .label-caps {
+    font-size: 0.6875rem;
+    font-weight: 650;
+    letter-spacing: 0.18em;
+    line-height: 1.1;
+    text-transform: uppercase;
+  }
+
+  .focus-ring {
+    outline: none;
+  }
+
+  .focus-ring:focus-visible {
+    box-shadow: 0 0 0 3px rgba(31, 107, 79, 0.18);
   }
 
   .skeleton-brand {
