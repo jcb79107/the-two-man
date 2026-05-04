@@ -629,6 +629,28 @@ export async function getLatestTournamentSlug() {
   return tournament?.slug ?? null;
 }
 
+export async function getPreviewFallbackTournamentState(requestedSlug?: string | null) {
+  const candidateSlugs = Array.from(
+    new Set([requestedSlug, "the-two-man-2026", "fairway-match-2026", "two-match-2026"].filter(Boolean))
+  ) as string[];
+
+  for (const candidateSlug of candidateSlugs) {
+    const state = await getPublicTournamentState(candidateSlug);
+
+    if (state) {
+      return state;
+    }
+  }
+
+  const latestSlug = await getLatestTournamentSlug();
+
+  if (!latestSlug || candidateSlugs.includes(latestSlug)) {
+    return null;
+  }
+
+  return getPublicTournamentState(latestSlug);
+}
+
 export async function getPublicBracketState(slug: string) {
   const state = await getPublicTournamentState(slug);
 
