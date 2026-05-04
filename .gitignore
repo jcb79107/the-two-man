@@ -1,0 +1,15 @@
+.DS_Store
+.next
+.next*
+node_modules
+.env
+.env.local
+.env.vercel.preview
+coverage
+dist
+prisma/dev.db
+.vercel
+
+tsconfig.tsbuildinfo
+.next.bak
+data/private/

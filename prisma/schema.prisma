@@ -1,0 +1,408 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum TournamentStatus {
+  DRAFT
+  ACTIVE
+  COMPLETE
+}
+
+enum MatchStage {
+  POD_PLAY
+  QUARTERFINAL
+  SEMIFINAL
+  CHAMPIONSHIP
+}
+
+enum MatchStatus {
+  SCHEDULED
+  READY
+  IN_PROGRESS
+  SUBMITTED
+  FINAL
+  FORFEIT
+  REOPENED
+}
+
+enum AdvancementSlot {
+  HOME
+  AWAY
+}
+
+enum ActivityFeedEventType {
+  MATCH_COMPLETED
+  MATCH_SCHEDULED
+  PLAYOFFS_SET
+  BRACKET_UPDATED
+  SEMIFINAL_LOCKED
+  CHAMPIONSHIP_SET
+}
+
+enum HandicapSyncStatus {
+  MANUAL
+  PENDING
+  SYNCED
+  FAILED
+  DISABLED
+}
+
+model Tournament {
+  id                     String           @id
+  name                   String
+  slug                   String           @unique
+  seasonYear             Int
+  status                 TournamentStatus @default(DRAFT)
+  startDate              DateTime
+  endDate                DateTime
+  handicapAllowancePct   Float            @default(0.9)
+  maxStrokesPerHole      Int              @default(1)
+  forfeitPointsAwarded   Float            @default(12)
+  forfeitHolesWonAwarded Int              @default(6)
+  createdAt              DateTime         @default(now())
+  updatedAt              DateTime         @updatedAt
+  players                Player[]
+  teams                  Team[]
+  pods                   Pod[]
+  matches                Match[]
+  brackets               Bracket[]
+  activityFeedEvents     ActivityFeedEvent[]
+
+  @@index([seasonYear])
+}
+
+model Player {
+  id              String       @id
+  tournamentId    String
+  firstName       String
+  lastName        String
+  displayName     String
+  email           String?
+  phoneNumber     String?
+  handicapIndex   Decimal?     @db.Decimal(4, 1)
+  ghinNumber      String?
+  handicapSyncStatus HandicapSyncStatus @default(MANUAL)
+  lastHandicapSyncAt DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  tournament      Tournament   @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  teamMemberships TeamPlayer[]
+  matchSelections MatchPlayer[]
+  holeScores      HoleScore[]
+  sentInvitations MatchInvitation[] @relation("InvitationRecipientPlayer")
+  claimedInvitations MatchInvitation[] @relation("InvitationClaimedPlayer")
+
+  @@index([tournamentId])
+  @@index([email])
+}
+
+model Team {
+  id              String        @id
+  tournamentId    String
+  name            String
+  seedNumber      Int?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  tournament      Tournament    @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  roster          TeamPlayer[]
+  podMemberships  PodTeam[]
+  homeMatches     Match[]       @relation("HomeTeamMatches")
+  awayMatches     Match[]       @relation("AwayTeamMatches")
+  wonMatches      Match[]       @relation("WinningTeamMatches")
+  matchSelections MatchPlayer[]
+
+  @@unique([tournamentId, name])
+  @@index([tournamentId])
+}
+
+model TeamPlayer {
+  teamId         String
+  playerId       String
+  rosterPosition Int
+  team           Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  player         Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@id([teamId, playerId])
+  @@unique([teamId, rosterPosition])
+}
+
+model Pod {
+  id           String     @id
+  tournamentId String
+  name         String
+  podOrder     Int
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  teams        PodTeam[]
+  matches      Match[]
+
+  @@unique([tournamentId, name])
+  @@index([tournamentId, podOrder])
+}
+
+model PodTeam {
+  podId      String
+  teamId     String
+  slotNumber Int
+  pod        Pod  @relation(fields: [podId], references: [id], onDelete: Cascade)
+  team       Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@id([podId, teamId])
+  @@unique([podId, slotNumber])
+}
+
+model Course {
+  id          String      @id
+  providerKey String?     @unique
+  name        String
+  city        String?
+  state       String?
+  country     String      @default("US")
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  tees        CourseTee[]
+  matches     Match[]
+}
+
+model CourseTee {
+  id              String       @id
+  courseId        String
+  providerKey     String?
+  name            String
+  gender          String
+  par             Int
+  slope           Int
+  courseRating    Decimal      @db.Decimal(4, 1)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  course          Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  holes           CourseHole[]
+  matchSelections MatchPlayer[]
+
+  @@unique([courseId, name])
+}
+
+model CourseHole {
+  id          String    @id
+  courseTeeId String
+  holeNumber  Int
+  par         Int
+  strokeIndex Int
+  yardage     Int?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  courseTee   CourseTee @relation(fields: [courseTeeId], references: [id], onDelete: Cascade)
+
+  @@unique([courseTeeId, holeNumber])
+}
+
+model Bracket {
+  id             String        @id
+  tournamentId    String
+  label           String
+  qualifierCount  Int
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  tournament      Tournament   @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  rounds          BracketRound[]
+  matches         Match[]
+
+  @@unique([tournamentId, label])
+  @@index([tournamentId])
+}
+
+model BracketRound {
+  id          String     @id
+  bracketId    String
+  label        String
+  stage        MatchStage
+  roundOrder   Int
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  bracket      Bracket    @relation(fields: [bracketId], references: [id], onDelete: Cascade)
+  matches      Match[]
+
+  @@unique([bracketId, stage, roundOrder])
+}
+
+model Match {
+  id                  String          @id
+  tournamentId        String
+  podId               String?
+  bracketId           String?
+  bracketRoundId      String?
+  courseId            String?
+  stage               MatchStage
+  status              MatchStatus     @default(SCHEDULED)
+  roundLabel          String
+  scheduledAt         DateTime?
+  homeTeamId          String?
+  awayTeamId          String?
+  winningTeamId       String?
+  privateToken        String          @unique
+  publicScorecardSlug String          @unique
+  homeSeedNumber      Int?
+  awaySeedNumber      Int?
+  homeSeedLabel       String?
+  awaySeedLabel       String?
+  advancesToMatchId   String?
+  advancesToSlot      AdvancementSlot?
+  submittedAt         DateTime?
+  finalizedAt         DateTime?
+  reopenedAt          DateTime?
+  isOverride          Boolean         @default(false)
+  overrideNote        String?
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+  tournament          Tournament      @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  pod                 Pod?            @relation(fields: [podId], references: [id], onDelete: SetNull)
+  bracket             Bracket?        @relation(fields: [bracketId], references: [id], onDelete: SetNull)
+  bracketRound        BracketRound?   @relation(fields: [bracketRoundId], references: [id], onDelete: SetNull)
+  course              Course?         @relation(fields: [courseId], references: [id], onDelete: SetNull)
+  homeTeam            Team?           @relation("HomeTeamMatches", fields: [homeTeamId], references: [id], onDelete: SetNull)
+  awayTeam            Team?           @relation("AwayTeamMatches", fields: [awayTeamId], references: [id], onDelete: SetNull)
+  winningTeam         Team?           @relation("WinningTeamMatches", fields: [winningTeamId], references: [id], onDelete: SetNull)
+  advancesToMatch     Match?          @relation("MatchAdvancement", fields: [advancesToMatchId], references: [id], onDelete: SetNull)
+  sourceMatches       Match[]         @relation("MatchAdvancement")
+  playerSelections    MatchPlayer[]
+  holeScores          HoleScore[]
+  auditLogs           MatchAuditLog[]
+  activityFeedEvents  ActivityFeedEvent[]
+  invitations         MatchInvitation[]
+
+  @@index([tournamentId, stage, status])
+  @@index([podId])
+  @@index([bracketId, bracketRoundId])
+}
+
+model MatchInvitation {
+  id                String   @id
+  matchId           String
+  recipientPlayerId String?
+  claimedByPlayerId String?
+  recipientEmail    String
+  token             String   @unique
+  sentAt            DateTime?
+  openedAt          DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  match             Match    @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  recipientPlayer   Player?  @relation("InvitationRecipientPlayer", fields: [recipientPlayerId], references: [id], onDelete: SetNull)
+  claimedByPlayer   Player?  @relation("InvitationClaimedPlayer", fields: [claimedByPlayerId], references: [id], onDelete: SetNull)
+
+  @@index([matchId])
+  @@index([recipientEmail])
+}
+
+model MatchPlayer {
+  id                    String    @id
+  matchId               String
+  playerId              String
+  teamId                String
+  teeId                 String
+  teeNameSnapshot       String
+  handicapIndexSnapshot Decimal   @db.Decimal(4, 1)
+  slopeSnapshot         Int
+  courseRatingSnapshot  Decimal   @db.Decimal(4, 1)
+  parSnapshot           Int
+  courseHandicap        Int
+  playingHandicap       Int
+  matchStrokeCount      Int
+  strokesByHole         Json
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  match                 Match     @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  player                Player    @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  team                  Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  tee                   CourseTee @relation(fields: [teeId], references: [id], onDelete: Restrict)
+
+  @@unique([matchId, playerId])
+  @@index([matchId, teamId])
+}
+
+model HoleScore {
+  id         String   @id
+  matchId    String
+  playerId   String
+  holeNumber Int
+  grossScore Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  match      Match    @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  player     Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([matchId, playerId, holeNumber])
+  @@index([matchId, holeNumber])
+}
+
+model MatchAuditLog {
+  id         String   @id
+  matchId    String
+  action     String
+  actorLabel String?
+  note       String?
+  payload    Json?
+  createdAt  DateTime @default(now())
+  match      Match    @relation(fields: [matchId], references: [id], onDelete: Cascade)
+
+  @@index([matchId, createdAt])
+}
+
+model ActivityFeedEvent {
+  id           String                @id
+  tournamentId String
+  matchId      String?
+  type         ActivityFeedEventType
+  occurredAt   DateTime
+  visibility   String                @default("PUBLIC")
+  icon         String
+  title        String
+  body         String
+  teamIds      Json
+  metadata     Json?
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+  tournament   Tournament            @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  match        Match?                @relation(fields: [matchId], references: [id], onDelete: SetNull)
+
+  @@index([tournamentId, occurredAt])
+  @@index([matchId])
+}
+
+model CourseLookupCache {
+  id              String   @id
+  provider        String
+  queryKey        String   @unique
+  payload         Json
+  fetchedAt       DateTime
+  expiresAt       DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([provider, fetchedAt])
+}
+
+model ExternalSyncLog {
+  id            String   @id
+  provider      String
+  syncType      String
+  entityType    String
+  entityId      String
+  status        String
+  requestPayload Json?
+  responsePayload Json?
+  errorMessage  String?
+  createdAt     DateTime @default(now())
+
+  @@index([provider, syncType, createdAt])
+  @@index([entityType, entityId])
+}
+
+// TODO: Add GHIN sync metadata and handicap revision history once MVP scoring is stable.
+// TODO: Add external course provider identifiers and sync timestamps when provider ingestion begins.
