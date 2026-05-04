@@ -4,7 +4,7 @@ import { searchCourseCatalog } from "@/lib/server/course-catalog";
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const name = searchParams.get("name")?.trim() ?? "";
-  const state = searchParams.get("state")?.trim().toUpperCase() ?? "";
+  const state = searchParams.get("state")?.trim().toUpperCase() || "IL";
 
   if (!name) {
     return NextResponse.json({ error: "Course name is required." }, { status: 400 });

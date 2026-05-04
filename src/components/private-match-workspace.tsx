@@ -217,7 +217,7 @@ export function PrivateMatchWorkspace({
     }))
   );
   const [courseSearchQuery, setCourseSearchQuery] = useState("");
-  const [courseSearchState, setCourseSearchState] = useState("");
+  const [courseSearchState, setCourseSearchState] = useState("IL");
   const [manualSetupOpen, setManualSetupOpen] = useState(false);
   const [manualCourseName, setManualCourseName] = useState("");
   const [manualCourseCity, setManualCourseCity] = useState("");

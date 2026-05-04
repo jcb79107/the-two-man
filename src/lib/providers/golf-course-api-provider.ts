@@ -95,6 +95,15 @@ function normalizeCourse(course: GolfCourseApiCourse): CourseLookupResult | null
     .map((value) => String(value ?? "").trim())
     .filter(Boolean);
   const uniqueNameParts = nameParts.filter((part, index) => nameParts.indexOf(part) === index);
+  const tees = [
+    ...normalizeTees(course.tees?.male, "MEN", courseId),
+    ...normalizeTees(course.tees?.female, "WOMEN", courseId)
+  ];
+  const duplicateTeeNames = new Set(
+    tees
+      .map((tee) => tee.name.trim().toLowerCase())
+      .filter((name, index, names) => names.indexOf(name) !== index)
+  );
 
   return {
     externalCourseId: String(courseId),
@@ -102,12 +111,92 @@ function normalizeCourse(course: GolfCourseApiCourse): CourseLookupResult | null
     name: uniqueNameParts.join(" - ") || `Course ${courseId}`,
     city: course.location?.city ?? null,
     state: course.location?.state ?? null,
-    tees: [
-      ...normalizeTees(course.tees?.male, "MEN", courseId),
-      ...normalizeTees(course.tees?.female, "WOMEN", courseId)
-    ],
+    tees: tees.map((tee) => ({
+      ...tee,
+      name: duplicateTeeNames.has(tee.name.trim().toLowerCase())
+        ? `${tee.name} (${tee.gender === "MEN" ? "Men" : "Women"})`
+        : tee.name
+    })),
     raw: course as Record<string, unknown>
   };
+}
+
+function normalizeSearchText(value: string) {
+  return value.trim().replace(/\s+/g, " ");
+}
+
+function titleCase(value: string) {
+  return value
+    .toLowerCase()
+    .split(" ")
+    .map((part) => (part ? `${part[0]?.toUpperCase()}${part.slice(1)}` : part))
+    .join(" ");
+}
+
+function buildPossessiveVariants(name: string) {
+  const normalized = normalizeSearchText(name);
+  const words = normalized.split(" ").filter(Boolean);
+  const variants: string[] = [];
+
+  if (words.length < 2) {
+    return variants;
+  }
+
+  for (let index = 0; index < words.length; index += 1) {
+    const cleanWord = words[index]?.replace(/[^A-Za-z0-9]/g, "") ?? "";
+
+    if (cleanWord.length <= 3 || !/s$/i.test(cleanWord) || /'s$/i.test(words[index] ?? "")) {
+      continue;
+    }
+
+    const possessiveWords = [...words];
+    possessiveWords[index] = `${cleanWord.slice(0, -1)}'s`;
+    variants.push(possessiveWords.join(" "));
+
+    const singularWords = [...words];
+    singularWords[index] = cleanWord.slice(0, -1);
+    variants.push(singularWords.join(" "));
+  }
+
+  return variants;
+}
+
+function buildSearchVariants(name: string, state?: string) {
+  const normalized = normalizeSearchText(name);
+  const baseVariants = Array.from(
+    new Map(
+      [normalized, ...buildPossessiveVariants(normalized), titleCase(normalized)].map((variant) => [
+        variant.toLowerCase(),
+        variant
+      ])
+    ).values()
+  );
+
+  const expandedVariants = baseVariants.flatMap((variant) => {
+    const variants = [variant];
+
+    if (!/\b(golf|club|course|country|cc|gc)\b/i.test(variant)) {
+      variants.push(`${variant} Golf Club`);
+      variants.push(`${variant} Country Club`);
+      variants.push(`${variant} Golf Course`);
+      variants.push(`${variant} GC`);
+    } else if (!/\b(golf|club|course)\b/i.test(variant)) {
+      variants.push(`${variant} Golf Club`);
+    }
+
+    return variants;
+  });
+
+  const stateCode = state?.trim().toUpperCase();
+  const exactVariants = baseVariants;
+  const expandedOnlyVariants = expandedVariants.filter(
+    (variant) => !exactVariants.some((exactVariant) => exactVariant.toLowerCase() === variant.toLowerCase())
+  );
+  const withState = stateCode ? expandedVariants.map((variant) => `${variant} ${stateCode}`) : [];
+  const variants = [...exactVariants, ...expandedOnlyVariants, ...withState];
+
+  return Array.from(new Map(variants.map((variant) => [variant.toLowerCase(), variant])).values())
+    .slice(0, 12);
 }
 
 async function fetchSearchResults(searchQuery: string): Promise<CourseLookupResult[]> {
@@ -148,19 +237,49 @@ function dedupeCourses(results: CourseLookupResult[]) {
     deduped.set(`${result.provider}:${result.externalCourseId}`, result);
   }
 
-  return Array.from(deduped.values()).sort((left, right) => left.name.localeCompare(right.name));
+  return Array.from(deduped.values()).sort((left, right) => {
+    const rightFullTees = right.tees.filter((tee) => (tee.holes ?? []).length === 18).length;
+    const leftFullTees = left.tees.filter((tee) => (tee.holes ?? []).length === 18).length;
+
+    if (rightFullTees !== leftFullTees) {
+      return rightFullTees - leftFullTees;
+    }
+
+    return left.name.localeCompare(right.name);
+  });
 }
 
 export class GolfCourseApiCourseDirectoryProvider implements CourseDirectoryProvider {
   async searchCourses(query: CourseLookupQuery): Promise<CourseLookupResult[]> {
-    const scopedQuery = query.state ? `${query.name} ${query.state}` : query.name;
-    const scopedResults = filterByState(await fetchSearchResults(scopedQuery), query.state);
+    const results: CourseLookupResult[] = [];
+    let lastError: unknown = null;
 
-    if (scopedResults.length > 0 || !query.state) {
-      return dedupeCourses(scopedResults);
+    for (const searchQuery of buildSearchVariants(query.name, query.state)) {
+      try {
+        const matches = filterByState(await fetchSearchResults(searchQuery), query.state);
+        results.push(...matches);
+
+        if (matches.some((course) => course.tees.some((tee) => (tee.holes ?? []).length === 18))) {
+          break;
+        }
+
+        if (results.length >= 8) {
+          break;
+        }
+      } catch (error) {
+        lastError = error;
+      }
     }
 
-    return dedupeCourses(filterByState(await fetchSearchResults(query.name), query.state));
+    if (results.length > 0) {
+      return dedupeCourses(results);
+    }
+
+    if (lastError instanceof Error) {
+      throw lastError;
+    }
+
+    return [];
   }
 }
 
