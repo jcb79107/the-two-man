@@ -173,6 +173,14 @@ function scorecardDisplayName(name: string) {
   return parts.at(-1) ?? name;
 }
 
+function formatScorecardHandicapIndex(value: number | null | undefined) {
+  if (value == null || Number.isNaN(value)) {
+    return "Index not set";
+  }
+
+  return `Index ${Number.isInteger(value) ? value.toFixed(0) : value.toFixed(1)}`;
+}
+
 function scorecardTeamInitials(name: string) {
   return name
     .split(/\s+|&/)
@@ -271,6 +279,7 @@ export function PrivateMatchWorkspace({
   const localDraftStorageKey = `fairway-match:draft:${data.match.privateToken}`;
   const canAdminOverridePostedCard = adminMode && pageMode === "scorecard";
   const isScorecardReadOnly = data.isPublished && !canAdminOverridePostedCard;
+  const showSubmittedConfirmation = data.isPublished && submittedThisSession && !canAdminOverridePostedCard;
 
   const selectedCourse = courseId
     ? data.courses.find((course) => course.id === courseId) ?? null
@@ -291,6 +300,7 @@ export function PrivateMatchWorkspace({
   const completedHoleCount = scoreRows.filter((hole) =>
     data.players.every((player) => hole.scores[player.playerId] !== "")
   ).length;
+  const isScorecardComplete = scoreRows.length > 0 && completedHoleCount === scoreRows.length;
   const scoreProgressLabel =
     scoreRows.length > 0 ? `${completedHoleCount}/${scoreRows.length} holes filled` : "No holes yet";
   const resolvedWinningTeamId = data.match.winningTeamId ?? data.scorecard?.winningTeamId ?? null;
@@ -344,6 +354,24 @@ export function PrivateMatchWorkspace({
   const baseHoleMetaByNumber = new Map(
     (holesByPlayerId.get(data.players[0]?.playerId ?? "") ?? []).map((hole) => [hole.holeNumber, hole])
   );
+  const handicapStrokeSummaries =
+    data.setupPreview?.players.map((player) => ({
+      ...player,
+      teamName: data.players.find((entry) => entry.playerId === player.playerId)?.teamName ?? "",
+      strokeHoles: Object.entries(player.strokesByHole)
+        .filter(([, strokes]) => strokes > 0)
+        .map(([holeNumber]) => Number(holeNumber))
+        .sort((left, right) => left - right)
+    })) ?? [];
+  const scorecardTeeNames = Array.from(
+    new Set((data.setupPreview?.players ?? []).map((player) => player.teeName).filter(Boolean))
+  );
+  const scorecardYardageLabel =
+    scorecardTeeNames.length === 1
+      ? `${scorecardTeeNames[0]} yards`
+      : scorecardTeeNames.length > 1
+        ? `${scorecardTeeNames.join(" / ")} yards`
+        : "Yards";
   const teamScorecards = teamGroups.map((team, teamIndex) => {
     const styles = getTeamBroadcastStyles(teamIndex);
     const players = team.players.map((player) => {
@@ -1187,7 +1215,35 @@ export function PrivateMatchWorkspace({
         </div>
       ) : null}
 
-      {data.setupComplete && pageMode === "scorecard" && !isScorecardReadOnly ? (
+      {showSubmittedConfirmation ? (
+        <section className="rounded-[28px] border border-pine/15 bg-[linear-gradient(180deg,#f3fbf6_0%,#e6f3ea_100%)] p-5 shadow-sm">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-pine/70">
+            Submitted
+          </p>
+          <h2 className="mt-2 text-2xl font-semibold text-ink">The result is locked in.</h2>
+          <p className="mt-2 text-sm leading-6 text-ink/70">
+            This card now feeds the standings, bracket, and live feed.
+          </p>
+          <div className="mt-5 grid gap-3 sm:grid-cols-2">
+            <button
+              type="button"
+              onClick={() => router.push(ROUTES.tournamentHome(data.match.tournamentSlug))}
+              className="min-h-12 rounded-full bg-pine px-4 py-2 text-sm font-semibold text-white"
+            >
+              Back to tournament
+            </button>
+            <button
+              type="button"
+              onClick={() => router.push(ROUTES.publicMatch(data.match.tournamentSlug, data.match.id))}
+              className="min-h-12 rounded-full border border-pine/20 bg-white px-4 py-2 text-sm font-semibold text-ink"
+            >
+              View posted round
+            </button>
+          </div>
+        </section>
+      ) : null}
+
+      {data.setupComplete && pageMode === "scorecard" && !isScorecardReadOnly && !showSubmittedConfirmation ? (
         <a
           href={RULES_JUDGE_URL}
           target="_blank"
@@ -1209,7 +1265,7 @@ export function PrivateMatchWorkspace({
         </a>
       ) : null}
 
-      {pageMode === "scorecard" && isScorecardReadOnly && publishedScorecardView ? (
+      {pageMode === "scorecard" && isScorecardReadOnly && publishedScorecardView && !showSubmittedConfirmation ? (
         <PublicMatchScorecard
           roundLabel={data.match.roundLabel}
           status={data.match.status}
@@ -1754,7 +1810,7 @@ export function PrivateMatchWorkspace({
         </section>
       ) : null}
 
-      {data.setupComplete && pageMode === "scorecard" && (!data.isPublished || canAdminOverridePostedCard) ? (
+      {data.setupComplete && pageMode === "scorecard" && (!data.isPublished || canAdminOverridePostedCard) && !showSubmittedConfirmation ? (
         <section className="overflow-hidden rounded-[28px] border border-white/70 bg-[linear-gradient(145deg,rgba(255,252,247,0.98),rgba(247,241,227,0.94))] p-4 shadow-[0_14px_34px_rgba(17,32,23,0.09)]">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
@@ -1830,6 +1886,47 @@ export function PrivateMatchWorkspace({
             ))}
           </div>
 
+          {handicapStrokeSummaries.length > 0 ? (
+            <div className="mt-4 rounded-[22px] border border-[#c8b77f] bg-white/82 px-4 py-3">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-fairway/72">
+                Handicap strokes
+              </p>
+              <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                {handicapStrokeSummaries.map((player) => (
+                  <div
+                    key={`scorecard-strokes-${player.playerId}`}
+                    className="rounded-2xl border border-[#d3bd83] bg-[#fffaf0] px-3 py-3"
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-ink">
+                        {scorecardDisplayName(player.playerName)}
+                      </p>
+                      <p className="mt-0.5 truncate text-[10px] font-semibold uppercase tracking-[0.14em] text-ink/48">
+                        {player.teamName}
+                      </p>
+                    </div>
+                    <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
+                      <span className="rounded-xl bg-pine px-2 py-2 font-semibold text-white">
+                        {player.matchStrokeCount} stroke{player.matchStrokeCount === 1 ? "" : "s"}
+                      </span>
+                      <span className="rounded-xl bg-white px-2 py-2 font-semibold text-ink/74">
+                        {formatScorecardHandicapIndex(player.handicapIndex)}
+                      </span>
+                      <span className="rounded-xl bg-white px-2 py-2 font-semibold text-ink/74">
+                        {player.teeName || "Tee TBD"}
+                      </span>
+                    </div>
+                    <p className="mt-2 text-xs leading-5 text-ink/64">
+                      {player.strokeHoles.length > 0
+                        ? `Stroke holes: ${player.strokeHoles.join(", ")}`
+                        : "No strokes allotted"}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
           {requiresPlayoffWinnerSelection ? (
             <div className="mx-4 mt-4 rounded-[24px] border border-[#d8c27a] bg-[#fff7dd] p-4">
               <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#8a6a09]">
@@ -1856,8 +1953,8 @@ export function PrivateMatchWorkspace({
           ) : null}
 
           <div className="mt-5 space-y-4">
-            <div className="rounded-[28px] border border-[#d7c28d] bg-white shadow-[0_12px_28px_rgba(76,58,26,0.08)]">
-              <div className="border-b border-[#e9d8ac] bg-[#fbf5e6] px-4 py-3">
+            <div className="rounded-[28px] border border-[#bfa66a] bg-white shadow-[0_12px_28px_rgba(76,58,26,0.08)]">
+              <div className="border-b border-[#c8b77f] bg-[#fbf5e6] px-4 py-3">
                 <div className="flex flex-wrap items-center gap-2">
                   <button
                     type="button"
@@ -1888,9 +1985,9 @@ export function PrivateMatchWorkspace({
                     Back 9
                   </button>
                   {!isScorecardReadOnly ? (
-                    <div className="ml-auto flex flex-wrap gap-2">
+                    <div className="ml-auto flex flex-wrap items-center gap-2">
                       {showScorecardEditHint ? (
-                        <span className="rounded-full border border-[#d7c28d] bg-white px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/62">
+                        <span className="px-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-ink/46">
                           Tap a score to edit
                         </span>
                       ) : null}
@@ -1914,7 +2011,7 @@ export function PrivateMatchWorkspace({
               </div>
 
               <ScorecardTableFrame segment={scoreSegment}>
-                    <div className={`sticky left-0 z-10 border-b border-r border-[#d7c28d] bg-[#f2ead9] text-ink/58 ${scorecardLabelCellClass}`}>
+                    <div className={`sticky left-0 z-10 border-b border-r border-[#bfa66a] bg-[#f2ead9] text-ink/58 ${scorecardLabelCellClass}`}>
                       Hole
                     </div>
                     {visibleHoleNumbers.map((holeNumber) => (
@@ -1922,7 +2019,7 @@ export function PrivateMatchWorkspace({
                         key={`hole-heading-${holeNumber}`}
                         type="button"
                         onClick={() => setSelectedHoleNumber(holeNumber)}
-                        className={`border-b border-r border-mist bg-[#f2ead9] transition ${scorecardHeaderCellClass}`}
+                        className={`border-b border-r border-[#c8b77f] bg-[#f2ead9] transition ${scorecardHeaderCellClass}`}
                       >
                         <span className="mx-auto flex h-8 w-8 items-center justify-center rounded-full bg-pine/10 text-sm font-semibold text-ink">
                           {holeNumber}
@@ -1930,15 +2027,15 @@ export function PrivateMatchWorkspace({
                       </button>
                     ))}
                     {scoreSegment === "front" ? (
-                      <div className={`border-b border-r border-mist bg-[#f2ead9] text-ink ${scorecardHeaderCellClass}`}>
+                      <div className={`border-b border-r border-[#c8b77f] bg-[#f2ead9] text-ink ${scorecardHeaderCellClass}`}>
                         Out
                       </div>
                     ) : (
                       <>
-                        <div className={`border-b border-r border-mist bg-[#f2ead9] text-ink ${scorecardHeaderCellClass}`}>
+                        <div className={`border-b border-r border-[#c8b77f] bg-[#f2ead9] text-ink ${scorecardHeaderCellClass}`}>
                           In
                         </div>
-                        <div className={`border-b border-r border-mist bg-[#f2ead9] text-ink ${scorecardHeaderCellClass}`}>
+                        <div className={`border-b border-r border-[#c8b77f] bg-[#f2ead9] text-ink ${scorecardHeaderCellClass}`}>
                           Total
                         </div>
                       </>
@@ -1947,12 +2044,16 @@ export function PrivateMatchWorkspace({
                     {[
                       {
                         label: "HCP",
+                        labelNote: null,
                         values: visibleHoleNumbers.map((holeNumber) => baseHoleMetaByNumber.get(holeNumber)?.strokeIndex ?? "—"),
                         segmentTotal: "",
-                        roundTotal: ""
+                        roundTotal: "",
+                        rowSurface: "bg-[#f5eddc]",
+                        totalSurface: "bg-[#eee1c6]"
                       },
                       {
                         label: "Yards",
+                        labelNote: scorecardYardageLabel === "Yards" ? null : scorecardYardageLabel.replace(/\s+yards$/i, ""),
                         values: visibleHoleNumbers.map((holeNumber) => baseHoleMetaByNumber.get(holeNumber)?.yardage ?? "—"),
                         segmentTotal: visibleHoleNumbers.reduce(
                           (total, holeNumber) => total + (baseHoleMetaByNumber.get(holeNumber)?.yardage ?? 0),
@@ -1961,10 +2062,13 @@ export function PrivateMatchWorkspace({
                         roundTotal: Array.from(baseHoleMetaByNumber.values()).reduce(
                           (total, hole) => total + (hole.yardage ?? 0),
                           0
-                        )
+                        ),
+                        rowSurface: "bg-[#f3ecd9]",
+                        totalSurface: "bg-[#eadbb7]"
                       },
                       {
                         label: "Par",
+                        labelNote: null,
                         values: visibleHoleNumbers.map((holeNumber) => baseHoleMetaByNumber.get(holeNumber)?.par ?? "—"),
                         segmentTotal: visibleHoleNumbers.reduce(
                           (total, holeNumber) => total + (baseHoleMetaByNumber.get(holeNumber)?.par ?? 0),
@@ -1973,28 +2077,35 @@ export function PrivateMatchWorkspace({
                         roundTotal: Array.from(baseHoleMetaByNumber.values()).reduce(
                           (total, hole) => total + (hole.par ?? 0),
                           0
-                        )
+                        ),
+                        rowSurface: "bg-[#f7df8b]",
+                        totalSurface: "bg-[#efd16c]"
                       }
-                    ].map(({ label, values, segmentTotal, roundTotal }) => (
+                    ].map(({ label, labelNote, values, segmentTotal, roundTotal, rowSurface, totalSurface }) => (
                       <Fragment key={`meta-${label}`}>
-                        <div className="sticky left-0 z-10 border-b border-r border-[#d7c28d] bg-[#fffaf0] px-3 py-3 text-sm font-semibold text-ink">
-                          {label}
+                        <div className={`sticky left-0 z-10 border-b border-r border-[#bfa66a] px-3 py-3 text-sm font-semibold text-ink ${rowSurface}`}>
+                          <span className="block">{label}</span>
+                          {labelNote ? (
+                            <span className="mt-1 block max-w-[11rem] truncate text-[9px] uppercase tracking-[0.14em] text-ink/54">
+                              {labelNote}
+                            </span>
+                          ) : null}
                         </div>
                         {values.map((value, index) => (
                           <button
                             key={`meta-${label}-${visibleHoleNumbers[index]}`}
                             type="button"
                             onClick={() => setSelectedHoleNumber(visibleHoleNumbers[index] ?? 1)}
-                            className="border-b border-r border-mist bg-white px-1 py-3 text-center text-sm font-semibold text-ink/64"
+                            className={`border-b border-r border-[#c8b77f] px-1 py-3 text-center text-sm font-semibold text-ink/72 ${rowSurface}`}
                           >
                             {value}
                           </button>
                         ))}
-                        <div className="border-b border-r border-mist bg-[#f7f1e3] px-2 py-3 text-center text-sm font-semibold text-ink">
+                        <div className={`border-b border-r border-[#c8b77f] px-2 py-3 text-center text-sm font-semibold text-ink ${totalSurface}`}>
                           {segmentTotal}
                         </div>
                         {scoreSegment === "back" ? (
-                          <div className="border-b border-r border-mist bg-[#efe7d6] px-2 py-3 text-center text-sm font-semibold text-ink">
+                          <div className={`border-b border-r border-[#c8b77f] px-2 py-3 text-center text-sm font-semibold text-ink ${totalSurface}`}>
                             {roundTotal}
                           </div>
                         ) : null}
@@ -2005,12 +2116,16 @@ export function PrivateMatchWorkspace({
                       <Fragment key={`team-block-${teamCard.team.teamId}`}>
                         {teamCard.players.map((playerCard) => (
                           <Fragment key={`${teamCard.team.teamId}-${playerCard.player.playerId}`}>
-                            <div className="sticky left-0 z-10 border-b border-r border-[#d7c28d] bg-[#fffaf0] px-3 py-3">
+                            <div className="sticky left-0 z-10 border-b border-r border-[#bfa66a] bg-[#fffaf0] px-3 py-3">
                               <p className="truncate text-sm font-semibold leading-tight text-ink">
                                 {scorecardDisplayName(playerCard.player.playerName)}
                               </p>
                               <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-ink/54">
                                 Gross
+                              </p>
+                              <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-ink/42">
+                                {playerCard.preview?.matchStrokeCount ?? 0} stroke
+                                {(playerCard.preview?.matchStrokeCount ?? 0) === 1 ? "" : "s"}
                               </p>
                             </div>
                             {visibleHoleNumbers.map((holeNumber) => {
@@ -2021,7 +2136,7 @@ export function PrivateMatchWorkspace({
                               return (
                                 <div
                                   key={`${playerCard.player.playerId}-gross-${holeNumber}`}
-                                  className={`border-b border-r border-mist bg-white ${scorecardBodyCellClass}`}
+                                  className={`border-b border-r border-[#c8b77f] bg-white ${scorecardBodyCellClass}`}
                                 >
                                   <div className="relative mx-auto w-fit">
                                     {strokeCount > 0 ? (
@@ -2055,19 +2170,19 @@ export function PrivateMatchWorkspace({
                               );
                             })}
                             {scoreSegment === "front" ? (
-                              <div className={`border-b border-r border-mist bg-[#f7f1e3] ${scorecardBodyCellClass}`}>
+                              <div className={`border-b border-r border-[#c8b77f] bg-[#f7f1e3] ${scorecardBodyCellClass}`}>
                                 <span className={`mx-auto flex items-center justify-center font-semibold text-ink ${scorecardScoreMarkClass}`}>
                                   {playerCard.frontNineNetTotal}
                                 </span>
                               </div>
                             ) : (
                               <>
-                                <div className={`border-b border-r border-mist bg-[#f7f1e3] ${scorecardBodyCellClass}`}>
+                                <div className={`border-b border-r border-[#c8b77f] bg-[#f7f1e3] ${scorecardBodyCellClass}`}>
                                   <span className={`mx-auto flex items-center justify-center font-semibold text-ink ${scorecardScoreMarkClass}`}>
                                     {playerCard.backNineNetTotal}
                                   </span>
                                 </div>
-                                <div className={`border-b border-r border-mist bg-[#efe7d6] ${scorecardBodyCellClass}`}>
+                                <div className={`border-b border-r border-[#c8b77f] bg-[#efe7d6] ${scorecardBodyCellClass}`}>
                                   <span className={`mx-auto flex items-center justify-center font-semibold text-ink ${scorecardScoreMarkClass}`}>
                                     {playerCard.netTotal}
                                   </span>
@@ -2077,7 +2192,7 @@ export function PrivateMatchWorkspace({
                           </Fragment>
                         ))}
 
-                        <div className={`sticky left-0 z-10 border-b border-r border-[#d7c28d] px-3 py-3 ${teamCard.styles.accentSurface}`}>
+                        <div className={`sticky left-0 z-10 border-b border-r border-[#bfa66a] px-3 py-3 ${teamCard.styles.accentSurface}`}>
                           <p className="truncate text-sm font-semibold text-ink">
                             {scorecardTeamInitials(teamCard.team.teamName)} best ball
                           </p>
@@ -2088,7 +2203,7 @@ export function PrivateMatchWorkspace({
                         {teamCard.holeSummaries.map((holeSummary) => (
                           <div
                             key={`${teamCard.team.teamId}-team-net-${holeSummary.holeNumber}`}
-                            className={`border-b border-r border-mist bg-white text-center ${scorecardBodyCellClass}`}
+                            className={`border-b border-r border-[#c8b77f] bg-white text-center ${scorecardBodyCellClass}`}
                           >
                             <span
                               className={`mx-auto flex items-center justify-center border-2 font-semibold ${scorecardScoreMarkClass} ${
@@ -2100,19 +2215,19 @@ export function PrivateMatchWorkspace({
                           </div>
                         ))}
                         {scoreSegment === "front" ? (
-                          <div className={`border-b border-r border-mist text-center ${teamCard.styles.accentSurface} ${scorecardBodyCellClass}`}>
+                          <div className={`border-b border-r border-[#c8b77f] text-center ${teamCard.styles.accentSurface} ${scorecardBodyCellClass}`}>
                             <span className={`mx-auto flex items-center justify-center font-semibold text-ink ${scorecardScoreMarkClass}`}>
                               {teamCard.frontNineBetterBallNetTotal}
                             </span>
                           </div>
                         ) : (
                           <>
-                            <div className={`border-b border-r border-mist text-center ${teamCard.styles.accentSurface} ${scorecardBodyCellClass}`}>
+                            <div className={`border-b border-r border-[#c8b77f] text-center ${teamCard.styles.accentSurface} ${scorecardBodyCellClass}`}>
                               <span className={`mx-auto flex items-center justify-center font-semibold text-ink ${scorecardScoreMarkClass}`}>
                                 {teamCard.backNineBetterBallNetTotal}
                               </span>
                             </div>
-                            <div className={`border-b border-r border-mist text-center ${teamCard.styles.accentSurface} ${scorecardBodyCellClass}`}>
+                            <div className={`border-b border-r border-[#c8b77f] text-center ${teamCard.styles.accentSurface} ${scorecardBodyCellClass}`}>
                               <span className={`mx-auto flex items-center justify-center font-semibold text-ink ${scorecardScoreMarkClass}`}>
                                 {teamCard.overallBetterBallNetTotal}
                               </span>
@@ -2125,8 +2240,8 @@ export function PrivateMatchWorkspace({
             </div>
           </div>
 
-          {!isScorecardReadOnly ? (
-            <div className="sticky bottom-4 mt-4">
+          {!isScorecardReadOnly && (canAdminOverridePostedCard || isScorecardComplete) ? (
+            <div className="mt-8">
               <div className="flex flex-col gap-3 rounded-[24px] border border-white/70 bg-[rgba(255,252,247,0.96)] p-4 pb-[calc(env(safe-area-inset-bottom)+1rem)] shadow-[0_18px_40px_rgba(17,32,23,0.14)] backdrop-blur sm:flex-row sm:items-center sm:justify-between sm:pb-4">
                 {canAdminOverridePostedCard ? (
                   <div className="space-y-2">
@@ -2190,7 +2305,7 @@ export function PrivateMatchWorkspace({
         </section>
       ) : null}
 
-      {data.isPublished && submittedThisSession ? (
+      {data.isPublished && submittedThisSession && canAdminOverridePostedCard ? (
         <section className="rounded-[28px] border border-pine/15 bg-[linear-gradient(180deg,#f3fbf6_0%,#e6f3ea_100%)] p-5 shadow-sm">
           <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-pine/70">
             {canAdminOverridePostedCard ? "Override saved" : "Submitted"}
@@ -2222,7 +2337,7 @@ export function PrivateMatchWorkspace({
         </section>
       ) : null}
 
-      {data.scorecard && !publishedScorecardView ? (
+      {data.scorecard && !publishedScorecardView && !showSubmittedConfirmation ? (
         <section className="rounded-[28px] border border-mist bg-white p-4 shadow-sm">
           <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-fairway/70">
             Result

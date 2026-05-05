@@ -219,41 +219,50 @@ export default async function TournamentStandingsPage({
                 ))}
               </section>
             ) : (
-              <SectionCard
-                title="Opening day standings"
-                action={
-                  <span className="rounded-full bg-[#fff4d8] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#8a6b08]">
-                    {completedPodPlayCount} cards posted
-                  </span>
-                }
-              >
-                <div className="rounded-[24px] border border-mist bg-white px-4 py-4">
-                  <p className="text-lg font-semibold leading-tight text-ink">
-                    The board unlocks after the first final scorecard.
+              <section className="grid gap-4">
+                <SectionCard
+                  title="Pods are set"
+                  action={
+                    <span className="rounded-full bg-[#fff4d8] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#8a6b08]">
+                      Opening day
+                    </span>
+                  }
+                >
+                  <p className="text-sm leading-6 text-ink/72">
+                    Standings will sort once the first official pod-play card is posted. Until then,
+                    every pod starts level.
                   </p>
-                  <p className="mt-2 text-sm leading-6 text-ink/70">
-                    Once a pod-play result is posted, each pod will sort by record, hole points,
-                    holes won, then total net better-ball.
-                  </p>
+                </SectionCard>
 
-                  <div className="mt-4 grid grid-cols-2 gap-2">
-                    <div className="rounded-2xl bg-sand px-3 py-3">
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-fairway/64">
-                        Field
-                      </p>
-                      <p className="mt-1 text-sm font-semibold text-ink">
-                        {state.podStandings.length} pods / {state.standings.length} teams
-                      </p>
+                {state.podStandings.map(({ pod, rows }) => (
+                  <SectionCard key={pod.id} title={pod.name}>
+                    <div className="overflow-hidden rounded-[22px] border border-mist bg-white">
+                      <div className="grid grid-cols-[minmax(0,1fr)_auto] bg-sand px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-fairway/68">
+                        <span>Team</span>
+                        <span>Status</span>
+                      </div>
+                      <div className="divide-y divide-mist">
+                        {rows.map((row) => (
+                          <article
+                            key={row.teamId}
+                            className="grid min-h-16 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-3"
+                          >
+                            <div className="min-w-0">
+                              <p className="truncate text-base font-semibold text-ink">{row.teamName}</p>
+                              <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-fairway/58">
+                                0-0-0 / no card posted
+                              </p>
+                            </div>
+                            <span className="rounded-full bg-sand px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-fairway/68">
+                              Ready
+                            </span>
+                          </article>
+                        ))}
+                      </div>
                     </div>
-                    <div className="rounded-2xl bg-sand px-3 py-3">
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-fairway/64">
-                        Playoff cut
-                      </p>
-                      <p className="mt-1 text-sm font-semibold text-ink">6 winners + 2 wild cards</p>
-                    </div>
-                  </div>
-                </div>
-              </SectionCard>
+                  </SectionCard>
+                ))}
+              </section>
             )}
           </>
         ) : currentTab === "playoff" ? (

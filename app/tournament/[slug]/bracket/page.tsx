@@ -7,6 +7,13 @@ import { getPublicBracketState } from "@/lib/server/public-tournament";
 
 export const dynamic = "force-dynamic";
 
+const quarterfinalSeedPairs = [
+  [1, 8],
+  [4, 5],
+  [3, 6],
+  [2, 7]
+] as const;
+
 export default async function TournamentBracketPage({
   params,
   searchParams
@@ -23,6 +30,9 @@ export default async function TournamentBracketPage({
   if (!state) {
     notFound();
   }
+
+  const projectedSeeds = new Map(state.playoffField.map((seed) => [seed.seedNumber, seed]));
+  const hasProjectedSeeds = projectedSeeds.size > 0;
 
   return (
     <>
@@ -44,36 +54,64 @@ export default async function TournamentBracketPage({
             <div className="rounded-[24px] border border-mist bg-white px-4 py-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <p className="text-lg font-semibold leading-tight text-ink">
-                  Bracket opens when the playoff field is set.
+                  Quarterfinal path
                 </p>
                 <span className="rounded-full bg-[#fff4d8] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#8a6b08]">
                   Waiting on pod play
                 </span>
               </div>
               <p className="mt-2 text-sm leading-6 text-ink/70">
-                Once the six pod winners and two wild cards are official, this page becomes the
-                round-by-round championship board.
+                The bracket opens once the six pod winners and two wild cards are official. This is
+                the seed order the field will drop into.
               </p>
 
-              <div className="mt-4 grid grid-cols-3 overflow-hidden rounded-2xl border border-mist bg-sand/45 text-center">
-                <div className="border-r border-mist px-2 py-3">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-fairway/62">
-                    1
-                  </p>
-                  <p className="mt-1 text-xs font-semibold text-ink">Pods</p>
-                </div>
-                <div className="border-r border-mist px-2 py-3">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-fairway/62">
-                    2
-                  </p>
-                  <p className="mt-1 text-xs font-semibold text-ink">Field</p>
-                </div>
-                <div className="px-2 py-3">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-fairway/62">
-                    3
-                  </p>
-                  <p className="mt-1 text-xs font-semibold text-ink">Bracket</p>
-                </div>
+              <div className="mt-4 grid gap-3">
+                {quarterfinalSeedPairs.map(([topSeed, bottomSeed], index) => {
+                  const top = projectedSeeds.get(topSeed);
+                  const bottom = projectedSeeds.get(bottomSeed);
+
+                  return (
+                    <div
+                      key={`${topSeed}-${bottomSeed}`}
+                      className="overflow-hidden rounded-[20px] border border-mist bg-white"
+                    >
+                      <div className="border-b border-mist bg-sand/55 px-3 py-2">
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-fairway/62">
+                          Quarterfinal {index + 1}
+                        </p>
+                      </div>
+                      {[
+                        { seedNumber: topSeed, seed: top, label: topSeed <= 6 ? "Pod winner" : "Wild card" },
+                        { seedNumber: bottomSeed, seed: bottom, label: bottomSeed <= 6 ? "Pod winner" : "Wild card" }
+                      ].map((slot) => (
+                        <div
+                          key={slot.seedNumber}
+                          className="grid grid-cols-[3.25rem_1fr] items-center gap-3 border-b border-mist/80 px-3 py-3 last:border-b-0"
+                        >
+                          <span className="grid h-9 w-9 place-items-center rounded-full bg-pine text-sm font-semibold text-white">
+                            {slot.seedNumber}
+                          </span>
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-semibold text-ink">
+                              {slot.seed?.teamName ?? `Seed ${slot.seedNumber}`}
+                            </p>
+                            <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-ink/45">
+                              {slot.seed?.podName ?? slot.label}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="mt-4 rounded-2xl border border-dashed border-[#c8b77f] bg-sand/35 px-3 py-3">
+                <p className="text-xs leading-5 text-ink/62">
+                  {hasProjectedSeeds
+                    ? "Projected teams are shown from the current table and will lock when pod play is complete."
+                    : "Seeds will populate here as official pod-play results begin posting."}
+                </p>
               </div>
             </div>
           )}

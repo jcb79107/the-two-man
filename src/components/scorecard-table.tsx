@@ -35,19 +35,19 @@ export function scorecardScoreStyle(
   const gross = score == null || score === "" ? null : Number(score);
 
   if (gross == null || !Number.isFinite(gross) || par == null) {
-    return "rounded-none border-2 border-[#b9b9b9] bg-white text-ink shadow-none";
+    return "rounded-none border-[3px] border-[#8a8a8a] bg-white text-ink shadow-none";
   }
 
   const delta = gross - par;
 
   if (delta <= -2) {
     return compact
-      ? "rounded-full border-[1.5px] border-[#7b7b7b] bg-white text-ink shadow-[0_0_0_2px_white,0_0_0_3.5px_#7b7b7b]"
-      : "rounded-full border-[3px] border-[#7b7b7b] bg-white text-ink shadow-[inset_0_0_0_4px_white,inset_0_0_0_7px_#7b7b7b]";
+      ? "rounded-full border-[2px] border-[#102018] bg-white text-ink shadow-[0_0_0_2px_white,0_0_0_4px_#102018]"
+      : "rounded-full border-[4px] border-[#102018] bg-white text-ink shadow-[inset_0_0_0_4px_white,inset_0_0_0_8px_#102018]";
   }
 
   if (delta === -1) {
-    return "rounded-full border-[3px] border-[#7b7b7b] bg-white text-ink";
+    return "rounded-full border-[4px] border-[#102018] bg-white text-ink";
   }
 
   if (delta === 0) {
@@ -55,12 +55,12 @@ export function scorecardScoreStyle(
   }
 
   if (delta === 1) {
-    return "rounded-none border-[3px] border-[#7b7b7b] bg-white text-ink";
+    return "rounded-none border-[4px] border-[#102018] bg-white text-ink";
   }
 
   return compact
-    ? "rounded-none border-[1.5px] border-[#7b7b7b] bg-white text-ink shadow-[0_0_0_2px_white,0_0_0_3.5px_#7b7b7b]"
-    : "rounded-none border-[3px] border-[#7b7b7b] bg-white text-ink shadow-[inset_0_0_0_4px_white,inset_0_0_0_7px_#7b7b7b]";
+    ? "rounded-none border-[2px] border-[#102018] bg-white text-ink shadow-[0_0_0_2px_white,0_0_0_4px_#102018]"
+    : "rounded-none border-[4px] border-[#102018] bg-white text-ink shadow-[inset_0_0_0_4px_white,inset_0_0_0_8px_#102018]";
 }
 
 export function ScorecardTableFrame({
@@ -77,7 +77,7 @@ export function ScorecardTableFrame({
       <div
         className={`${getScorecardMinWidthClass(
           segment
-        )} overflow-hidden rounded-[24px] border border-mist bg-white shadow-[0_12px_28px_rgba(76,58,26,0.08)]`}
+        )} overflow-hidden rounded-[24px] border border-[#bfa66a] bg-white shadow-[0_12px_28px_rgba(76,58,26,0.08)]`}
       >
         <div className={getScorecardGridClass(segment)}>{children}</div>
       </div>
