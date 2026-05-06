@@ -6,6 +6,7 @@ import type { CourseLookupResult } from "@/lib/providers/types";
 import { golfCourseApiCourseDirectoryProvider } from "@/lib/providers/golf-course-api-provider";
 import { openGolfApiCourseDirectoryProvider } from "@/lib/providers/opengolfapi-provider";
 import { usgaCourseDirectoryProvider } from "@/lib/providers/usga-scrape-provider";
+import { searchCuratedChicagolandCourses } from "@/lib/server/chicagoland-course-fallbacks";
 import { db } from "@/lib/server/db";
 
 function decimal(value: number) {
@@ -545,6 +546,14 @@ async function lookupCourses(query: { name: string; state?: string }) {
     } catch {
       // OpenGolfAPI is used for scorecard enrichment and can be skipped if it is unavailable.
     }
+  }
+
+  const stillNeedsFallbackData =
+    results.length === 0 ||
+    results.every((course) => course.tees.length === 0 || course.tees.every((tee) => (tee.holes ?? []).length !== 18));
+
+  if (stillNeedsFallbackData) {
+    results.push(...searchCuratedChicagolandCourses(query));
   }
 
   return mergeLookupResults(results);

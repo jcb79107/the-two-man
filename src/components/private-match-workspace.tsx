@@ -231,6 +231,7 @@ export function PrivateMatchWorkspace({
   const [courseSearchState, setCourseSearchState] = useState("IL");
   const [courseSearchFailed, setCourseSearchFailed] = useState(false);
   const [courseSearchCompleted, setCourseSearchCompleted] = useState(false);
+  const [courseSearchNeedsManual, setCourseSearchNeedsManual] = useState(false);
   const [manualSetupOpen, setManualSetupOpen] = useState(false);
   const [manualCourseName, setManualCourseName] = useState("");
   const [manualCourseCity, setManualCourseCity] = useState("");
@@ -292,10 +293,13 @@ export function PrivateMatchWorkspace({
   const manualCourseIsSelected = courseId === MANUAL_COURSE_ID;
   const courseLoaded = selectedCourse != null;
   const selectedCourseHasTeeData = (selectedCourse?.tees.length ?? 0) > 0;
+  const selectedCourseNeedsTeeLookup = courseLoaded && !selectedCourseHasTeeData;
+  const shouldShowCourseLookup = !courseLoaded || selectedCourseNeedsTeeLookup;
   const selectedGroupTeeId =
     setupPlayers.length > 0 && setupPlayers.every((player) => player.teeId === setupPlayers[0]?.teeId)
       ? setupPlayers[0]?.teeId ?? ""
       : "";
+  const selectedGroupTee = selectedCourse?.tees.find((tee) => tee.id === selectedGroupTeeId) ?? null;
   const teamGroups = Array.from(
     new Map(data.players.map((player) => [player.teamId, player.teamName]))
   ).map(([teamId, teamName]) => ({
@@ -823,6 +827,7 @@ export function PrivateMatchWorkspace({
     setCourseId("");
     setCourseSearchResults([]);
     setCourseSearchCompleted(false);
+    setCourseSearchNeedsManual(false);
     setManualSetupOpen(false);
     setManualTeeHoles({});
     setSetupPlayers((current) =>
@@ -1123,22 +1128,24 @@ export function PrivateMatchWorkspace({
           throw new Error(payload?.error ?? "Course search failed.");
         }
 
-        const courses = Array.isArray(payload?.courses) ? payload.courses : [];
+        const courses = (Array.isArray(payload?.courses) ? payload.courses : []) as PrivateMatchView["courses"];
         setCourseSearchCompleted(true);
 
         if (courses.length === 0) {
           setCourseSearchFailed(true);
+          setCourseSearchNeedsManual(false);
           throw new Error("No matching course was found. Try a broader name or add the state.");
         }
 
         const mergedCourses = mergeCourses(data.courses, courses);
+        const coursesWithTeeData = courses.filter((course) => course.tees.length > 0);
 
         setData((current) => ({
           ...current,
           courses: mergeCourses(current.courses, courses)
         }));
 
-        if (courses.length === 1) {
+        if (courses.length === 1 && coursesWithTeeData.length === 1) {
           applySelectedCourse(courses[0].id, mergedCourses);
           setCourseSearchResults([]);
         } else {
@@ -1155,6 +1162,7 @@ export function PrivateMatchWorkspace({
         }
 
         setCourseSearchFailed(false);
+        setCourseSearchNeedsManual(coursesWithTeeData.length === 0);
         setManualSetupOpen(false);
         setErrorMessage(null);
       } catch (error) {
@@ -1343,19 +1351,6 @@ export function PrivateMatchWorkspace({
       ) : null}
 
       {pageMode === "setup" ? (
-        <details className="rounded-2xl border border-mist bg-white px-4 py-2.5 text-sm text-ink/72">
-          <summary className="cursor-pointer list-none text-sm font-semibold text-ink">
-            Setup help
-          </summary>
-          <div className="mt-2 space-y-1.5 leading-6">
-            <p>Use each golfer&apos;s current Handicap Index for this round before you generate the card.</p>
-            <p>If the wrong course, tee, or index gets entered, fix it here before scoring starts.</p>
-            <p>If the round has already been posted, ask the commissioner to reopen or reset the card from admin.</p>
-          </div>
-        </details>
-      ) : null}
-
-      {pageMode === "setup" ? (
         <section className="rounded-[28px] border border-white/70 bg-[linear-gradient(145deg,rgba(255,252,247,0.98),rgba(247,241,227,0.94))] p-4 shadow-[0_14px_34px_rgba(17,32,23,0.08)]">
           <div className="grid gap-4 sm:grid-cols-[1.25fr_0.75fr]">
             <div className="min-w-0">
@@ -1397,19 +1392,24 @@ export function PrivateMatchWorkspace({
             </div>
         </div>
 
-        {!courseLoaded ? (
+        {shouldShowCourseLookup ? (
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             <div className="rounded-[24px] border border-mist bg-[#fbf7ec] p-4 sm:col-span-2">
               <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-fairway/70">
-                Find the course
+                {selectedCourseNeedsTeeLookup ? "Find course tee data" : "Find the course"}
               </p>
+              {selectedCourseNeedsTeeLookup ? (
+                <div className="mt-3 rounded-2xl border border-[#d8c27a] bg-[#fff7dd] px-3 py-3 text-sm font-semibold leading-5 text-ink/78">
+                  {selectedCourse.name} is selected, but no tees loaded. Search again or use manual setup.
+                </div>
+              ) : null}
               <div className="mt-3 grid grid-cols-[1fr_76px] gap-2 sm:grid-cols-[1.3fr_120px_auto]">
                 <input
                   type="text"
                   value={courseSearchQuery}
                   disabled={data.isPublished || isSearchingCourses}
                   onChange={(event) => setCourseSearchQuery(event.target.value)}
-                  placeholder="Course name"
+                  placeholder={selectedCourseNeedsTeeLookup ? selectedCourse.name : "Course name"}
                   className="rounded-2xl border border-mist bg-white px-4 py-3"
                 />
                 <input
@@ -1430,7 +1430,7 @@ export function PrivateMatchWorkspace({
                 </button>
               </div>
 
-              {courseSearchFailed || manualSetupOpen ? (
+              {courseSearchFailed || courseSearchNeedsManual || selectedCourseNeedsTeeLookup || manualSetupOpen ? (
                 <div className="mt-4 rounded-[22px] border border-dashed border-[#d7c28d] bg-white/70 p-3">
                   <button
                     type="button"
@@ -1443,7 +1443,9 @@ export function PrivateMatchWorkspace({
                         Plan B
                       </span>
                       <span className="mt-1 block text-sm font-semibold text-ink">
-                        Course not found? Use manual setup.
+                        {courseSearchNeedsManual || selectedCourseNeedsTeeLookup
+                          ? "Tee data missing? Use manual setup."
+                          : "Course not found? Use manual setup."}
                       </span>
                     </span>
                     <span className="rounded-full border border-[#d7c28d] bg-white px-3 py-1.5 text-xs font-semibold text-[#8a6b08]">
@@ -1592,30 +1594,51 @@ export function PrivateMatchWorkspace({
                     </p>
                   </div>
                   {courseSearchResults.map((course) => (
-                    <button
-                      key={course.id}
-                      type="button"
-                      disabled={data.isPublished || isSearchingCourses}
-                      onClick={() => {
-                        applySelectedCourse(course.id, mergeCourses(data.courses, courseSearchResults));
-                        setCourseSearchResults([]);
-                      }}
-                      className="grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-[22px] border border-mist bg-white px-4 py-4 text-left transition hover:border-fairway/30"
-                    >
-                      <span className="min-w-0">
-                        <span className="block text-sm font-semibold text-ink">{course.name}</span>
-                        <span className="mt-1 block text-sm text-ink/65">
-                          {[course.city, course.state].filter(Boolean).join(", ") || "Course directory result"}
-                        </span>
-                        <span className="mt-2 block text-xs uppercase tracking-[0.18em] text-fairway/70">
-                          {course.tees.length} tees •{" "}
-                          {course.tees.some((tee) => tee.holes.length === 18) ? "holes loaded" : "tee data only"}
-                        </span>
-                      </span>
-                      <span className="rounded-full bg-pine px-3 py-2 text-xs font-semibold text-white">
-                        Select
-                      </span>
-                    </button>
+                    <Fragment key={course.id}>
+                      {(() => {
+                        const hasTeeData = course.tees.length > 0;
+
+                        return (
+                          <button
+                            type="button"
+                            disabled={data.isPublished || isSearchingCourses}
+                            onClick={() => {
+                              if (!hasTeeData) {
+                                setManualCourseName(course.name);
+                                setManualCourseCity(course.city ?? "");
+                                setManualCourseState(course.state ?? courseSearchState);
+                                setCourseSearchNeedsManual(true);
+                                setManualSetupOpen(true);
+                                return;
+                              }
+
+                              applySelectedCourse(course.id, mergeCourses(data.courses, courseSearchResults));
+                              setCourseSearchResults([]);
+                            }}
+                            className="grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-[22px] border border-mist bg-white px-4 py-4 text-left transition hover:border-fairway/30"
+                          >
+                            <span className="min-w-0">
+                              <span className="block text-sm font-semibold text-ink">{course.name}</span>
+                              <span className="mt-1 block text-sm text-ink/65">
+                                {[course.city, course.state].filter(Boolean).join(", ") || "Course directory result"}
+                              </span>
+                              <span className="mt-2 block text-xs uppercase tracking-[0.18em] text-fairway/70">
+                                {hasTeeData
+                                  ? `${course.tees.length} tees • ${
+                                      course.tees.some((tee) => tee.holes.length === 18)
+                                        ? "holes loaded"
+                                        : "tee data only"
+                                    }`
+                                  : "No tees loaded"}
+                              </span>
+                            </span>
+                            <span className={hasTeeData ? "rounded-full bg-pine px-3 py-2 text-xs font-semibold text-white" : "rounded-full border border-[#d7c28d] bg-[#fff7dd] px-3 py-2 text-xs font-semibold text-[#8a6b08]"}>
+                              {hasTeeData ? "Select" : "Manual"}
+                            </span>
+                          </button>
+                        );
+                      })()}
+                    </Fragment>
                   ))}
                 </div>
               ) : null}
@@ -1653,35 +1676,29 @@ export function PrivateMatchWorkspace({
               </div>
 
               {selectedCourseHasTeeData ? (
-                <div className="mt-4">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-fairway/70">
-                    Group tees
+                <div className="mt-4 rounded-[22px] border border-pine/15 bg-white p-3">
+                  <label className="grid gap-2">
+                    <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-fairway/70">
+                      Tees for everyone
+                    </span>
+                    <select
+                      value={selectedGroupTeeId}
+                      disabled={data.isPublished}
+                      onChange={(event) => handleGroupTeeChange(event.target.value)}
+                      className="min-h-12 w-full rounded-2xl border border-mist bg-[#fbf7ec] px-4 py-3 text-base font-semibold text-ink"
+                    >
+                      {selectedCourse.tees.map((tee) => (
+                        <option key={tee.id} value={tee.id}>
+                          {tee.name} • {tee.slope} slope • {tee.courseRating} rating
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <p className="mt-2 text-xs font-semibold uppercase tracking-[0.16em] text-ink/52">
+                    {selectedGroupTee
+                      ? `${selectedGroupTee.holes.length === 18 ? "Holes loaded" : "Needs hole row"}`
+                      : "Choose tee"}
                   </p>
-                  <div className="mt-2 grid gap-2 sm:grid-cols-2">
-                    {selectedCourse.tees.map((tee) => {
-                      const isSelected = selectedGroupTeeId === tee.id;
-
-                      return (
-                        <button
-                          key={tee.id}
-                          type="button"
-                          disabled={data.isPublished}
-                          onClick={() => handleGroupTeeChange(tee.id)}
-                          className={
-                            isSelected
-                              ? "rounded-2xl border border-pine bg-pine px-4 py-3 text-left text-sm font-semibold text-white"
-                              : "rounded-2xl border border-mist bg-white px-4 py-3 text-left text-sm font-semibold text-ink"
-                          }
-                        >
-                          <span className="block">{tee.name}</span>
-                          <span className={isSelected ? "mt-1 block text-xs text-white/72" : "mt-1 block text-xs text-ink/58"}>
-                            {tee.slope} slope • {tee.courseRating} rating
-                            {tee.holes.length === 18 ? " • holes loaded" : " • needs hole row"}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
                 </div>
               ) : null}
             </div>
