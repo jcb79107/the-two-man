@@ -3,6 +3,7 @@
 import { Fragment, useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { ROUTES } from "@/lib/api/routes";
+import { MatchScorecardSummary, type MatchScorecardSummaryTeam } from "@/components/match-scorecard-summary";
 import { PublicMatchScorecard } from "@/components/public-match-scorecard";
 import { RulesJudgeIcon } from "@/components/rules-judge-icon";
 import {
@@ -23,6 +24,7 @@ interface PrivateMatchWorkspaceProps {
   initialData: PrivateMatchView;
   pageMode: "setup" | "scorecard";
   adminMode?: boolean;
+  adminBackHref?: string;
 }
 
 type ManualHoleInput = {
@@ -193,7 +195,8 @@ function scorecardTeamInitials(name: string) {
 export function PrivateMatchWorkspace({
   initialData,
   pageMode,
-  adminMode = false
+  adminMode = false,
+  adminBackHref = "/admin?section=scorecards"
 }: PrivateMatchWorkspaceProps) {
   const initialSerializedScoreRows = JSON.stringify(
     initialData.holeInputs.map((hole) => ({
@@ -577,6 +580,27 @@ export function PrivateMatchWorkspace({
         enteredBetterBallHoles > 0 ? enteredBetterBallNetTotal - enteredBetterBallParTotal : null
     };
   });
+  const editableSummaryTeams: MatchScorecardSummaryTeam[] = teamScorecards.map((teamCard) => ({
+    id: teamCard.team.teamId,
+    name: teamCard.team.teamName,
+    label: "Team net",
+    score: formatEditableVsPar(teamCard.betterBallToPar),
+    tone: teamCard.teamIndex % 2 === 0 ? "pine" : "purple",
+    stats: [
+      { label: "Out", value: formatEditableVsPar(teamCard.frontNineToPar) },
+      { label: "In", value: formatEditableVsPar(teamCard.backNineToPar) },
+      { label: "Total", value: formatEditableVsPar(teamCard.overallToPar) }
+    ]
+  }));
+  const editableStrokeSummaries = handicapStrokeSummaries.map((player) => ({
+    playerId: player.playerId,
+    playerName: scorecardDisplayName(player.playerName),
+    teamName: player.teamName,
+    strokeCount: player.matchStrokeCount,
+    handicapIndex: formatScorecardHandicapIndex(player.handicapIndex).replace(/^Index\s+/i, ""),
+    teeName: player.teeName || "TBD",
+    strokeHoles: player.strokeHoles
+  }));
   const publishedScorecardView =
     data.scorecard && data.setupPreview
       ? (() => {
@@ -1158,32 +1182,6 @@ export function PrivateMatchWorkspace({
     });
   }
 
-  function goToPreviousHole() {
-    setSelectedHoleNumber((current) => {
-      if (current <= 1) {
-        setScoreSegment("front");
-        return 1;
-      }
-
-      const nextHole = current - 1;
-      setScoreSegment(nextHole <= 9 ? "front" : "back");
-      return nextHole;
-    });
-  }
-
-  function goToNextHole() {
-    setSelectedHoleNumber((current) => {
-      if (current >= 18) {
-        setScoreSegment("back");
-        return 18;
-      }
-
-      const nextHole = current + 1;
-      setScoreSegment(nextHole <= 9 ? "front" : "back");
-      return nextHole;
-    });
-  }
-
   function handleScoreFieldFocus(holeNumber: number) {
     setSelectedHoleNumber(holeNumber);
     setIsScoringFieldActive(true);
@@ -1212,6 +1210,25 @@ export function PrivateMatchWorkspace({
       {showRestoredDraftBanner ? (
         <div className="rounded-2xl border border-pine/20 bg-[#eef8f1] px-4 py-3 text-sm text-pine">
           {draftStatus}
+        </div>
+      ) : null}
+
+      {adminMode ? (
+        <div className="flex items-center justify-between gap-3 rounded-[22px] border border-[#d8c07d]/45 bg-white/90 px-3 py-3 text-ink shadow-[0_10px_24px_rgba(17,32,23,0.08)]">
+          <a
+            href={adminBackHref}
+            className="inline-flex min-h-10 items-center rounded-full border border-pine/15 bg-sand px-3 text-xs font-semibold uppercase tracking-[0.12em] text-ink/70"
+          >
+            Back
+          </a>
+          <div className="min-w-0 text-right">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-fairway/70">
+              Admin scorecard
+            </p>
+            <p className="truncate text-xs font-semibold text-ink/68">
+              {data.isPublished && pageMode === "scorecard" ? "Editing final card" : "Commissioner mode"}
+            </p>
+          </div>
         </div>
       ) : null}
 
@@ -1276,7 +1293,7 @@ export function PrivateMatchWorkspace({
           teams={publishedScorecardView.teams}
           summaries={data.scorecard?.teamSummaries ?? []}
           holes={publishedScorecardView.holes}
-          backHref={adminMode ? "/admin?section=scorecards" : ROUTES.tournamentHome(data.match.tournamentSlug)}
+          backHref={adminMode ? adminBackHref : ROUTES.tournamentHome(data.match.tournamentSlug)}
         />
       ) : null}
 
@@ -1811,121 +1828,27 @@ export function PrivateMatchWorkspace({
       ) : null}
 
       {data.setupComplete && pageMode === "scorecard" && (!data.isPublished || canAdminOverridePostedCard) && !showSubmittedConfirmation ? (
-        <section className="overflow-hidden rounded-[28px] border border-white/70 bg-[linear-gradient(145deg,rgba(255,252,247,0.98),rgba(247,241,227,0.94))] p-4 shadow-[0_14px_34px_rgba(17,32,23,0.09)]">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#c5a250]">
-                {data.match.stageLabel}
-              </p>
-              <h2 className="mt-3 text-[2.05rem] font-semibold leading-[1.02] tracking-normal text-ink sm:text-[2.5rem]">
-                {data.match.homeTeamName} vs {data.match.awayTeamName}
-              </h2>
-              <p className="mt-3 text-sm font-medium leading-6 text-ink/64">
-                {selectedCourse?.name ?? "Course not set"} • {scoreProgressLabel}
-              </p>
-            </div>
-            <div className="flex shrink-0 flex-col items-end gap-2">
-              <span className="px-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-ink/54">
-                {data.isPublished ? (canAdminOverridePostedCard ? "Admin edit" : "Final") : data.match.status}
-              </span>
-              {(!data.isPublished || canAdminOverridePostedCard) && draftStatus ? (
-                <span className="rounded-full bg-[#eef8f1] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-pine">
-                  {broadcastSaveLabel}
-                </span>
-              ) : null}
-              {!data.isPublished ? (
-                <button
-                  type="button"
-                  onClick={() => navigateToPage("setup")}
-                  className="rounded-full border border-pine/15 bg-white px-3 py-2 text-xs font-semibold text-ink"
-                >
-                  Edit setup
-                </button>
-              ) : null}
-            </div>
-          </div>
-
-          <div className="mt-5 grid grid-cols-2 items-stretch gap-2">
-            {teamScorecards.map((teamCard) => (
-              <article
-                key={`summary-${teamCard.team.teamId}`}
-                className={`grid min-h-[11.5rem] grid-rows-[auto_auto_1fr_auto] justify-items-center rounded-[20px] border p-3 text-center ${
-                  teamCard.teamIndex % 2 === 0
-                    ? "border-[#b4d4c5] bg-[#e3f1ea]"
-                    : "border-[#d7cdf1] bg-[#f0ebfb]"
-                }`}
+        <MatchScorecardSummary
+          eyebrow={data.match.stageLabel}
+          title={`${data.match.homeTeamName} vs ${data.match.awayTeamName}`}
+          statusLabel={data.isPublished ? (canAdminOverridePostedCard ? "Admin edit" : "Final") : data.match.status}
+          statusPill={(!data.isPublished || canAdminOverridePostedCard) && draftStatus ? broadcastSaveLabel : null}
+          statusActions={
+            !data.isPublished ? (
+              <button
+                type="button"
+                onClick={() => navigateToPage("setup")}
+                className="rounded-full border border-pine/15 bg-white px-3 py-2 text-xs font-semibold text-ink"
               >
-                <p className="max-w-full text-base font-semibold leading-tight text-ink">
-                  {teamCard.team.teamName}
-                </p>
-                <p className="mt-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-ink/54">
-                  Team net
-                </p>
-                <p className="self-end text-[2.55rem] font-semibold leading-none text-ink">
-                  {teamCard.betterBallToPar == null
-                    ? "E"
-                    : `${teamCard.betterBallToPar >= 0 ? "+" : ""}${teamCard.betterBallToPar}`}
-                </p>
-                <div className="mt-3 grid grid-cols-3 gap-1">
-                  {[
-                    ["Out", teamCard.frontNineToPar],
-                    ["In", teamCard.backNineToPar],
-                    ["Total", teamCard.overallToPar]
-                  ].map(([label, value]) => (
-                    <span key={label as string} className="rounded-xl bg-white/70 px-1.5 py-1.5 text-center">
-                      <span className="block text-[8px] font-semibold uppercase tracking-[0.12em] text-ink/46">
-                        {label}
-                      </span>
-                      <strong className="mt-0.5 block text-xs text-ink">
-                        {formatEditableVsPar(value as number | null)}
-                      </strong>
-                    </span>
-                  ))}
-                </div>
-              </article>
-            ))}
-          </div>
-
-          {handicapStrokeSummaries.length > 0 ? (
-            <div className="mt-4 rounded-[22px] border border-[#c8b77f] bg-white/82 px-4 py-3">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-fairway/72">
-                Handicap strokes
-              </p>
-              <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                {handicapStrokeSummaries.map((player) => (
-                  <div
-                    key={`scorecard-strokes-${player.playerId}`}
-                    className="rounded-2xl border border-[#d3bd83] bg-[#fffaf0] px-3 py-3"
-                  >
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold text-ink">
-                        {scorecardDisplayName(player.playerName)}
-                      </p>
-                      <p className="mt-0.5 truncate text-[10px] font-semibold uppercase tracking-[0.14em] text-ink/48">
-                        {player.teamName}
-                      </p>
-                    </div>
-                    <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
-                      <span className="rounded-xl bg-pine px-2 py-2 font-semibold text-white">
-                        {player.matchStrokeCount} stroke{player.matchStrokeCount === 1 ? "" : "s"}
-                      </span>
-                      <span className="rounded-xl bg-white px-2 py-2 font-semibold text-ink/74">
-                        {formatScorecardHandicapIndex(player.handicapIndex)}
-                      </span>
-                      <span className="rounded-xl bg-white px-2 py-2 font-semibold text-ink/74">
-                        {player.teeName || "Tee TBD"}
-                      </span>
-                    </div>
-                    <p className="mt-2 text-xs leading-5 text-ink/64">
-                      {player.strokeHoles.length > 0
-                        ? `Stroke holes: ${player.strokeHoles.join(", ")}`
-                        : "No strokes allotted"}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : null}
+                Edit setup
+              </button>
+            ) : null
+          }
+          courseName={selectedCourse?.name ?? "Course not set"}
+          courseMeta={scoreProgressLabel}
+          teams={editableSummaryTeams}
+          strokes={editableStrokeSummaries}
+        >
 
           {requiresPlayoffWinnerSelection ? (
             <div className="mx-4 mt-4 rounded-[24px] border border-[#d8c27a] bg-[#fff7dd] p-4">
@@ -1955,57 +1878,43 @@ export function PrivateMatchWorkspace({
           <div className="mt-5 space-y-4">
             <div className="rounded-[28px] border border-[#bfa66a] bg-white shadow-[0_12px_28px_rgba(76,58,26,0.08)]">
               <div className="border-b border-[#c8b77f] bg-[#fbf5e6] px-4 py-3">
-                <div className="flex flex-wrap items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setScoreSegment("front");
-                      setSelectedHoleNumber((current) => (current > 9 ? 1 : current));
-                    }}
-                    className={`rounded-full px-4 py-2 text-sm font-medium transition ${
-                      scoreSegment === "front"
-                        ? "bg-pine text-white"
-                        : "border border-[#d7c28d] bg-white text-ink"
-                    }`}
-                  >
-                    Front 9
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setScoreSegment("back");
-                      setSelectedHoleNumber((current) => (current < 10 ? 10 : current));
-                    }}
-                    className={`rounded-full px-4 py-2 text-sm font-medium transition ${
-                      scoreSegment === "back"
-                        ? "bg-pine text-white"
-                        : "border border-[#d7c28d] bg-white text-ink"
-                    }`}
-                  >
-                    Back 9
-                  </button>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setScoreSegment("front");
+                        setSelectedHoleNumber((current) => (current > 9 ? 1 : current));
+                      }}
+                      className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                        scoreSegment === "front"
+                          ? "bg-pine text-white"
+                          : "border border-[#d7c28d] bg-white text-ink"
+                      }`}
+                    >
+                      Front 9
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setScoreSegment("back");
+                        setSelectedHoleNumber((current) => (current < 10 ? 10 : current));
+                      }}
+                      className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                        scoreSegment === "back"
+                          ? "bg-pine text-white"
+                          : "border border-[#d7c28d] bg-white text-ink"
+                      }`}
+                    >
+                      Back 9
+                    </button>
+                  </div>
                   {!isScorecardReadOnly ? (
-                    <div className="ml-auto flex flex-wrap items-center gap-2">
-                      {showScorecardEditHint ? (
-                        <span className="px-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-ink/46">
-                          Tap a score to edit
-                        </span>
-                      ) : null}
-                      <button
-                        type="button"
-                        onClick={goToPreviousHole}
-                        className="rounded-full border border-[#d7c28d] bg-white px-4 py-2 text-sm font-semibold text-ink"
-                      >
-                        Previous hole
-                      </button>
-                      <button
-                        type="button"
-                        onClick={goToNextHole}
-                        className="rounded-full bg-pine px-4 py-2 text-sm font-semibold text-white"
-                      >
-                        Next hole
-                      </button>
-                    </div>
+                    showScorecardEditHint ? (
+                      <span className="rounded-full bg-white/70 px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-ink/46">
+                        Tap a score to edit
+                      </span>
+                    ) : null
                   ) : null}
                 </div>
               </div>
@@ -2302,7 +2211,7 @@ export function PrivateMatchWorkspace({
               </div>
             </div>
           ) : null}
-        </section>
+        </MatchScorecardSummary>
       ) : null}
 
       {data.isPublished && submittedThisSession && canAdminOverridePostedCard ? (

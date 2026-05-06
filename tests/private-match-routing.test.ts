@@ -135,4 +135,60 @@ describe("private match routing safeguards", () => {
       }
     });
   });
+
+  it("renders the admin scorecard route in commissioner edit mode", async () => {
+    getPrivateMatchRecordByTokenMock.mockResolvedValue({
+      setupComplete: true,
+      isPublished: true
+    });
+    isAdminAuthenticatedMock.mockResolvedValue(true);
+
+    const { default: AdminMatchScorecardPage } = await import("../app/admin/match/[token]/scorecard/page");
+
+    const view = await AdminMatchScorecardPage({
+      params: Promise.resolve({ token: "private-token" })
+    });
+
+    expect(view).toMatchObject({
+      props: {
+        children: expect.objectContaining({
+          props: expect.objectContaining({
+            adminMode: true,
+            adminBackHref: "/admin?section=scorecards",
+            pageMode: "scorecard"
+          })
+        })
+      }
+    });
+  });
+
+  it("keeps unauthenticated visitors out of the admin scorecard route", async () => {
+    isAdminAuthenticatedMock.mockResolvedValue(false);
+
+    const { default: AdminMatchScorecardPage } = await import("../app/admin/match/[token]/scorecard/page");
+
+    await expect(
+      AdminMatchScorecardPage({
+        params: Promise.resolve({ token: "private-token" })
+      })
+    ).rejects.toThrow("REDIRECT:/admin?section=scorecards");
+
+    expect(getPrivateMatchRecordByTokenMock).not.toHaveBeenCalled();
+  });
+
+  it("routes unfinished admin cards to the admin setup route", async () => {
+    getPrivateMatchRecordByTokenMock.mockResolvedValue({
+      setupComplete: false,
+      isPublished: false
+    });
+    isAdminAuthenticatedMock.mockResolvedValue(true);
+
+    const { default: AdminMatchScorecardPage } = await import("../app/admin/match/[token]/scorecard/page");
+
+    await expect(
+      AdminMatchScorecardPage({
+        params: Promise.resolve({ token: "private-token" })
+      })
+    ).rejects.toThrow("REDIRECT:/admin/match/private-token/setup");
+  });
 });

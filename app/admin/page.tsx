@@ -176,10 +176,8 @@ function scorecardPriority(status: string) {
   }
 }
 
-function buildAdminScorecardPath(row: { privateUrl: string; statusCode: string }) {
-  const privatePath = row.privateUrl.replace(/^https?:\/\/[^/]+/, "");
-
-  return row.statusCode === "FINAL" || row.statusCode === "FORFEIT" ? `${privatePath}?admin=1` : privatePath;
+function buildAdminScorecardPath(row: { privateToken: string; setupComplete: boolean }) {
+  return row.setupComplete ? ROUTES.adminMatchScorecard(row.privateToken) : ROUTES.adminMatchSetup(row.privateToken);
 }
 
 function FlashBanner({
@@ -444,6 +442,7 @@ export default async function AdminPage({
       matchup: `${match.homeTeamName ?? "TBD"} vs ${match.awayTeamName ?? "TBD"}`,
       meta: `${match.roundLabel} • ${match.podName ?? "Playoff"}`,
       timestamp: displayTimestamp,
+      privateToken: match.privateToken,
       privateUrl,
       inviteMessage,
       emailInviteHref,

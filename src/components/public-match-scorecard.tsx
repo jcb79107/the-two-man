@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { MatchScorecardSummary, type MatchScorecardSummaryTeam } from "@/components/match-scorecard-summary";
 
 type TeamTone = "pine" | "purple";
 type Segment = "front" | "back";
@@ -207,133 +208,64 @@ export function PublicMatchScorecard({
   const strokeSummaries = teams.flatMap((team) =>
     team.players.map((player) => ({
       playerId: player.playerId,
-      playerName: player.playerName,
+      playerName: lastName(player.playerName),
       teamName: team.name,
-      colors: teamColor(team.tone),
-      teeName: player.teeName,
-      handicapIndex: player.handicapIndex,
-      matchStrokeCount: player.matchStrokeCount,
+      teeName: player.teeName || "TBD",
+      handicapIndex: formatHandicapIndex(player.handicapIndex).replace(/^Index\s+/i, ""),
+      strokeCount: player.matchStrokeCount,
       strokeHoles: Object.entries(player.strokesByHole)
         .filter(([, strokes]) => strokes > 0)
         .map(([holeNumber]) => Number(holeNumber))
         .sort((left, right) => left - right)
     }))
   );
+  const summaryTeams: MatchScorecardSummaryTeam[] = teams.map((team) => {
+    const summary = summaryByTeamId.get(team.id);
+    const isWinner = team.id === winner?.id;
+    const front = splitSummary(frontHoles, team.id);
+    const back = splitSummary(backHoles, team.id);
+    const totalNet = summary?.betterBallNetTotal ?? sumTeamNet(holes, team.id);
+    const totalVsPar = totalNet - sumPar(holes);
+
+    return {
+      id: team.id,
+      name: team.name,
+      label: isWinner ? "Winner" : "Runner-up",
+      score: formatStat(summary?.totalPoints),
+      tone: team.tone,
+      stats: [
+        { label: "Out", value: formatVsPar(front.vsPar) },
+        { label: "In", value: formatVsPar(back.vsPar) },
+        { label: "Total", value: formatVsPar(totalVsPar) }
+      ]
+    };
+  });
 
   return (
     <div className="mx-auto w-full max-w-[430px] space-y-4 md:max-w-[620px]">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex items-center gap-3">
         <a
           href={backHref}
           className="inline-flex min-h-11 items-center rounded-full border border-pine/15 bg-white/80 px-4 text-xs font-semibold uppercase tracking-[0.12em] text-ink/70"
         >
           Back
         </a>
-        <span className="inline-flex min-h-11 items-center px-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-ink/54">
-          {status}
-        </span>
       </div>
 
-      <section className="overflow-hidden rounded-[28px] border border-white/70 bg-[linear-gradient(145deg,rgba(255,252,247,0.98),rgba(247,241,227,0.94))] p-4 shadow-[0_14px_34px_rgba(17,32,23,0.09)]">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#c5a250]">
-          {roundLabel}
-        </p>
-        <h1 className="mt-3 text-[2.4rem] font-semibold leading-[0.98] tracking-normal text-ink sm:text-[3rem]">
-          {winner?.name ?? "Match"} wins
-        </h1>
-        <div className="mt-4 text-base font-medium leading-6 text-ink/64">
-          <a
-            href={googleMapsSearchHref(courseName, courseLocation)}
-            target="_blank"
-            rel="noreferrer"
-            className="font-semibold text-pine underline decoration-pine/30 underline-offset-4"
-          >
-            {courseName}
-          </a>
-          <span className="block">{playedOnLabel}</span>
-          {courseLocation !== "Course TBD" ? <span className="block">{courseLocation}</span> : null}
-        </div>
-
-        <div className="mt-5 grid grid-cols-2 items-stretch gap-2">
-          {teams.map((team) => {
-            const summary = summaryByTeamId.get(team.id);
-            const isWinner = team.id === winner?.id;
-            const colors = teamColor(team.tone);
-            const front = splitSummary(frontHoles, team.id);
-            const back = splitSummary(backHoles, team.id);
-            const totalNet = summary?.betterBallNetTotal ?? sumTeamNet(holes, team.id);
-            const totalVsPar = totalNet - sumPar(holes);
-
-            return (
-              <article
-                key={team.id}
-                className={`grid min-h-[11.5rem] grid-rows-[auto_auto_1fr_auto] justify-items-center rounded-[20px] border p-3 text-center ${
-                  isWinner ? `${colors.soft} ${colors.border}` : "border-mist bg-white"
-                }`}
-              >
-                <p className="max-w-full text-base font-semibold leading-tight text-ink">{team.name}</p>
-                <p className="mt-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-ink/54">
-                  {isWinner ? "Winner" : "Runner-up"}
-                </p>
-                <p className="self-end text-[2.55rem] font-semibold leading-none text-ink">
-                  {formatStat(summary?.totalPoints)}
-                </p>
-                <div className="mt-3 grid w-full grid-cols-3 gap-1">
-                  {[
-                    ["Out", front.vsPar],
-                    ["In", back.vsPar],
-                    ["Total", totalVsPar]
-                  ].map(([label, value]) => (
-                    <span key={label as string} className="text-center">
-                      <span className="block text-[8px] font-semibold uppercase tracking-[0.12em] text-ink/52">
-                        {label}
-                      </span>
-                      <strong className="mt-0.5 block text-xs text-ink">{formatVsPar(value as number)}</strong>
-                    </span>
-                  ))}
-                </div>
-              </article>
-            );
-          })}
-        </div>
-
-        <div className="mt-4 rounded-[22px] border border-[#c8b77f] bg-white/82 px-4 py-3">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-fairway/72">
-            Handicap strokes
-          </p>
-          <div className="mt-3 grid gap-2 sm:grid-cols-2">
-            {strokeSummaries.map((player) => (
-              <div
-                key={`public-strokes-${player.playerId}`}
-                className="rounded-2xl border border-[#d3bd83] bg-[#fffaf0] px-3 py-3"
-              >
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold text-ink">{lastName(player.playerName)}</p>
-                  <p className="mt-0.5 truncate text-[10px] font-semibold uppercase tracking-[0.14em] text-ink/48">
-                    {player.teamName}
-                  </p>
-                </div>
-                <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
-                  <span className={`rounded-xl px-2 py-2 font-semibold text-white ${player.colors.marker}`}>
-                    {player.matchStrokeCount} stroke{player.matchStrokeCount === 1 ? "" : "s"}
-                  </span>
-                  <span className="rounded-xl bg-white px-2 py-2 font-semibold text-ink/74">
-                    {formatHandicapIndex(player.handicapIndex)}
-                  </span>
-                  <span className="rounded-xl bg-white px-2 py-2 font-semibold text-ink/74">
-                    {player.teeName || "Tee TBD"}
-                  </span>
-                </div>
-                <p className="mt-2 text-xs leading-5 text-ink/64">
-                  {player.strokeHoles.length > 0
-                    ? `Stroke holes: ${player.strokeHoles.join(", ")}`
-                    : "No strokes allotted"}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      <MatchScorecardSummary
+        eyebrow={roundLabel}
+        title={`${winner?.name ?? "Match"} wins`}
+        headingLevel="h1"
+        statusLabel={status}
+        courseName={courseName}
+        courseHref={googleMapsSearchHref(courseName, courseLocation)}
+        courseDetails={[
+          playedOnLabel,
+          ...(courseLocation !== "Course TBD" ? [courseLocation] : [])
+        ]}
+        teams={summaryTeams}
+        strokes={strokeSummaries}
+      />
 
       <section className="rounded-[26px] border border-[#d7c28d] bg-white/92 p-4 shadow-[0_14px_34px_rgba(17,32,23,0.08)]">
         <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#c5a250]">

@@ -19,6 +19,7 @@ export interface AdminMatchOpsRow {
   matchup: string;
   meta: string;
   timestamp: string | null;
+  privateToken: string;
   privateUrl: string;
   inviteMessage: string;
   emailInviteHref: string | null;
@@ -250,11 +251,9 @@ export function AdminMatchOpsList({ rows, mode = "scorecards" }: AdminMatchOpsLi
 
   function renderRow(row: AdminMatchOpsRow) {
     const sentAt = inviteSentMap[row.id];
-    const isPublishedResult = isFinalStatus(row.statusCode);
-    const privatePath = row.privateUrl.replace(/^https?:\/\/[^/]+/, "");
-    const setupPath = privatePath.replace(/\/scorecard$/, "/setup");
-    const scorecardPath = isPublishedResult ? `${privatePath}?admin=1` : privatePath;
-    const adminCardPath = row.setupComplete ? scorecardPath : setupPath;
+    const adminCardPath = row.setupComplete
+      ? `/admin/match/${row.privateToken}/scorecard`
+      : `/admin/match/${row.privateToken}/setup`;
     const showEmailWarning = row.hasAssignedTeams && row.missingRecipientNames.length > 0;
     const isWaitingField = !row.hasAssignedTeams;
     const scoreProgressLabel = row.setupComplete
