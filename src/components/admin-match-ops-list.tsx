@@ -1,12 +1,15 @@
 "use client";
 
 import Link from "next/link";
+import type { FormEvent } from "react";
 import { useState, useSyncExternalStore } from "react";
+import { resetMatchCardAction } from "../../app/admin/actions";
 import { CopyButton } from "@/components/copy-button";
 import { EmailInviteButton } from "@/components/email-invite-button";
 import { LocalTimestamp } from "@/components/local-timestamp";
 
 const SENT_INVITE_STORAGE_KEY = "fairway-match.admin.sent-invite-map";
+const EMPTY_INVITE_SNAPSHOT: Record<string, string> = {};
 let inviteSnapshotCacheKey: string | null | undefined;
 let inviteSnapshotCache: Record<string, string> = {};
 
@@ -121,7 +124,7 @@ export function AdminMatchOpsList({ rows, mode = "scorecards" }: AdminMatchOpsLi
   const inviteSentMap = useSyncExternalStore<Record<string, string>>(
     subscribeToStorage,
     getInviteSentMapSnapshot,
-    () => ({})
+    () => EMPTY_INVITE_SNAPSHOT
   );
   const [filter, setFilter] = useState<AdminMatchOpsFilter>(mode === "email" ? "unsent" : "all");
 
@@ -185,6 +188,12 @@ export function AdminMatchOpsList({ rows, mode = "scorecards" }: AdminMatchOpsLi
       ...inviteSentMap,
       [matchId]: new Date().toISOString()
     });
+  }
+
+  function confirmReset(event: FormEvent<HTMLFormElement>) {
+    if (!window.confirm("Reset this scorecard back to a blank setup state?")) {
+      event.preventDefault();
+    }
   }
 
   const needsSetupCount = rows.filter((row) => row.hasAssignedTeams && !row.setupComplete).length;
@@ -377,6 +386,22 @@ export function AdminMatchOpsList({ rows, mode = "scorecards" }: AdminMatchOpsLi
                   Waiting on matchup
                 </span>
               )}
+              {row.hasAssignedTeams ? (
+                <form action={resetMatchCardAction} onSubmit={confirmReset}>
+                  <input type="hidden" name="matchId" value={row.id} />
+                  <input
+                    type="hidden"
+                    name="overrideNote"
+                    value="Reset from scorecard manager."
+                  />
+                  <button
+                    type="submit"
+                    className="rounded-full border border-[#d7c28d] bg-white px-4 py-2.5 text-sm font-semibold text-[#7a5a00]"
+                  >
+                    Reset card
+                  </button>
+                </form>
+              ) : null}
             </>
           )}
         </div>

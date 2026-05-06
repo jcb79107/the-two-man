@@ -30,7 +30,6 @@ export function TournamentHomeView({
       <main className="mx-auto flex min-h-screen w-full max-w-[620px] flex-col gap-4 px-4 py-5 pb-24 sm:px-6">
         <div className="grid gap-4">
           <section className="relative flex min-h-[270px] items-center justify-center overflow-hidden px-4 py-2 text-ink md:min-h-[360px]">
-            <div className="pointer-events-none absolute inset-x-8 top-8 h-52 rounded-full bg-[radial-gradient(circle,#fff7dd_0%,rgba(239,213,139,0.44)_45%,rgba(239,213,139,0)_72%)] blur-2xl md:inset-x-20 md:h-64" />
             <div className="relative flex items-center justify-center text-center">
               <TwoManLogo
                 className="h-64 w-64 shrink-0 md:h-80 md:w-80"

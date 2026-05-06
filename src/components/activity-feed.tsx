@@ -186,9 +186,6 @@ export function ActivityFeed({ events, linkForMatch, linkForBracket }: ActivityF
                 {event.title}
               </h3>
             </div>
-            <span className="hidden shrink-0 text-lg leading-none sm:block" aria-hidden="true">
-              {event.icon}
-            </span>
           </div>
           <p className="mt-1.5 text-sm leading-6 text-ink/70">{event.body}</p>
           {event.matchId && event.type === "MATCH_COMPLETED" ? (
