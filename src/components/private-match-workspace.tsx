@@ -230,6 +230,7 @@ export function PrivateMatchWorkspace({
   const [courseSearchQuery, setCourseSearchQuery] = useState("");
   const [courseSearchState, setCourseSearchState] = useState("IL");
   const [courseSearchFailed, setCourseSearchFailed] = useState(false);
+  const [courseSearchCompleted, setCourseSearchCompleted] = useState(false);
   const [manualSetupOpen, setManualSetupOpen] = useState(false);
   const [manualCourseName, setManualCourseName] = useState("");
   const [manualCourseCity, setManualCourseCity] = useState("");
@@ -821,6 +822,7 @@ export function PrivateMatchWorkspace({
     setSetupConfirmationChecked(false);
     setCourseId("");
     setCourseSearchResults([]);
+    setCourseSearchCompleted(false);
     setManualSetupOpen(false);
     setManualTeeHoles({});
     setSetupPlayers((current) =>
@@ -1122,6 +1124,7 @@ export function PrivateMatchWorkspace({
         }
 
         const courses = Array.isArray(payload?.courses) ? payload.courses : [];
+        setCourseSearchCompleted(true);
 
         if (courses.length === 0) {
           setCourseSearchFailed(true);
@@ -1129,19 +1132,28 @@ export function PrivateMatchWorkspace({
         }
 
         const mergedCourses = mergeCourses(data.courses, courses);
-        const shouldAutoSelectCourse =
-          !courseId || !mergedCourses.some((course) => course.id === courseId);
 
         setData((current) => ({
           ...current,
           courses: mergeCourses(current.courses, courses)
         }));
 
-        if (shouldAutoSelectCourse) {
+        if (courses.length === 1) {
           applySelectedCourse(courses[0].id, mergedCourses);
+          setCourseSearchResults([]);
+        } else {
+          setCourseId("");
+          setSetupConfirmationChecked(false);
+          setManualTeeHoles({});
+          setSetupPlayers((current) =>
+            current.map((player) => ({
+              ...player,
+              teeId: ""
+            }))
+          );
+          setCourseSearchResults(courses);
         }
 
-        setCourseSearchResults(courses);
         setCourseSearchFailed(false);
         setManualSetupOpen(false);
         setErrorMessage(null);
@@ -1571,6 +1583,14 @@ export function PrivateMatchWorkspace({
               ) : null}
               {courseSearchResults.length > 0 ? (
                 <div className="mt-4 space-y-3">
+                  <div className="rounded-[18px] border border-fairway/12 bg-white px-3 py-3">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-fairway/70">
+                      {courseSearchResults.length} matches found
+                    </p>
+                    <p className="mt-1 text-sm leading-5 text-ink/68">
+                      Pick the course by name and city before choosing tees.
+                    </p>
+                  </div>
                   {courseSearchResults.map((course) => (
                     <button
                       key={course.id}
@@ -1580,14 +1600,20 @@ export function PrivateMatchWorkspace({
                         applySelectedCourse(course.id, mergeCourses(data.courses, courseSearchResults));
                         setCourseSearchResults([]);
                       }}
-                      className="block w-full rounded-[22px] border border-mist bg-white px-4 py-4 text-left transition hover:border-fairway/30"
+                      className="grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-[22px] border border-mist bg-white px-4 py-4 text-left transition hover:border-fairway/30"
                     >
-                      <span className="block text-sm font-semibold text-ink">{course.name}</span>
-                      <span className="mt-1 block text-sm text-ink/65">
-                        {[course.city, course.state].filter(Boolean).join(", ") || "Course directory result"}
+                      <span className="min-w-0">
+                        <span className="block text-sm font-semibold text-ink">{course.name}</span>
+                        <span className="mt-1 block text-sm text-ink/65">
+                          {[course.city, course.state].filter(Boolean).join(", ") || "Course directory result"}
+                        </span>
+                        <span className="mt-2 block text-xs uppercase tracking-[0.18em] text-fairway/70">
+                          {course.tees.length} tees •{" "}
+                          {course.tees.some((tee) => tee.holes.length === 18) ? "holes loaded" : "tee data only"}
+                        </span>
                       </span>
-                      <span className="mt-2 block text-xs uppercase tracking-[0.18em] text-fairway/70">
-                        {course.tees.length} tees loaded
+                      <span className="rounded-full bg-pine px-3 py-2 text-xs font-semibold text-white">
+                        Select
                       </span>
                     </button>
                   ))}
@@ -1599,7 +1625,9 @@ export function PrivateMatchWorkspace({
 
         {!courseLoaded ? (
           <div className="mt-4 rounded-[24px] border border-dashed border-mist bg-white px-4 py-5 text-sm leading-6 text-ink/68">
-            Pick a course to unlock tee selections and handicap indexes.
+            {courseSearchCompleted && courseSearchResults.length > 0
+              ? "Choose one of the matching courses above to unlock tees and handicap indexes."
+              : "Search for the course to unlock tees and handicap indexes."}
           </div>
         ) : (
           <>
