@@ -6,9 +6,11 @@ declare global {
 
 function resolveDatabaseUrl() {
   const url =
+    process.env.DATABASE_URL ??
+    process.env.POSTGRES_PRISMA_URL ??
+    process.env.POSTGRES_URL ??
     process.env.POSTGRES_URL_NON_POOLING ??
-    process.env.DATABASE_URL_UNPOOLED ??
-    process.env.DATABASE_URL;
+    process.env.DATABASE_URL_UNPOOLED;
 
   if (!url) {
     return undefined;
@@ -16,14 +18,6 @@ function resolveDatabaseUrl() {
 
   try {
     const parsed = new URL(url);
-
-    if (
-      parsed.hostname === "ep-soft-cell-an49z71n-pooler.c-6.us-east-1.aws.neon.tech" ||
-      parsed.hostname === "ep-soft-cell-an49z71n.c-6.us-east-1.aws.neon.tech"
-    ) {
-      parsed.hostname = "ep-soft-cell-an49z71n-ddq.c-6.us-east-1.aws.neon.tech";
-    }
-
     parsed.searchParams.set("connect_timeout", "30");
     return parsed.toString();
   } catch {
