@@ -4,10 +4,34 @@ declare global {
   var __fairwayPrisma__: PrismaClient | undefined;
 }
 
-const databaseUrl =
-  process.env.POSTGRES_URL_NON_POOLING ??
-  process.env.DATABASE_URL_UNPOOLED ??
-  process.env.DATABASE_URL;
+function resolveDatabaseUrl() {
+  const url =
+    process.env.POSTGRES_URL_NON_POOLING ??
+    process.env.DATABASE_URL_UNPOOLED ??
+    process.env.DATABASE_URL;
+
+  if (!url) {
+    return undefined;
+  }
+
+  try {
+    const parsed = new URL(url);
+
+    if (
+      parsed.hostname === "ep-soft-cell-an49z71n-pooler.c-6.us-east-1.aws.neon.tech" ||
+      parsed.hostname === "ep-soft-cell-an49z71n.c-6.us-east-1.aws.neon.tech"
+    ) {
+      parsed.hostname = "ep-soft-cell-an49z71n-ddq.c-6.us-east-1.aws.neon.tech";
+    }
+
+    parsed.searchParams.set("connect_timeout", "30");
+    return parsed.toString();
+  } catch {
+    return url;
+  }
+}
+
+const databaseUrl = resolveDatabaseUrl();
 
 export const db =
   globalThis.__fairwayPrisma__ ??
