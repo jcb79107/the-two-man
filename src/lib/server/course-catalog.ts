@@ -419,6 +419,32 @@ async function searchStoredCourseCatalog(query: { name: string; state?: string }
     .slice(0, MAX_STORED_SEARCH_RESULTS);
 }
 
+function dedupeCourseCatalogResults<
+  T extends {
+    id: string;
+    name: string;
+    city: string | null;
+    state: string | null;
+  }
+>(courses: T[]) {
+  const seenKeys = new Set<string>();
+
+  return courses.filter((course) => {
+    const key = [
+      normalizeText(course.name),
+      normalizeText(course.city),
+      course.state?.toUpperCase() ?? ""
+    ].join(":");
+
+    if (seenKeys.has(key)) {
+      return false;
+    }
+
+    seenKeys.add(key);
+    return true;
+  });
+}
+
 async function upsertCourseLookupResult(result: CourseLookupResult) {
   const providerKey = normalizeProviderKey(result.provider, result.externalCourseId);
   const existingCourse = await db.course.findUnique({
@@ -581,12 +607,17 @@ export async function searchCourseCatalog(query: { name: string; state?: string 
   }
 
   if (persistedCourses.length > 0) {
+    const storedCourses = await searchStoredCourseCatalog(query);
+
     return serializeCourses(
-      persistedCourses.filter(
-        (
-          course
-        ): course is NonNullable<typeof course> => Boolean(course)
-      )
+      dedupeCourseCatalogResults([
+        ...persistedCourses.filter(
+          (
+            course
+          ): course is NonNullable<typeof course> => Boolean(course)
+        ),
+        ...storedCourses
+      ]).slice(0, MAX_STORED_SEARCH_RESULTS)
     );
   }
 
