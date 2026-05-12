@@ -430,11 +430,16 @@ function dedupeCourseCatalogResults<
   const seenKeys = new Set<string>();
 
   return courses.filter((course) => {
-    const key = [
-      normalizeText(course.name),
-      normalizeText(course.city),
-      course.state?.toUpperCase() ?? ""
-    ].join(":");
+    const normalizedName = normalizeText(course.name);
+    const routing = getNamedRouting(course.name);
+    const key =
+      normalizedName.includes("northmoor") && routing
+        ? ["northmoor", routing, course.state?.toUpperCase() ?? ""].join(":")
+        : [
+            normalizedName,
+            normalizeText(course.city),
+            course.state?.toUpperCase() ?? ""
+          ].join(":");
 
     if (seenKeys.has(key)) {
       return false;
@@ -608,20 +613,29 @@ export async function searchCourseCatalog(query: { name: string; state?: string 
 
   if (persistedCourses.length > 0) {
     const storedCourses = await searchStoredCourseCatalog(query);
+    const courses = dedupeCourseCatalogResults([
+      ...persistedCourses.filter(
+        (
+          course
+        ): course is NonNullable<typeof course> => Boolean(course)
+      ),
+      ...storedCourses
+    ]);
+    const fullScorecardCourses = courses.filter((course) =>
+      course.tees.some((tee) => tee.holes.length === 18)
+    );
 
     return serializeCourses(
-      dedupeCourseCatalogResults([
-        ...persistedCourses.filter(
-          (
-            course
-          ): course is NonNullable<typeof course> => Boolean(course)
-        ),
-        ...storedCourses
-      ]).slice(0, MAX_STORED_SEARCH_RESULTS)
+      (fullScorecardCourses.length > 0 ? fullScorecardCourses : courses).slice(0, MAX_STORED_SEARCH_RESULTS)
     );
   }
 
-  return serializeCourses(await searchStoredCourseCatalog(query));
+  const storedCourses = await searchStoredCourseCatalog(query);
+  const fullScorecardCourses = storedCourses.filter((course) =>
+    course.tees.some((tee) => tee.holes.length === 18)
+  );
+
+  return serializeCourses(fullScorecardCourses.length > 0 ? fullScorecardCourses : storedCourses);
 }
 
 export async function getStoredCourseCatalog() {
