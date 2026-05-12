@@ -1137,7 +1137,6 @@ export function PrivateMatchWorkspace({
           throw new Error("No matching course was found. Try a broader name or add the state.");
         }
 
-        const mergedCourses = mergeCourses(data.courses, courses);
         const coursesWithTeeData = courses.filter((course) => course.tees.length > 0);
 
         setData((current) => ({
@@ -1145,21 +1144,16 @@ export function PrivateMatchWorkspace({
           courses: mergeCourses(current.courses, courses)
         }));
 
-        if (courses.length === 1 && coursesWithTeeData.length === 1) {
-          applySelectedCourse(courses[0].id, mergedCourses);
-          setCourseSearchResults([]);
-        } else {
-          setCourseId("");
-          setSetupConfirmationChecked(false);
-          setManualTeeHoles({});
-          setSetupPlayers((current) =>
-            current.map((player) => ({
-              ...player,
-              teeId: ""
-            }))
-          );
-          setCourseSearchResults(courses);
-        }
+        setCourseId("");
+        setSetupConfirmationChecked(false);
+        setManualTeeHoles({});
+        setSetupPlayers((current) =>
+          current.map((player) => ({
+            ...player,
+            teeId: ""
+          }))
+        );
+        setCourseSearchResults(courses);
 
         setCourseSearchFailed(false);
         setCourseSearchNeedsManual(coursesWithTeeData.length === 0);
