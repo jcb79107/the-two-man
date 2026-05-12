@@ -4,6 +4,7 @@
 node_modules
 .env
 .env.local
+.env.sentry-build-plugin
 coverage
 dist
 prisma/dev.db

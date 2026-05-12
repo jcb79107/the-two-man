@@ -549,6 +549,25 @@ export default async function AdminPage({
         }
       >
         <SectionCard
+          title="Production checks"
+          eyebrow="Monitoring"
+          action={
+            <a
+              href="/api/admin/sentry-test"
+              target="_blank"
+              rel="noreferrer"
+              className="rounded-full border border-fairway/15 bg-sand px-3 py-1.5 text-xs font-medium text-ink"
+            >
+              Test Sentry
+            </a>
+          }
+        >
+          <p className="text-sm leading-6 text-ink/66">
+            Sends one controlled admin-only error to Sentry so production monitoring can be verified after deploy.
+          </p>
+        </SectionCard>
+
+        <SectionCard
           title="Score rescue"
           action={
             <Link
