@@ -1581,10 +1581,10 @@ export function PrivateMatchWorkspace({
                 <div className="mt-4 space-y-3">
                   <div className="rounded-[18px] border border-fairway/12 bg-white px-3 py-3">
                     <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-fairway/70">
-                      {courseSearchResults.length} matches found
+                      {courseSearchResults.length} {courseSearchResults.length === 1 ? "course" : "courses"} found
                     </p>
                     <p className="mt-1 text-sm leading-5 text-ink/68">
-                      Pick the course by name and city before choosing tees.
+                      Pick the course before choosing tees.
                     </p>
                   </div>
                   {courseSearchResults.map((course) => (
@@ -1640,13 +1640,13 @@ export function PrivateMatchWorkspace({
           </div>
         ) : null}
 
-        {!courseLoaded ? (
+        {!courseLoaded && !(courseSearchCompleted && courseSearchResults.length > 0) ? (
           <div className="mt-4 rounded-[24px] border border-dashed border-mist bg-white px-4 py-5 text-sm leading-6 text-ink/68">
-            {courseSearchCompleted && courseSearchResults.length > 0
-              ? "Choose one of the matching courses above to unlock tees and handicap indexes."
-              : "Search for the course to unlock tees and handicap indexes."}
+            Search for the course to unlock tees and handicap indexes.
           </div>
-        ) : (
+        ) : null}
+
+        {courseLoaded && selectedCourse ? (
           <>
             <div className="mt-4 rounded-[24px] border border-mist bg-[#fbf7ec] p-4">
               <div className="flex items-start justify-between gap-3">
@@ -1863,7 +1863,7 @@ export function PrivateMatchWorkspace({
               </div>
             ) : null}
           </>
-        )}
+        ) : null}
       </section>
       ) : null}
 

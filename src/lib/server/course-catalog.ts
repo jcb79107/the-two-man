@@ -65,6 +65,13 @@ function normalizeText(value: string | null | undefined) {
     .trim();
 }
 
+function getNamedRouting(value: string | null | undefined) {
+  const text = normalizeText(value);
+  const routings = ["blue red", "red white", "white blue"];
+
+  return routings.find((routing) => text.includes(routing)) ?? null;
+}
+
 function getLookupScorecardHoles(result: CourseLookupResult) {
   const fullTee = result.tees.find((tee) => (tee.holes ?? []).length === 18);
 
@@ -91,6 +98,12 @@ function courseSimilarityScore(left: CourseLookupResult, right: CourseLookupResu
 
   const leftText = normalizeText([left.name, left.city].filter(Boolean).join(" "));
   const rightText = normalizeText([right.name, right.city].filter(Boolean).join(" "));
+  const leftRouting = getNamedRouting(left.name);
+  const rightRouting = getNamedRouting(right.name);
+
+  if (leftRouting && rightRouting && leftRouting !== rightRouting) {
+    return 0;
+  }
 
   if (!leftText || !rightText) {
     return 0;
@@ -108,7 +121,12 @@ function courseSimilarityScore(left: CourseLookupResult, right: CourseLookupResu
 }
 
 function mergeLookupResultGroup(group: CourseLookupResult[]) {
-  const base = group
+  const authoritativeGroup = group.some(
+    (result) => result.provider === "curated-chicagoland" && getNamedRouting(result.name)
+  )
+    ? group.filter((result) => result.provider === "curated-chicagoland" && getNamedRouting(result.name))
+    : group;
+  const base = authoritativeGroup
     .slice()
     .sort((left, right) => {
       const rightFullTees = right.tees.filter((tee) => (tee.holes ?? []).length === 18).length;
@@ -125,10 +143,10 @@ function mergeLookupResultGroup(group: CourseLookupResult[]) {
       return left.name.localeCompare(right.name);
     })[0];
   const scorecardHoles =
-    group.map(getLookupScorecardHoles).find((holes): holes is TeeHoleLike[] => Boolean(holes)) ?? null;
+    authoritativeGroup.map(getLookupScorecardHoles).find((holes): holes is TeeHoleLike[] => Boolean(holes)) ?? null;
   const teeByName = new Map<string, CourseLookupResult["tees"][number]>();
 
-  for (const result of group) {
+  for (const result of authoritativeGroup) {
     for (const tee of result.tees) {
       const key = `${normalizeText(tee.name)}:${tee.gender}`;
       const hydratedHoles =
@@ -159,7 +177,7 @@ function mergeLookupResultGroup(group: CourseLookupResult[]) {
     tees: Array.from(teeByName.values()).sort((left, right) => right.courseRating - left.courseRating),
     raw: {
       ...(base.raw ?? {}),
-      mergedProviders: group.map((result) => result.provider)
+      mergedProviders: authoritativeGroup.map((result) => result.provider)
     }
   };
 }
@@ -548,13 +566,7 @@ async function lookupCourses(query: { name: string; state?: string }) {
     }
   }
 
-  const stillNeedsFallbackData =
-    results.length === 0 ||
-    results.every((course) => course.tees.length === 0 || course.tees.every((tee) => (tee.holes ?? []).length !== 18));
-
-  if (stillNeedsFallbackData) {
-    results.push(...searchCuratedChicagolandCourses(query));
-  }
+  results.push(...searchCuratedChicagolandCourses(query));
 
   return mergeLookupResults(results);
 }

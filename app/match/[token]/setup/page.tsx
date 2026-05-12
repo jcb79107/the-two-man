@@ -32,9 +32,6 @@ export default async function PrivateMatchSetupPage({
               {dbData.match.awayTeamName}
             </span>
           </div>
-          <p className="text-sm leading-6 text-ink/76">
-            Enter current indexes, pick the course and tees, then generate the live card.
-          </p>
         </div>
       </SectionCard>
       <PrivateMatchWorkspace initialData={dbData} pageMode="setup" />

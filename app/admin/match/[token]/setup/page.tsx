@@ -40,9 +40,6 @@ export default async function AdminMatchSetupPage({
               {dbData.match.awayTeamName}
             </span>
           </div>
-          <p className="text-sm leading-6 text-ink/76">
-            Enter current indexes, pick the course and tees, then generate the live card from admin.
-          </p>
         </div>
       </SectionCard>
       <PrivateMatchWorkspace
