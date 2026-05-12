@@ -427,9 +427,10 @@ function dedupeCourseCatalogResults<
     state: string | null;
   }
 >(courses: T[]) {
-  const seenKeys = new Set<string>();
+  const result: T[] = [];
+  const indexByKey = new Map<string, number>();
 
-  return courses.filter((course) => {
+  for (const course of courses) {
     const normalizedName = normalizeText(course.name);
     const routing = getNamedRouting(course.name);
     const key =
@@ -440,14 +441,30 @@ function dedupeCourseCatalogResults<
             normalizeText(course.city),
             course.state?.toUpperCase() ?? ""
           ].join(":");
+    const existingIndex = indexByKey.get(key);
 
-    if (seenKeys.has(key)) {
-      return false;
+    if (existingIndex === undefined) {
+      indexByKey.set(key, result.length);
+      result.push(course);
+      continue;
     }
 
-    seenKeys.add(key);
-    return true;
-  });
+    const existingCourse = result[existingIndex];
+    const courseHasCleanNorthmoorName =
+      normalizedName.includes("northmoor") &&
+      Boolean(routing) &&
+      !normalizedName.match(/northmoor\s+northmoor/);
+    const existingHasCleanNorthmoorName =
+      normalizeText(existingCourse.name).includes("northmoor") &&
+      Boolean(getNamedRouting(existingCourse.name)) &&
+      !normalizeText(existingCourse.name).match(/northmoor\s+northmoor/);
+
+    if (courseHasCleanNorthmoorName && !existingHasCleanNorthmoorName) {
+      result[existingIndex] = course;
+    }
+  }
+
+  return result;
 }
 
 async function upsertCourseLookupResult(result: CourseLookupResult) {
