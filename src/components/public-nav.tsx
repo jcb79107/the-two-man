@@ -8,21 +8,29 @@ import { TwoManLogo } from "@/components/two-man-logo";
 
 const INSTAGRAM_URL = "https://www.instagram.com/twomantournament/";
 
-function InstagramIcon({ className = "h-4 w-4" }: { className?: string }) {
+function InstagramIcon({ className = "h-7 w-7" }: { className?: string }) {
   return (
     <svg
       aria-hidden="true"
       viewBox="0 0 24 24"
       className={className}
       fill="none"
-      stroke="currentColor"
       strokeLinecap="round"
       strokeLinejoin="round"
-      strokeWidth="2"
     >
-      <rect x="3" y="3" width="18" height="18" rx="5" />
-      <circle cx="12" cy="12" r="4" />
-      <circle cx="17.5" cy="6.5" r="0.9" fill="currentColor" stroke="none" />
+      <defs>
+        <linearGradient id="instagram-gradient" x1="3" x2="21" y1="21" y2="3" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#feda75" />
+          <stop offset="0.28" stopColor="#fa7e1e" />
+          <stop offset="0.52" stopColor="#d62976" />
+          <stop offset="0.78" stopColor="#962fbf" />
+          <stop offset="1" stopColor="#4f5bd5" />
+        </linearGradient>
+      </defs>
+      <rect x="2.25" y="2.25" width="19.5" height="19.5" rx="5.5" fill="url(#instagram-gradient)" />
+      <rect x="7" y="7" width="10" height="10" rx="3" stroke="white" strokeWidth="1.8" />
+      <circle cx="12" cy="12" r="2.6" stroke="white" strokeWidth="1.8" />
+      <circle cx="16.15" cy="7.85" r="1" fill="white" />
     </svg>
   );
 }
@@ -94,7 +102,7 @@ export function PublicNav({ slug, seasonIsLive = false }: PublicNavProps) {
               rel="noreferrer"
               aria-label="Open The Two Man on Instagram"
               title="Instagram"
-              className="focus-ring inline-flex h-9 w-9 items-center justify-center rounded-full text-ink/72 transition hover:bg-white/80 hover:text-ink"
+              className="focus-ring inline-flex h-9 w-9 items-center justify-center rounded-full transition hover:scale-105"
             >
               <InstagramIcon />
             </a>
@@ -107,7 +115,7 @@ export function PublicNav({ slug, seasonIsLive = false }: PublicNavProps) {
               rel="noreferrer"
               aria-label="Open The Two Man on Instagram"
               title="Instagram"
-              className="focus-ring inline-flex h-9 w-9 items-center justify-center rounded-full border border-fairway/15 bg-white/88 text-ink/82"
+              className="focus-ring inline-flex h-9 w-9 items-center justify-center rounded-full transition hover:scale-105"
             >
               <InstagramIcon />
             </a>
