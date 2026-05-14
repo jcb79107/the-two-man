@@ -8,6 +8,25 @@ import { TwoManLogo } from "@/components/two-man-logo";
 
 const INSTAGRAM_URL = "https://www.instagram.com/twomantournament/";
 
+function InstagramIcon({ className = "h-4 w-4" }: { className?: string }) {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      className={className}
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="2"
+    >
+      <rect x="3" y="3" width="18" height="18" rx="5" />
+      <circle cx="12" cy="12" r="4" />
+      <circle cx="17.5" cy="6.5" r="0.9" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
 interface PublicNavProps {
   slug: string;
   seasonIsLive?: boolean;
@@ -73,9 +92,11 @@ export function PublicNav({ slug, seasonIsLive = false }: PublicNavProps) {
               href={INSTAGRAM_URL}
               target="_blank"
               rel="noreferrer"
-              className="focus-ring rounded-full px-4 py-2 text-sm font-medium text-ink/72 transition hover:bg-white/80 hover:text-ink"
+              aria-label="Open The Two Man on Instagram"
+              title="Instagram"
+              className="focus-ring inline-flex h-9 w-9 items-center justify-center rounded-full text-ink/72 transition hover:bg-white/80 hover:text-ink"
             >
-              Instagram
+              <InstagramIcon />
             </a>
           </nav>
 
@@ -84,9 +105,11 @@ export function PublicNav({ slug, seasonIsLive = false }: PublicNavProps) {
               href={INSTAGRAM_URL}
               target="_blank"
               rel="noreferrer"
-              className="focus-ring rounded-full border border-fairway/15 bg-white/88 px-3 py-1.5 text-xs font-medium text-ink/82"
+              aria-label="Open The Two Man on Instagram"
+              title="Instagram"
+              className="focus-ring inline-flex h-9 w-9 items-center justify-center rounded-full border border-fairway/15 bg-white/88 text-ink/82"
             >
-              Instagram
+              <InstagramIcon />
             </a>
             <Link
               href={ROUTES.tournamentRules(slug)}
