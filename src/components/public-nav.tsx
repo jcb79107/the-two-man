@@ -6,6 +6,8 @@ import { clsx } from "clsx";
 import { ROUTES } from "@/lib/api/routes";
 import { TwoManLogo } from "@/components/two-man-logo";
 
+const INSTAGRAM_URL = "https://www.instagram.com/twomantournament/";
+
 interface PublicNavProps {
   slug: string;
   seasonIsLive?: boolean;
@@ -67,14 +69,32 @@ export function PublicNav({ slug, seasonIsLive = false }: PublicNavProps) {
                 </Link>
               );
             })}
+            <a
+              href={INSTAGRAM_URL}
+              target="_blank"
+              rel="noreferrer"
+              className="focus-ring rounded-full px-4 py-2 text-sm font-medium text-ink/72 transition hover:bg-white/80 hover:text-ink"
+            >
+              Instagram
+            </a>
           </nav>
 
-          <Link
-            href={ROUTES.tournamentRules(slug)}
-            className="focus-ring rounded-full border border-fairway/15 bg-white/88 px-3 py-1.5 text-xs font-medium text-ink/82 md:hidden"
-          >
-            Rules
-          </Link>
+          <div className="flex items-center gap-2 md:hidden">
+            <a
+              href={INSTAGRAM_URL}
+              target="_blank"
+              rel="noreferrer"
+              className="focus-ring rounded-full border border-fairway/15 bg-white/88 px-3 py-1.5 text-xs font-medium text-ink/82"
+            >
+              Instagram
+            </a>
+            <Link
+              href={ROUTES.tournamentRules(slug)}
+              className="focus-ring rounded-full border border-fairway/15 bg-white/88 px-3 py-1.5 text-xs font-medium text-ink/82"
+            >
+              Rules
+            </Link>
+          </div>
         </div>
       </header>
 
