@@ -18,6 +18,48 @@ const seasonTimeline = [
   { month: "September", label: "Championship", detail: "Final match decides The Two Man champion." }
 ] as const;
 
+const ruleSummaryCards = [
+  { label: "Format", value: "2-man net better-ball" },
+  { label: "Match", value: "18 holes" },
+  { label: "Pods", value: "6 pods of 3 teams" },
+  { label: "Playoffs", value: "6 winners + 2 wild cards" }
+] as const;
+
+const scoringCards = [
+  {
+    title: "Win a hole",
+    eyebrow: "Hole scoring",
+    body: "Compare each team's lowest net score on the hole. Lower team net wins the hole.",
+    points: ["Win = 1 point", "Tie = 0.5 points each", "Loss = 0 points"]
+  },
+  {
+    title: "Win a match",
+    eyebrow: "Pod play",
+    body: "Most hole points after 18 holes wins the match. All hole points still matter for standings.",
+    points: ["Pod matches may finish tied", "Every team plays two pod matches", "The app calculates the result from gross scores"]
+  },
+  {
+    title: "Win a pod",
+    eyebrow: "Advance",
+    body: "A 2-0 team wins its pod. If teams are tied, standings tiebreakers decide the pod winner.",
+    points: ["Match record first", "Then hole points and holes won", "Then lowest cumulative net better-ball"]
+  },
+  {
+    title: "Win a playoff match",
+    eyebrow: "Bracket",
+    body: "Playoff matches use the same scoring, but they cannot end tied.",
+    points: ["Sudden death if feasible", "Otherwise net scorecard playoff from 18 backward", "Coin flip only if still tied"]
+  }
+] as const;
+
+const handicapRules = [
+  "Each player uses 90% of Course Handicap.",
+  "Lowest handicap player plays off 0.",
+  "Other players receive strokes from the difference.",
+  "Strokes follow the scorecard handicap row.",
+  "Maximum 1 stroke per hole per player."
+] as const;
+
 const matchChecklist = [
   "One player submits the scorecard for the group.",
   "Confirm handicap indexes, course, and tees played are correct.",
@@ -25,110 +67,36 @@ const matchChecklist = [
   "Post gross scores to GHIN as competition rounds."
 ] as const;
 
+const matchProcedures = [
+  "The side that won the previous hole has the honor. If the hole was halved, the order carries over.",
+  "After tee shots, the side farther from the hole is away unless both teams agree to ready golf.",
+  "A side may concede a stroke, hole, or match. A clear concession cannot be declined or taken back.",
+  "Resolve rules questions before moving on when possible. Use the live rules judge for on-course disputes."
+] as const;
+
 const faqGroups = [
   {
-    title: "Basics",
+    title: "Common questions",
     items: [
       {
-        question: "What is the format?",
-        answer: "2-man net better-ball match play over 18 holes."
-      },
-      {
-        question: "How many teams are in it?",
-        answer: "18 teams split into 6 pods of 3."
-      },
-      {
-        question: "How many pod matches does each team play?",
-        answer: "Two."
-      }
-    ]
-  },
-  {
-    title: "Match play etiquette",
-    items: [
-      {
-        question: "Who tees off first?",
-        answer: "The team that won the previous hole has the honor on the next tee. If the hole was halved, the order carries over."
-      },
-      {
-        question: "Who plays first after the tee shot?",
-        answer: "The side farther from the hole is away and should play first unless both teams agree to ready golf to keep pace."
-      },
-      {
-        question: "Can putts or holes be conceded?",
-        answer: "Yes. A side can concede a stroke, hole, or match. Once a concession is clearly made, it cannot be declined or taken back."
-      },
-      {
-        question: "What etiquette should we follow?",
-        answer: "Be clear about concessions, mark balls when needed, announce provisional balls, repair the course, keep pace, and settle questions before moving on when possible."
-      }
-    ]
-  },
-  {
-    title: "Standings",
-    items: [
-      {
-        question: "How are pod standings sorted?",
-        answer: "Match record, hole points, holes won, lowest cumulative net better-ball score, then coin flip."
-      },
-      {
-        question: "How do wild cards work?",
-        answer: "The top 2 non-pod winners advance to the playoffs."
-      },
-      {
-        question: "What does each hole count for?",
-        answer: "Win = 1 point, tie = 0.5 each, loss = 0."
-      }
-    ]
-  },
-  {
-    title: "Handicaps",
-    items: [
-      {
-        question: "What handicap allowance are we using?",
-        answer: "90% of Course Handicap."
-      },
-      {
-        question: "How are strokes allocated?",
-        answer: "Lowest handicap player plays off 0. Everyone else gets strokes based on the difference."
-      },
-      {
-        question: "Is there a stroke cap per hole?",
-        answer: "Yes. Maximum 1 stroke per hole per player."
-      }
-    ]
-  },
-  {
-    title: "Playoffs",
-    items: [
-      {
-        question: "Who makes the bracket?",
-        answer: "6 pod winners and 2 wild cards."
+        question: "How are wild cards picked?",
+        answer: "The top 2 non-pod winners advance. Wild cards are ranked by match record, hole points, holes won, lowest net better-ball score, then coin flip."
       },
       {
         question: "How is the bracket seeded?",
-        answer: "1 vs 8, 2 vs 7, 3 vs 6, 4 vs 5."
+        answer: "Pod winners are seeds 1-6 using the same standings criteria. Wild cards are seeds 7-8."
       },
       {
         question: "Who picks the playoff course?",
-        answer: "The higher seed."
-      }
-    ]
-  },
-  {
-    title: "Edge cases",
-    items: [
-      {
-        question: "How are tied playoff matches decided?",
-        answer: "Sudden death if feasible, otherwise a net scorecard playoff from hole 18 backward, then coin flip."
+        answer: "The higher seed gets to pick the course."
       },
       {
         question: "What happens in a forfeit?",
-        answer: "Opponent wins, gets 12 hole points and +6 holes won, and no best-ball score is recorded."
+        answer: "The opponent wins, receives 12 hole points and +6 holes won, and no best-ball score is recorded."
       },
       {
         question: "What needs to be submitted after a match?",
-        answer: "One player submits the completed scorecard with correct handicap indexes, course, tees, and gross scores for every player. The app handles the match result and scoring math from there."
+        answer: "One player submits the completed scorecard with correct handicap indexes, course, tees, and gross scores. The app handles the result and scoring math."
       }
     ]
   }
@@ -166,25 +134,19 @@ export default async function TournamentRulesPage({
             </a>
           }
         >
-          <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
-            <div className="rounded-[18px] bg-sand px-3 py-3">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-fairway/68">Format</p>
-              <p className="mt-1 text-sm font-semibold leading-tight text-ink">2-man net better-ball</p>
-            </div>
-            <div className="rounded-[18px] bg-sand px-3 py-3">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-fairway/68">Field</p>
-              <p className="mt-1 text-sm font-semibold leading-tight text-ink">18 teams, 6 pods</p>
-            </div>
-            <div className="rounded-[18px] bg-sand px-3 py-3">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-fairway/68">Allowance</p>
-              <p className="mt-1 text-sm font-semibold leading-tight text-ink">
-                90% course handicap
-              </p>
-            </div>
-            <div className="rounded-[18px] bg-sand px-3 py-3">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-fairway/68">Playoffs</p>
-              <p className="mt-1 text-sm font-semibold leading-tight text-ink">6 winners + 2 wild cards</p>
-            </div>
+          <p className="mt-3 text-sm leading-6 text-ink/72">
+            The Two Man is 2-man net better-ball match play. Use this page to score the match,
+            understand advancement, and handle common on-course questions.
+          </p>
+          <div className="mt-4 grid grid-cols-2 gap-2">
+            {ruleSummaryCards.map((item) => (
+              <div key={item.label} className="rounded-[18px] bg-sand px-3 py-3">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-fairway/68">
+                  {item.label}
+                </p>
+                <p className="mt-1 text-sm font-semibold leading-tight text-ink">{item.value}</p>
+              </div>
+            ))}
           </div>
         </SectionCard>
 
@@ -207,6 +169,58 @@ export default async function TournamentRulesPage({
             <span className="text-xs font-semibold uppercase tracking-[0.18em] text-white/78">Open</span>
           </a>
         </SectionCard>
+
+        <SectionCard title="Scoring & advancement" eyebrow="How to win">
+          <div className="grid gap-3">
+            {scoringCards.map((item) => (
+              <article key={item.title} className="rounded-[20px] border border-mist bg-white px-4 py-4">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-fairway/68">
+                  {item.eyebrow}
+                </p>
+                <h2 className="mt-1 text-xl font-semibold leading-tight text-ink">{item.title}</h2>
+                <p className="mt-2 text-sm leading-6 text-ink/70">{item.body}</p>
+                <div className="mt-3 grid gap-2">
+                  {item.points.map((point) => (
+                    <div
+                      key={point}
+                      className="rounded-[16px] border border-fairway/10 bg-[#f7faf7] px-3 py-2 text-sm font-semibold leading-5 text-ink/82"
+                    >
+                      {point}
+                    </div>
+                  ))}
+                </div>
+              </article>
+            ))}
+          </div>
+        </SectionCard>
+
+        <section className="grid gap-4 md:grid-cols-2">
+          <SectionCard title="Handicaps & tees" eyebrow="Before play">
+            <div className="grid gap-2">
+              {handicapRules.map((item) => (
+                <div
+                  key={item}
+                  className="rounded-[18px] border border-mist bg-white px-3 py-3 text-sm font-semibold leading-6 text-ink/82"
+                >
+                  {item}
+                </div>
+              ))}
+            </div>
+          </SectionCard>
+
+          <SectionCard title="Match procedures" eyebrow="During play">
+            <div className="grid gap-2">
+              {matchProcedures.map((item) => (
+                <div
+                  key={item}
+                  className="rounded-[18px] border border-mist bg-white px-3 py-3 text-sm font-semibold leading-6 text-ink/82"
+                >
+                  {item}
+                </div>
+              ))}
+            </div>
+          </SectionCard>
+        </section>
 
         <section className="grid gap-4 md:grid-cols-2">
           <SectionCard title="Season flow" eyebrow="May to September">
@@ -252,8 +266,8 @@ export default async function TournamentRulesPage({
           </SectionCard>
         </section>
 
-        <SectionCard title="Rule book" eyebrow="Quick answers">
-          <div className="grid gap-3 xl:grid-cols-2">
+        <SectionCard title="Quick answers" eyebrow="Reference">
+          <div className="grid gap-3">
             {faqGroups.map((group) => (
               <div key={group.title} className="overflow-hidden rounded-[20px] border border-mist bg-white">
                 <div className="border-b border-mist bg-sand px-4 py-3">
