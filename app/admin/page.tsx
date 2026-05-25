@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { unstable_noStore as noStore } from "next/cache";
+import { AdminInstagramGraphicGenerator } from "@/components/admin-instagram-graphic-generator";
 import { AdminMatchOpsList } from "@/components/admin-match-ops-list";
 import { FormSubmitButton } from "@/components/form-submit-button";
 import { LocalTimestamp } from "@/components/local-timestamp";
@@ -7,6 +8,7 @@ import { SectionCard } from "@/components/section-card";
 import { TwoManLogo } from "@/components/two-man-logo";
 import { isAdminAuthConfigured, isAdminAuthenticated } from "@/lib/server/admin-auth";
 import { getAdminDashboardData } from "@/lib/server/admin";
+import { getAdminGraphicRecaps } from "@/lib/server/admin-graphics";
 import { ROUTES } from "@/lib/api/routes";
 import {
   adminLoginAction,
@@ -15,12 +17,13 @@ import {
 
 export const dynamic = "force-dynamic";
 
-type AdminSectionKey = "overview" | "email-manager" | "scorecards";
+type AdminSectionKey = "overview" | "email-manager" | "scorecards" | "graphics";
 
 function normalizeAdminSection(value?: string): AdminSectionKey {
   switch (value) {
     case "email-manager":
     case "scorecards":
+    case "graphics":
       return value;
     case "match-ops":
       return "scorecards";
@@ -209,12 +212,13 @@ function AdminSectionNav({
   const links = [
     { section: "overview", label: "Activity" },
     { section: "email-manager", label: "Email manager", mobileLabel: "Emails" },
-    { section: "scorecards", label: "Scorecards", mobileLabel: "Cards" }
+    { section: "scorecards", label: "Scorecards", mobileLabel: "Cards" },
+    { section: "graphics", label: "Graphics" }
   ] satisfies Array<{ section: AdminSectionKey; label: string; mobileLabel?: string }>;
 
   return (
     <nav className="sticky top-3 z-20 rounded-[22px] border border-[#d8c07d]/45 bg-white/90 p-1 shadow-[0_12px_28px_rgba(17,32,23,0.1)] backdrop-blur">
-      <div className="grid grid-cols-3 gap-1.5">
+      <div className="grid grid-cols-4 gap-1.5">
         {links.map((link) => {
           const active = link.section === activeSection;
 
@@ -307,6 +311,7 @@ export default async function AdminPage({
   }
 
   const data = await getAdminDashboardData();
+  const graphicRecaps = await getAdminGraphicRecaps();
   const activeSection = normalizeAdminSection(params?.section);
   const searchQuery = (params?.q ?? "").trim().toLowerCase();
   const requestedLimit = Number.parseInt(params?.limit ?? "12", 10);
@@ -334,7 +339,9 @@ export default async function AdminPage({
   const searchPlaceholder =
     activeSection === "email-manager"
       ? "Search invites, teams, pods, or missing emails"
-      : "Search scorecards, teams, pods, or status";
+      : activeSection === "graphics"
+        ? "Search completed matches"
+        : "Search scorecards, teams, pods, or status";
   const activityItems = [
     ...data.recentAuditLog
       .filter((entry) => {
@@ -517,7 +524,7 @@ export default async function AdminPage({
 
       <AdminSectionNav activeSection={activeSection} />
 
-      {activeSection !== "overview" ? (
+      {activeSection !== "overview" && activeSection !== "graphics" ? (
         <form className="grid gap-3 rounded-[24px] border border-white/70 bg-[#f6efe1]/92 p-4 shadow-[0_16px_34px_rgba(17,32,23,0.08)] sm:grid-cols-[1fr_auto_auto]">
           <input type="hidden" name="section" value={activeSection} />
           <input
@@ -691,6 +698,15 @@ export default async function AdminPage({
           ) : (
             <AdminMatchOpsList rows={matchOpsRows} mode="scorecards" />
           )}
+        </SectionCard>
+      </section>
+
+      <section className={activeSection === "graphics" ? "grid gap-4" : "hidden"}>
+        <SectionCard
+          title="Instagram graphics"
+          eyebrow="Post-match recap"
+        >
+          <AdminInstagramGraphicGenerator recaps={graphicRecaps} />
         </SectionCard>
       </section>
 
