@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  buildMatchPlayerSnapshots,
   calculateCourseHandicap,
   calculatePlayingHandicap,
   scoreForfeit,
@@ -112,6 +113,77 @@ describe("handicap calculations", () => {
   it("applies the 90% allowance for playing handicap", () => {
     expect(calculatePlayingHandicap(14, 0.9)).toBe(13);
   });
+
+  it("applies handicap allowances before rounding Course Handicap", () => {
+    const holes = Array.from({ length: 18 }, (_, index) => ({
+      holeNumber: index + 1,
+      par: 4,
+      strokeIndex: index + 1
+    }));
+    const result = buildMatchPlayerSnapshots({
+      allowancePct: 0.85,
+      players: [
+        {
+          playerId: "usga-a",
+          playerName: "USGA A",
+          teamId: "team-a",
+          handicapIndex: 8.6,
+          teeId: "tee",
+          teeName: "Example",
+          slope: 125,
+          courseRating: 71,
+          par: 71,
+          holes
+        },
+        {
+          playerId: "usga-b",
+          playerName: "USGA B",
+          teamId: "team-a",
+          handicapIndex: 10.3,
+          teeId: "tee",
+          teeName: "Example",
+          slope: 125,
+          courseRating: 71,
+          par: 71,
+          holes
+        },
+        {
+          playerId: "low-a",
+          playerName: "Low A",
+          teamId: "team-b",
+          handicapIndex: 0,
+          teeId: "tee",
+          teeName: "Example",
+          slope: 125,
+          courseRating: 71,
+          par: 71,
+          holes
+        },
+        {
+          playerId: "low-b",
+          playerName: "Low B",
+          teamId: "team-b",
+          handicapIndex: 0,
+          teeId: "tee",
+          teeName: "Example",
+          slope: 125,
+          courseRating: 71,
+          par: 71,
+          holes
+        }
+      ]
+    });
+    const byPlayerId = new Map(result.players.map((player) => [player.playerId, player]));
+
+    expect(byPlayerId.get("usga-a")).toMatchObject({
+      courseHandicap: 10,
+      playingHandicap: 8
+    });
+    expect(byPlayerId.get("usga-b")).toMatchObject({
+      courseHandicap: 11,
+      playingHandicap: 10
+    });
+  });
 });
 
 describe("match scoring", () => {
@@ -191,6 +263,98 @@ describe("match scoring", () => {
     expect(tenIndexPlayer?.strokesByHole[1]).toBe(1);
     expect(tenIndexPlayer?.strokesByHole[9]).toBe(1);
     expect(tenIndexPlayer?.strokesByHole[10]).toBe(0);
+  });
+
+  it("matches GHIN-style 90% four-ball match play strokes from unrounded Course Handicap", () => {
+    const holes = Array.from({ length: 18 }, (_, index) => ({
+      holeNumber: index + 1,
+      par: 4,
+      strokeIndex: index + 1
+    }));
+    const result = scoreMatch({
+      players: [
+        {
+          playerId: "jon-stone",
+          playerName: "Jonathan Stone",
+          teamId: "stone",
+          handicapIndex: 16.2,
+          teeId: "sunset-blue",
+          teeName: "Blue",
+          slope: 130,
+          courseRating: 70.7,
+          par: 72,
+          holes
+        },
+        {
+          playerId: "aaron-stone",
+          playerName: "Aaron Stone",
+          teamId: "stone",
+          handicapIndex: 15.6,
+          teeId: "sunset-blue",
+          teeName: "Blue",
+          slope: 130,
+          courseRating: 70.7,
+          par: 72,
+          holes
+        },
+        {
+          playerId: "ryan-rabin",
+          playerName: "Ryan Rabin",
+          teamId: "rabin-taitz",
+          handicapIndex: 22.4,
+          teeId: "sunset-blue",
+          teeName: "Blue",
+          slope: 130,
+          courseRating: 70.7,
+          par: 72,
+          holes
+        },
+        {
+          playerId: "jason-taitz",
+          playerName: "Jason Taitz",
+          teamId: "rabin-taitz",
+          handicapIndex: 15,
+          teeId: "sunset-blue",
+          teeName: "Blue",
+          slope: 130,
+          courseRating: 70.7,
+          par: 72,
+          holes
+        }
+      ],
+      holeScores: holes.map((hole) => ({
+        holeNumber: hole.holeNumber,
+        scores: {
+          "jon-stone": 4,
+          "aaron-stone": 4,
+          "ryan-rabin": 4,
+          "jason-taitz": 4
+        }
+      }))
+    });
+    const byPlayerId = new Map(result.players.map((player) => [player.playerId, player]));
+
+    expect(result.lowPlayerId).toBe("jason-taitz");
+    expect(byPlayerId.get("ryan-rabin")).toMatchObject({
+      courseHandicap: 24,
+      playingHandicap: 22,
+      matchStrokeCount: 8
+    });
+    expect(byPlayerId.get("jon-stone")).toMatchObject({
+      courseHandicap: 17,
+      playingHandicap: 16,
+      matchStrokeCount: 2
+    });
+    expect(byPlayerId.get("aaron-stone")).toMatchObject({
+      courseHandicap: 17,
+      playingHandicap: 15,
+      matchStrokeCount: 1
+    });
+    expect(byPlayerId.get("jason-taitz")).toMatchObject({
+      courseHandicap: 16,
+      playingHandicap: 14,
+      matchStrokeCount: 0
+    });
   });
 });
 

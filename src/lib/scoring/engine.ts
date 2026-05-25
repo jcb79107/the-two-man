@@ -16,16 +16,22 @@ function roundHalfAwayFromZero(value: number): number {
   return sign * Math.floor(Math.abs(value) + 0.5);
 }
 
+function calculateUnroundedCourseHandicap(input: {
+  handicapIndex: number;
+  slope: number;
+  courseRating: number;
+  par: number;
+}): number {
+  return (input.handicapIndex * input.slope) / 113 + (input.courseRating - input.par);
+}
+
 export function calculateCourseHandicap(input: {
   handicapIndex: number;
   slope: number;
   courseRating: number;
   par: number;
 }): number {
-  const raw =
-    (input.handicapIndex * input.slope) / 113 + (input.courseRating - input.par);
-
-  return roundHalfAwayFromZero(raw);
+  return roundHalfAwayFromZero(calculateUnroundedCourseHandicap(input));
 }
 
 export function calculatePlayingHandicap(
@@ -41,13 +47,15 @@ function buildPlayerSnapshot(
   maxStrokeHoles: number,
   allowancePct: number
 ): PlayerHandicapSnapshot {
-  const courseHandicap = calculateCourseHandicap({
+  const courseHandicapInput = {
     handicapIndex: player.handicapIndex,
     slope: player.slope,
     courseRating: player.courseRating,
     par: player.par
-  });
-  const playingHandicap = calculatePlayingHandicap(courseHandicap, allowancePct);
+  };
+  const unroundedCourseHandicap = calculateUnroundedCourseHandicap(courseHandicapInput);
+  const courseHandicap = roundHalfAwayFromZero(unroundedCourseHandicap);
+  const playingHandicap = roundHalfAwayFromZero(unroundedCourseHandicap * allowancePct);
   const matchStrokeCount = Math.max(
     0,
     Math.min(maxStrokeHoles, playingHandicap - lowPlayingHandicap)
@@ -148,14 +156,13 @@ export function buildMatchPlayerSnapshots(input: {
     holeCount * (input.maxStrokesPerHole ?? DEFAULT_MAX_STROKES_PER_HOLE)
   );
   const playingHandicaps = input.players.map((player) =>
-    calculatePlayingHandicap(
-      calculateCourseHandicap({
+    roundHalfAwayFromZero(
+      calculateUnroundedCourseHandicap({
         handicapIndex: player.handicapIndex,
         slope: player.slope,
         courseRating: player.courseRating,
         par: player.par
-      }),
-      allowancePct
+      }) * allowancePct
     )
   );
   const lowPlayingHandicap = Math.min(...playingHandicaps);
