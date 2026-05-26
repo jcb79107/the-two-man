@@ -172,7 +172,18 @@ function formatEditableVsPar(value: number | null | undefined) {
 
 function scorecardDisplayName(name: string) {
   const parts = name.trim().split(/\s+/).filter(Boolean);
-  return parts.at(-1) ?? name;
+  const firstName = parts.at(0);
+  const lastName = parts.at(-1);
+
+  if (!firstName || !lastName) {
+    return name;
+  }
+
+  if (firstName === lastName) {
+    return lastName;
+  }
+
+  return `${firstName.charAt(0).toUpperCase()}. ${lastName}`;
 }
 
 function formatScorecardHandicapIndex(value: number | null | undefined) {
@@ -2153,6 +2164,9 @@ export function PrivateMatchWorkspace({
                                       data-score-field="true"
                                       value={score}
                                       disabled={isScorecardReadOnly}
+                                      aria-label={`${scorecardDisplayName(
+                                        playerCard.player.playerName
+                                      )} gross score on hole ${holeNumber}`}
                                       onFocus={() => handleScoreFieldFocus(holeNumber)}
                                       onBlur={handleScoreFieldBlur}
                                       onChange={(event) =>
