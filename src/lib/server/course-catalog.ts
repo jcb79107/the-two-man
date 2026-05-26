@@ -366,9 +366,11 @@ async function searchStoredCourseCatalog(query: { name: string; state?: string }
     },
     include: {
       tees: {
-        orderBy: {
-          name: "asc"
-        },
+        orderBy: [
+          { gender: "asc" },
+          { courseRating: "desc" },
+          { name: "asc" }
+        ],
         include: {
           holes: {
             orderBy: {
@@ -581,9 +583,11 @@ async function upsertCourseLookupResult(result: CourseLookupResult) {
     },
     include: {
       tees: {
-        orderBy: {
-          name: "asc"
-        },
+        orderBy: [
+          { gender: "asc" },
+          { courseRating: "desc" },
+          { name: "asc" }
+        ],
         include: {
           holes: {
             orderBy: {
@@ -671,9 +675,11 @@ export async function getStoredCourseCatalog() {
     },
     include: {
       tees: {
-        orderBy: {
-          name: "asc"
-        },
+        orderBy: [
+          { gender: "asc" },
+          { courseRating: "desc" },
+          { name: "asc" }
+        ],
         include: {
           holes: {
             orderBy: {
