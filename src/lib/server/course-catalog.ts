@@ -121,11 +121,20 @@ function courseSimilarityScore(left: CourseLookupResult, right: CourseLookupResu
 }
 
 function mergeLookupResultGroup(group: CourseLookupResult[]) {
-  const authoritativeGroup = group.some(
+  const hasCuratedResult = group.some((result) => result.provider === "curated-chicagoland");
+  const hasCuratedNamedRouting = group.some(
     (result) => result.provider === "curated-chicagoland" && getNamedRouting(result.name)
-  )
-    ? group.filter((result) => result.provider === "curated-chicagoland" && getNamedRouting(result.name))
-    : group;
+  );
+  let authoritativeGroup = group;
+
+  if (hasCuratedNamedRouting) {
+    authoritativeGroup = group.filter(
+      (result) => result.provider === "curated-chicagoland" && getNamedRouting(result.name)
+    );
+  } else if (hasCuratedResult) {
+    authoritativeGroup = group.filter((result) => result.provider === "curated-chicagoland");
+  }
+
   const base = authoritativeGroup
     .slice()
     .sort((left, right) => {

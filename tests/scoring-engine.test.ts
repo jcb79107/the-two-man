@@ -364,26 +364,26 @@ describe("match scoring", () => {
     });
   });
 
-  it("keeps the Barron match from double-rounding Loewenstein's allowance", () => {
+  it("scores the Barron match correctly from Bryn Mawr Langford tees", () => {
     const holeMetadata = [
-      { holeNumber: 1, par: 4, strokeIndex: 12 },
-      { holeNumber: 2, par: 4, strokeIndex: 8 },
-      { holeNumber: 3, par: 4, strokeIndex: 14 },
+      { holeNumber: 1, par: 5, strokeIndex: 15 },
+      { holeNumber: 2, par: 4, strokeIndex: 5 },
+      { holeNumber: 3, par: 4, strokeIndex: 11 },
       { holeNumber: 4, par: 4, strokeIndex: 1 },
-      { holeNumber: 5, par: 4, strokeIndex: 10 },
-      { holeNumber: 6, par: 4, strokeIndex: 16 },
-      { holeNumber: 7, par: 4, strokeIndex: 6 },
-      { holeNumber: 8, par: 4, strokeIndex: 18 },
+      { holeNumber: 5, par: 5, strokeIndex: 7 },
+      { holeNumber: 6, par: 3, strokeIndex: 9 },
+      { holeNumber: 7, par: 4, strokeIndex: 17 },
+      { holeNumber: 8, par: 3, strokeIndex: 13 },
       { holeNumber: 9, par: 4, strokeIndex: 3 },
-      { holeNumber: 10, par: 4, strokeIndex: 11 },
-      { holeNumber: 11, par: 4, strokeIndex: 13 },
-      { holeNumber: 12, par: 4, strokeIndex: 15 },
-      { holeNumber: 13, par: 4, strokeIndex: 5 },
-      { holeNumber: 14, par: 4, strokeIndex: 9 },
-      { holeNumber: 15, par: 4, strokeIndex: 7 },
-      { holeNumber: 16, par: 4, strokeIndex: 17 },
+      { holeNumber: 10, par: 3, strokeIndex: 8 },
+      { holeNumber: 11, par: 4, strokeIndex: 16 },
+      { holeNumber: 12, par: 4, strokeIndex: 4 },
+      { holeNumber: 13, par: 5, strokeIndex: 6 },
+      { holeNumber: 14, par: 3, strokeIndex: 14 },
+      { holeNumber: 15, par: 5, strokeIndex: 10 },
+      { holeNumber: 16, par: 3, strokeIndex: 18 },
       { holeNumber: 17, par: 4, strokeIndex: 2 },
-      { holeNumber: 18, par: 4, strokeIndex: 4 }
+      { holeNumber: 18, par: 5, strokeIndex: 12 }
     ];
     const players = [
       {
@@ -412,10 +412,10 @@ describe("match scoring", () => {
       }
     ].map((player) => ({
       ...player,
-      teeId: "bryn-mawr-black",
-      teeName: "Black",
-      slope: 129,
-      courseRating: 72.1,
+      teeId: "bryn-mawr-langford-men",
+      teeName: "Langford",
+      slope: 130,
+      courseRating: 72.4,
       par: 72,
       holes: holeMetadata
     }));
@@ -446,20 +446,25 @@ describe("match scoring", () => {
 
     expect(byPlayerId.get("loewenstein")).toMatchObject({
       courseHandicap: 13,
+      playingHandicap: 12,
+      matchStrokeCount: 2
+    });
+    expect(byPlayerId.get("loewenstein")?.strokesByHole[4]).toBe(1);
+    expect(byPlayerId.get("loewenstein")?.strokesByHole[17]).toBe(1);
+    expect(byPlayerId.get("holway")).toMatchObject({
+      courseHandicap: 12,
       playingHandicap: 11,
       matchStrokeCount: 1
     });
-    expect(byPlayerId.get("loewenstein")?.strokesByHole[4]).toBe(1);
-    expect(byPlayerId.get("loewenstein")?.strokesByHole[17]).toBe(0);
     expect(byPlayerId.get("chase")).toMatchObject({
       courseHandicap: 14,
       playingHandicap: 13,
       matchStrokeCount: 3
     });
     expect(byPlayerId.get("chase")?.strokesByHole[17]).toBe(1);
-    expect(holeSeventeen?.winningTeamId).toBe("holway-chase");
-    expect(barronTeam?.totalPoints).toBe(8);
-    expect(holwayTeam?.totalPoints).toBe(10);
+    expect(holeSeventeen?.winningTeamId).toBeNull();
+    expect(barronTeam?.totalPoints).toBe(8.5);
+    expect(holwayTeam?.totalPoints).toBe(9.5);
   });
 });
 
