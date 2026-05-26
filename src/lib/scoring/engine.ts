@@ -34,11 +34,16 @@ export function calculateCourseHandicap(input: {
   return roundHalfAwayFromZero(calculateUnroundedCourseHandicap(input));
 }
 
-export function calculatePlayingHandicap(
-  courseHandicap: number,
-  allowancePct = DEFAULT_ALLOWANCE_PCT
-): number {
-  return roundHalfAwayFromZero(courseHandicap * allowancePct);
+export function calculatePlayingHandicap(input: {
+  handicapIndex: number;
+  slope: number;
+  courseRating: number;
+  par: number;
+  allowancePct?: number;
+}): number {
+  return roundHalfAwayFromZero(
+    calculateUnroundedCourseHandicap(input) * (input.allowancePct ?? DEFAULT_ALLOWANCE_PCT)
+  );
 }
 
 function buildPlayerSnapshot(

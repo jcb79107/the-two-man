@@ -111,7 +111,14 @@ describe("handicap calculations", () => {
   });
 
   it("applies the 90% allowance for playing handicap", () => {
-    expect(calculatePlayingHandicap(14, 0.9)).toBe(13);
+    expect(
+      calculatePlayingHandicap({
+        handicapIndex: 12.2,
+        slope: 129,
+        courseRating: 72.1,
+        par: 72
+      })
+    ).toBe(13);
   });
 
   it("applies handicap allowances before rounding Course Handicap", () => {
@@ -355,6 +362,104 @@ describe("match scoring", () => {
       playingHandicap: 14,
       matchStrokeCount: 0
     });
+  });
+
+  it("keeps the Barron match from double-rounding Loewenstein's allowance", () => {
+    const holeMetadata = [
+      { holeNumber: 1, par: 4, strokeIndex: 12 },
+      { holeNumber: 2, par: 4, strokeIndex: 8 },
+      { holeNumber: 3, par: 4, strokeIndex: 14 },
+      { holeNumber: 4, par: 4, strokeIndex: 1 },
+      { holeNumber: 5, par: 4, strokeIndex: 10 },
+      { holeNumber: 6, par: 4, strokeIndex: 16 },
+      { holeNumber: 7, par: 4, strokeIndex: 6 },
+      { holeNumber: 8, par: 4, strokeIndex: 18 },
+      { holeNumber: 9, par: 4, strokeIndex: 3 },
+      { holeNumber: 10, par: 4, strokeIndex: 11 },
+      { holeNumber: 11, par: 4, strokeIndex: 13 },
+      { holeNumber: 12, par: 4, strokeIndex: 15 },
+      { holeNumber: 13, par: 4, strokeIndex: 5 },
+      { holeNumber: 14, par: 4, strokeIndex: 9 },
+      { holeNumber: 15, par: 4, strokeIndex: 7 },
+      { holeNumber: 16, par: 4, strokeIndex: 17 },
+      { holeNumber: 17, par: 4, strokeIndex: 2 },
+      { holeNumber: 18, par: 4, strokeIndex: 4 }
+    ];
+    const players = [
+      {
+        playerId: "barron",
+        playerName: "Judd Barron",
+        teamId: "barron-loewenstein",
+        handicapIndex: 9.6
+      },
+      {
+        playerId: "loewenstein",
+        playerName: "Judd Loewenstein",
+        teamId: "barron-loewenstein",
+        handicapIndex: 10.9
+      },
+      {
+        playerId: "holway",
+        playerName: "Bradley Holway",
+        teamId: "holway-chase",
+        handicapIndex: 9.8
+      },
+      {
+        playerId: "chase",
+        playerName: "Dylan Chase",
+        teamId: "holway-chase",
+        handicapIndex: 12.2
+      }
+    ].map((player) => ({
+      ...player,
+      teeId: "bryn-mawr-black",
+      teeName: "Black",
+      slope: 129,
+      courseRating: 72.1,
+      par: 72,
+      holes: holeMetadata
+    }));
+    const grossScores: Record<string, number[]> = {
+      barron: [5, 5, 4, 4, 6, 3, 5, 3, 4, 4, 5, 4, 6, 4, 6, 4, 5, 5],
+      loewenstein: [5, 4, 5, 5, 8, 4, 4, 4, 5, 4, 4, 6, 6, 3, 6, 3, 5, 7],
+      holway: [7, 6, 5, 4, 5, 4, 5, 5, 6, 5, 4, 4, 5, 5, 5, 3, 6, 5],
+      chase: [6, 4, 5, 3, 7, 4, 3, 4, 5, 3, 4, 4, 6, 4, 5, 3, 5, 6]
+    };
+    const result = scoreMatch({
+      players,
+      holeScores: holeMetadata.map((hole, index) => ({
+        holeNumber: hole.holeNumber,
+        scores: {
+          barron: grossScores.barron[index],
+          loewenstein: grossScores.loewenstein[index],
+          holway: grossScores.holway[index],
+          chase: grossScores.chase[index]
+        }
+      }))
+    });
+    const byPlayerId = new Map(result.players.map((player) => [player.playerId, player]));
+    const barronTeam = result.teamSummaries.find(
+      (summary) => summary.teamId === "barron-loewenstein"
+    );
+    const holwayTeam = result.teamSummaries.find((summary) => summary.teamId === "holway-chase");
+    const holeSeventeen = result.holes.find((hole) => hole.holeNumber === 17);
+
+    expect(byPlayerId.get("loewenstein")).toMatchObject({
+      courseHandicap: 13,
+      playingHandicap: 11,
+      matchStrokeCount: 1
+    });
+    expect(byPlayerId.get("loewenstein")?.strokesByHole[4]).toBe(1);
+    expect(byPlayerId.get("loewenstein")?.strokesByHole[17]).toBe(0);
+    expect(byPlayerId.get("chase")).toMatchObject({
+      courseHandicap: 14,
+      playingHandicap: 13,
+      matchStrokeCount: 3
+    });
+    expect(byPlayerId.get("chase")?.strokesByHole[17]).toBe(1);
+    expect(holeSeventeen?.winningTeamId).toBe("holway-chase");
+    expect(barronTeam?.totalPoints).toBe(8);
+    expect(holwayTeam?.totalPoints).toBe(10);
   });
 });
 
