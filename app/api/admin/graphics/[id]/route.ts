@@ -19,6 +19,7 @@ const HOME_WIN = "#d6eadc";
 const AWAY_WIN = "#e7def5";
 const HOME_STROKE = "#17533d";
 const AWAY_STROKE = "#6a4d90";
+const EXPORT_FONT_FAMILY = "TwoManExport";
 
 type RecapHole = AdminGraphicRecap["holes"][number];
 type SegmentKey = "front" | "back";
@@ -242,7 +243,7 @@ function text(
     letterSpacing?: number;
   }
 ) {
-  return `<text x="${x}" y="${y}" text-anchor="${options.anchor ?? "middle"}" fill="${options.color ?? INK}" font-size="${options.size}" font-weight="${options.weight ?? 650}" letter-spacing="${options.letterSpacing ?? 0}" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif">${escapeSvg(value)}</text>`;
+  return `<text x="${x}" y="${y}" text-anchor="${options.anchor ?? "middle"}" fill="${options.color ?? INK}" font-size="${options.size}" font-weight="${options.weight ?? 650}" letter-spacing="${options.letterSpacing ?? 0}" font-family="${EXPORT_FONT_FAMILY}">${escapeSvg(value)}</text>`;
 }
 
 function line(x1: number, y1: number, x2: number, y2: number, stroke = GOLD, strokeWidth = 2) {
@@ -458,15 +459,25 @@ export async function GET(
   }
 
   const svg = await renderGraphicSvg(recap);
-  const sharp = (await import("sharp")).default;
-  const png = await sharp(Buffer.from(svg)).png().toBuffer();
+  const { Resvg } = await import("@resvg/resvg-js");
+  const fontPath = path.join(process.cwd(), "public", "two-man-export-font.ttf");
+  await readFile(fontPath);
+
+  const png = new Resvg(svg, {
+    font: {
+      defaultFontFamily: EXPORT_FONT_FAMILY,
+      fontFiles: [fontPath],
+      loadSystemFonts: false
+    }
+  }).render().asPng();
   const disposition = new URL(request.url).searchParams.get("disposition") === "inline" ? "inline" : "attachment";
 
   return new NextResponse(new Uint8Array(png), {
     headers: {
       "Cache-Control": "no-store",
       "Content-Disposition": `${disposition}; filename="${downloadFilename(recap)}"`,
-      "Content-Type": "image/png"
+      "Content-Type": "image/png",
+      "X-Two-Man-Graphic-Renderer": "resvg-bundled-font-v1"
     }
   });
 }

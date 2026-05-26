@@ -3,7 +3,8 @@ import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs";
 
 const nextConfig: NextConfig = {
-  outputFileTracingRoot: path.join(process.cwd())
+  outputFileTracingRoot: path.join(process.cwd()),
+  serverExternalPackages: ["@resvg/resvg-js"]
 };
 
 export default withSentryConfig(nextConfig, {
