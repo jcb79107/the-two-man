@@ -16,6 +16,7 @@
     "prisma:seed": "tsx prisma/seed.ts",
     "field:import:csv": "node scripts/import_2026_field_from_csvs.mjs",
     "courses:import:illinois": "tsx scripts/import_illinois_courses.ts",
+    "courses:export:usga": "tsx scripts/export_usga_ncrdb_courses.ts",
     "bracket:preview:stage": "tsx scripts/stage_bracket_preview.ts",
     "dry-run:tournament": "tsx scripts/dry_run_tournament.ts",
     "tournament:reset:state": "tsx scripts/reset_tournament_state.ts"

@@ -1,0 +1,2155 @@
+{
+  "generatedAt": "2026-05-27T00:41:50.079Z",
+  "state": "IL",
+  "source": "USGA NCRListing",
+  "courses": [
+    {
+      "sourceQuery": "Skokie Country Club",
+      "externalCourseId": "usga-ncrdb-7321",
+      "name": "Skokie Country Club",
+      "city": "Glencoe",
+      "state": "IL",
+      "sourceUrl": "https://ncrdb.usga.org/courseTeeInfo?CourseID=7321",
+      "tees": [
+        {
+          "externalTeeId": "usga-7321-920767",
+          "name": "Blue (Women)",
+          "gender": "WOMEN",
+          "par": 72,
+          "slope": 145,
+          "courseRating": 78.6
+        },
+        {
+          "externalTeeId": "usga-7321-920765",
+          "name": "Yellow (Women)",
+          "gender": "WOMEN",
+          "par": 72,
+          "slope": 143,
+          "courseRating": 77.5
+        },
+        {
+          "externalTeeId": "usga-7321-543387",
+          "name": "Red (Women)",
+          "gender": "WOMEN",
+          "par": 76,
+          "slope": 137,
+          "courseRating": 74.7
+        },
+        {
+          "externalTeeId": "usga-7321-326247",
+          "name": "Black",
+          "gender": "MEN",
+          "par": 71,
+          "slope": 141,
+          "courseRating": 74.4
+        },
+        {
+          "externalTeeId": "usga-7321-731966",
+          "name": "Black / Blue",
+          "gender": "MEN",
+          "par": 72,
+          "slope": 138,
+          "courseRating": 73.1
+        },
+        {
+          "externalTeeId": "usga-7321-326274",
+          "name": "Green (Women)",
+          "gender": "WOMEN",
+          "par": 74,
+          "slope": 133,
+          "courseRating": 72.7
+        },
+        {
+          "externalTeeId": "usga-7321-177441",
+          "name": "Blue",
+          "gender": "MEN",
+          "par": 72,
+          "slope": 136,
+          "courseRating": 72.1
+        },
+        {
+          "externalTeeId": "usga-7321-504476",
+          "name": "Yellow",
+          "gender": "MEN",
+          "par": 72,
+          "slope": 133,
+          "courseRating": 70.8
+        },
+        {
+          "externalTeeId": "usga-7321-326250",
+          "name": "White",
+          "gender": "MEN",
+          "par": 72,
+          "slope": 129,
+          "courseRating": 68.9
+        },
+        {
+          "externalTeeId": "usga-7321-558707",
+          "name": "Green",
+          "gender": "MEN",
+          "par": 72,
+          "slope": 124,
+          "courseRating": 66.9
+        }
+      ]
+    },
+    {
+      "sourceQuery": "Exmoor Country Club",
+      "externalCourseId": "usga-ncrdb-7627",
+      "name": "Exmoor Country Club",
+      "city": "Highland Park",
+      "state": "IL",
+      "sourceUrl": "https://ncrdb.usga.org/courseTeeInfo?CourseID=7627",
+      "tees": [
+        {
+          "externalTeeId": "usga-7627-915893",
+          "name": "White (Women)",
+          "gender": "WOMEN",
+          "par": 72,
+          "slope": 146,
+          "courseRating": 79.4
+        },
+        {
+          "externalTeeId": "usga-7627-695962",
+          "name": "Green (Women)",
+          "gender": "WOMEN",
+          "par": 72,
+          "slope": 142,
+          "courseRating": 77.6
+        },
+        {
+          "externalTeeId": "usga-7627-816820",
+          "name": "Green/Gold (Women)",
+          "gender": "WOMEN",
+          "par": 72,
+          "slope": 140,
+          "courseRating": 77
+        },
+        {
+          "externalTeeId": "usga-7627-564665",
+          "name": "Gold (Women)",
+          "gender": "WOMEN",
+          "par": 72,
+          "slope": 139,
+          "courseRating": 76
+        },
+        {
+          "externalTeeId": "usga-7627-564673",
+          "name": "Black",
+          "gender": "MEN",
+          "par": 72,
+          "slope": 140,
+          "courseRating": 75
+        },
+        {
+          "externalTeeId": "usga-7627-564672",
+          "name": "B/W Combo",
+          "gender": "MEN",
+          "par": 72,
+          "slope": 138,
+          "courseRating": 74
+        },
+        {
+          "externalTeeId": "usga-7627-564664",
+          "name": "Burgundy (Women)",
+          "gender": "WOMEN",
+          "par": 72,
+          "slope": 135,
+          "courseRating": 73.9
+        },
+        {
+          "externalTeeId": "usga-7627-564671",
+          "name": "White",
+          "gender": "MEN",
+          "par": 72,
+          "slope": 135,
+          "courseRating": 72.9
+        },
+        {
+          "externalTeeId": "usga-7627-564670",
+          "name": "W/G Combo",
+          "gender": "MEN",
+          "par": 72,
+          "slope": 133,
+          "courseRating": 72.1
+        },
+        {
+          "externalTeeId": "usga-7627-564663",
+          "name": "Silver (Women)",
+          "gender": "WOMEN",
+          "par": 72,
+          "slope": 130,
+          "courseRating": 71.6
+        },
+        {
+          "externalTeeId": "usga-7627-564669",
+          "name": "Green",
+          "gender": "MEN",
+          "par": 72,
+          "slope": 131,
+          "courseRating": 71.4
+        },
+        {
+          "externalTeeId": "usga-7627-816817",
+          "name": "Green/Gold",
+          "gender": "MEN",
+          "par": 72,
+          "slope": 130,
+          "courseRating": 70.6
+        },
+        {
+          "externalTeeId": "usga-7627-695489",
+          "name": "Gold",
+          "gender": "MEN",
+          "par": 72,
+          "slope": 128,
+          "courseRating": 70.1
+        },
+        {
+          "externalTeeId": "usga-7627-564667",
+          "name": "Burgundy",
+          "gender": "MEN",
+          "par": 72,
+          "slope": 124,
+          "courseRating": 68.4
+        },
+        {
+          "externalTeeId": "usga-7627-695491",
+          "name": "Silver",
+          "gender": "MEN",
+          "par": 72,
+          "slope": 119,
+          "courseRating": 66.5
+        }
+      ]
+    },
+    {
+      "sourceQuery": "Shoreacres",
+      "externalCourseId": "usga-ncrdb-7274",
+      "name": "Shoreacres",
+      "city": "Lake Bluff",
+      "state": "IL",
+      "sourceUrl": "https://ncrdb.usga.org/courseTeeInfo?CourseID=7274",
+      "tees": [
+        {
+          "externalTeeId": "usga-7274-838802",
+          "name": "Black (Women)",
+          "gender": "WOMEN",
+          "par": 72,
+          "slope": 149,
+          "courseRating": 79.2
+        },
+        {
+          "externalTeeId": "usga-7274-538770",
+          "name": "Raynor (Women)",
+          "gender": "WOMEN",
+          "par": 72,
+          "slope": 144,
+          "courseRating": 77
+        },
+        {
+          "externalTeeId": "usga-7274-538114",
+          "name": "Combo (Women)",
+          "gender": "WOMEN",
+          "par": 72,
+          "slope": 139,
+          "courseRating": 74.6
+        },
+        {
+          "externalTeeId": "usga-7274-538108",
+          "name": "Black",
+          "gender": "MEN",
+          "par": 71,
+          "slope": 142,
+          "courseRating": 73.2
+        },
+        {
+          "externalTeeId": "usga-7274-538113",
+          "name": "Green (Women)",
+          "gender": "WOMEN",
+          "par": 72,
+          "slope": 135,
+          "courseRating": 72.6
+        },
+        {
+          "externalTeeId": "usga-7274-538109",
+          "name": "Raynor",
+          "gender": "MEN",
+          "par": 71,
+          "slope": 138,
+          "courseRating": 71.4
+        },
+        {
+          "externalTeeId": "usga-7274-538112",
+          "name": "Gold (Women)",
+          "gender": "WOMEN",
+          "par": 72,
+          "slope": 130,
+          "courseRating": 70
+        },
+        {
+          "externalTeeId": "usga-7274-538110",
+          "name": "Combo",
+          "gender": "MEN",
+          "par": 71,
+          "slope": 133,
+          "courseRating": 69.5
+        },
+        {
+          "externalTeeId": "usga-7274-538111",
+          "name": "Green",
+          "gender": "MEN",
+          "par": 71,
+          "slope": 129,
+          "courseRating": 67.9
+        },
+        {
+          "externalTeeId": "usga-7274-538766",
+          "name": "Gold",
+          "gender": "MEN",
+          "par": 71,
+          "slope": 124,
+          "courseRating": 65.7
+        }
+      ]
+    },
+    {
+      "sourceQuery": "Bob O'Link Golf Club",
+      "externalCourseId": "usga-ncrdb-7491",
+      "name": "Bob O'Link Golf Club",
+      "city": "Highland Park",
+      "state": "IL",
+      "sourceUrl": "https://ncrdb.usga.org/courseTeeInfo?CourseID=7491",
+      "tees": [
+        {
+          "externalTeeId": "usga-7491-683984",
+          "name": "Green",
+          "gender": "MEN",
+          "par": 71,
+          "slope": 140,
+          "courseRating": 75.6
+        },
+        {
+          "externalTeeId": "usga-7491-683985",
+          "name": "Blue",
+          "gender": "MEN",
+          "par": 72,
+          "slope": 134,
+          "courseRating": 73.2
+        },
+        {
+          "externalTeeId": "usga-7491-730219",
+          "name": "Gold",
+          "gender": "MEN",
+          "par": 72,
+          "slope": 129,
+          "courseRating": 71.1
+        },
+        {
+          "externalTeeId": "usga-7491-683988",
+          "name": "Black",
+          "gender": "MEN",
+          "par": 72,
+          "slope": 120,
+          "courseRating": 67.4
+        }
+      ]
+    },
+    {
+      "sourceQuery": "Old Elm Club",
+      "externalCourseId": "usga-ncrdb-7276",
+      "name": "Old Elm Club",
+      "city": "Highland Park",
+      "state": "IL",
+      "sourceUrl": "https://ncrdb.usga.org/courseTeeInfo?CourseID=7276",
+      "tees": [
+        {
+          "externalTeeId": "usga-7276-730416",
+          "name": "Buzz",
+          "gender": "MEN",
+          "par": 72,
+          "slope": 135,
+          "courseRating": 74.3
+        },
+        {
+          "externalTeeId": "usga-7276-546148",
+          "name": "Buzz Combo",
+          "gender": "MEN",
+          "par": 72,
+          "slope": 128,
+          "courseRating": 71.3
+        },
+        {
+          "externalTeeId": "usga-7276-595412",
+          "name": "Member",
+          "gender": "MEN",
+          "par": 72,
+          "slope": 126,
+          "courseRating": 70.4
+        },
+        {
+          "externalTeeId": "usga-7276-793610",
+          "name": "Member Combo",
+          "gender": "MEN",
+          "par": 72,
+          "slope": 120,
+          "courseRating": 68.5
+        },
+        {
+          "externalTeeId": "usga-7276-793601",
+          "name": "Forward Combo",
+          "gender": "MEN",
+          "par": 72,
+          "slope": 116,
+          "courseRating": 66.7
+        },
+        {
+          "externalTeeId": "usga-7276-595408",
+          "name": "Forward",
+          "gender": "MEN",
+          "par": 72,
+          "slope": 111,
+          "courseRating": 64.5
+        }
+      ]
+    },
+    {
+      "sourceQuery": "Onwentsia Club",
+      "externalCourseId": "usga-ncrdb-7481",
+      "name": "Onwentsia Club",
+      "city": "Lake Forest",
+      "state": "IL",
+      "sourceUrl": "https://ncrdb.usga.org/courseTeeInfo?CourseID=7481",
+      "tees": [
+        {
+          "externalTeeId": "usga-7481-829512",
+          "name": "Black (Women)",
+          "gender": "WOMEN",
+          "par": 72,
+          "slope": 139,
+          "courseRating": 78.7
+        },
+        {
+          "externalTeeId": "usga-7481-829511",
+          "name": "Blue (Women)",
+          "gender": "WOMEN",
+          "par": 72,
+          "slope": 135,
+          "courseRating": 76.9
+        },
+        {
+          "externalTeeId": "usga-7481-829508",
+          "name": "White (Women)",
+          "gender": "WOMEN",
+          "par": 72,
+          "slope": 130,
+          "courseRating": 74.3
+        },
+        {
+          "externalTeeId": "usga-7481-829495",
+          "name": "Black",
+          "gender": "MEN",
+          "par": 71,
+          "slope": 135,
+          "courseRating": 72.3
+        },
+        {
+          "externalTeeId": "usga-7481-829503",
+          "name": "Gold (Women)",
+          "gender": "WOMEN",
+          "par": 72,
+          "slope": 125,
+          "courseRating": 72
+        },
+        {
+          "externalTeeId": "usga-7481-838724",
+          "name": "Blue",
+          "gender": "MEN",
+          "par": 71,
+          "slope": 131,
+          "courseRating": 70.9
+        },
+        {
+          "externalTeeId": "usga-7481-503215",
+          "name": "Blue/White",
+          "gender": "MEN",
+          "par": 71,
+          "slope": 127,
+          "courseRating": 70.3
+        },
+        {
+          "externalTeeId": "usga-7481-829496",
+          "name": "White",
+          "gender": "MEN",
+          "par": 71,
+          "slope": 126,
+          "courseRating": 69
+        },
+        {
+          "externalTeeId": "usga-7481-503218",
+          "name": "White/Gold",
+          "gender": "MEN",
+          "par": 71,
+          "slope": 121,
+          "courseRating": 68
+        },
+        {
+          "externalTeeId": "usga-7481-829501",
+          "name": "Gold",
+          "gender": "MEN",
+          "par": 71,
+          "slope": 121,
+          "courseRating": 67
+        }
+      ]
+    },
+    {
+      "sourceQuery": "Westmoreland Country Club",
+      "externalCourseId": "usga-ncrdb-7436",
+      "name": "Westmoreland Country Club",
+      "city": "Wilmette",
+      "state": "IL",
+      "sourceUrl": "https://ncrdb.usga.org/courseTeeInfo?CourseID=7436",
+      "tees": [
+        {
+          "externalTeeId": "usga-7436-922052",
+          "name": "Blue (Women)",
+          "gender": "WOMEN",
+          "par": 73,
+          "slope": 149,
+          "courseRating": 80
+        },
+        {
+          "externalTeeId": "usga-7436-922046",
+          "name": "White (Women)",
+          "gender": "WOMEN",
+          "par": 73,
+          "slope": 144,
+          "courseRating": 77.8
+        },
+        {
+          "externalTeeId": "usga-7436-505070",
+          "name": "Black",
+          "gender": "MEN",
+          "par": 72,
+          "slope": 138,
+          "courseRating": 74.1
+        },
+        {
+          "externalTeeId": "usga-7436-258278",
+          "name": "Green (Women)",
+          "gender": "WOMEN",
+          "par": 73,
+          "slope": 136,
+          "courseRating": 74.1
+        },
+        {
+          "externalTeeId": "usga-7436-258276",
+          "name": "Blue",
+          "gender": "MEN",
+          "par": 72,
+          "slope": 136,
+          "courseRating": 73.4
+        },
+        {
+          "externalTeeId": "usga-7436-258279",
+          "name": "Member (Women)",
+          "gender": "WOMEN",
+          "par": 73,
+          "slope": 133,
+          "courseRating": 72.9
+        },
+        {
+          "externalTeeId": "usga-7436-177732",
+          "name": "Gold (Women)",
+          "gender": "WOMEN",
+          "par": 73,
+          "slope": 132,
+          "courseRating": 72.5
+        },
+        {
+          "externalTeeId": "usga-7436-258275",
+          "name": "Member",
+          "gender": "MEN",
+          "par": 72,
+          "slope": 134,
+          "courseRating": 72.4
+        },
+        {
+          "externalTeeId": "usga-7436-177731",
+          "name": "White",
+          "gender": "MEN",
+          "par": 72,
+          "slope": 132,
+          "courseRating": 71.8
+        },
+        {
+          "externalTeeId": "usga-7436-258297",
+          "name": "Senior",
+          "gender": "MEN",
+          "par": 72,
+          "slope": 129,
+          "courseRating": 70.7
+        },
+        {
+          "externalTeeId": "usga-7436-258277",
+          "name": "Green",
+          "gender": "MEN",
+          "par": 72,
+          "slope": 127,
+          "courseRating": 69.7
+        }
+      ]
+    },
+    {
+      "sourceQuery": "Glen View Club",
+      "externalCourseId": "usga-ncrdb-7421",
+      "name": "Glen View Club",
+      "city": "Golf",
+      "state": "IL",
+      "sourceUrl": "https://ncrdb.usga.org/courseTeeInfo?CourseID=7421",
+      "tees": [
+        {
+          "externalTeeId": "usga-7421-916424",
+          "name": "Lang (Women)",
+          "gender": "WOMEN",
+          "par": 72,
+          "slope": 137,
+          "courseRating": 77.5
+        },
+        {
+          "externalTeeId": "usga-7421-253423",
+          "name": "Laigh (Women)",
+          "gender": "WOMEN",
+          "par": 73,
+          "slope": 134,
+          "courseRating": 74.8
+        },
+        {
+          "externalTeeId": "usga-7421-499780",
+          "name": "Laigh/Glen (Women)",
+          "gender": "WOMEN",
+          "par": 73,
+          "slope": 131,
+          "courseRating": 73.6
+        },
+        {
+          "externalTeeId": "usga-7421-253421",
+          "name": "Mach",
+          "gender": "MEN",
+          "par": 72,
+          "slope": 139,
+          "courseRating": 73.4
+        },
+        {
+          "externalTeeId": "usga-7421-260616",
+          "name": "Mach/Lang",
+          "gender": "MEN",
+          "par": 72,
+          "slope": 137,
+          "courseRating": 72.5
+        },
+        {
+          "externalTeeId": "usga-7421-253422",
+          "name": "Glen (Women)",
+          "gender": "WOMEN",
+          "par": 73,
+          "slope": 128,
+          "courseRating": 72.2
+        },
+        {
+          "externalTeeId": "usga-7421-177701",
+          "name": "Lang",
+          "gender": "MEN",
+          "par": 72,
+          "slope": 135,
+          "courseRating": 71.5
+        },
+        {
+          "externalTeeId": "usga-7421-376450",
+          "name": "Club (Women)",
+          "gender": "WOMEN",
+          "par": 73,
+          "slope": 125,
+          "courseRating": 70.6
+        },
+        {
+          "externalTeeId": "usga-7421-260617",
+          "name": "Lang/Laigh",
+          "gender": "MEN",
+          "par": 72,
+          "slope": 131,
+          "courseRating": 69.9
+        },
+        {
+          "externalTeeId": "usga-7421-253420",
+          "name": "Laigh",
+          "gender": "MEN",
+          "par": 72,
+          "slope": 128,
+          "courseRating": 68.6
+        },
+        {
+          "externalTeeId": "usga-7421-667003",
+          "name": "Glen",
+          "gender": "MEN",
+          "par": 72,
+          "slope": 123,
+          "courseRating": 66.4
+        }
+      ]
+    },
+    {
+      "sourceQuery": "Indian Hill Club",
+      "externalCourseId": "usga-ncrdb-7607",
+      "name": "Indian Hill Club",
+      "city": "Winnetka",
+      "state": "IL",
+      "sourceUrl": "https://ncrdb.usga.org/courseTeeInfo?CourseID=7607",
+      "tees": [
+        {
+          "externalTeeId": "usga-7607-917959",
+          "name": "Stone (Women)",
+          "gender": "WOMEN",
+          "par": 72,
+          "slope": 141,
+          "courseRating": 77.6
+        },
+        {
+          "externalTeeId": "usga-7607-759730",
+          "name": "Blue (Women)",
+          "gender": "WOMEN",
+          "par": 72,
+          "slope": 139,
+          "courseRating": 76.6
+        },
+        {
+          "externalTeeId": "usga-7607-673706",
+          "name": "Silver (Women)",
+          "gender": "WOMEN",
+          "par": 72,
+          "slope": 134,
+          "courseRating": 74.1
+        },
+        {
+          "externalTeeId": "usga-7607-231390",
+          "name": "White (Women)",
+          "gender": "WOMEN",
+          "par": 72,
+          "slope": 132,
+          "courseRating": 73.3
+        },
+        {
+          "externalTeeId": "usga-7607-673688",
+          "name": "Stone",
+          "gender": "MEN",
+          "par": 71,
+          "slope": 132,
+          "courseRating": 71.9
+        },
+        {
+          "externalTeeId": "usga-7607-178090",
+          "name": "Red (Women)",
+          "gender": "WOMEN",
+          "par": 72,
+          "slope": 128,
+          "courseRating": 71.2
+        },
+        {
+          "externalTeeId": "usga-7607-178089",
+          "name": "Blue",
+          "gender": "MEN",
+          "par": 71,
+          "slope": 130,
+          "courseRating": 71.1
+        },
+        {
+          "externalTeeId": "usga-7607-231361",
+          "name": "Silver",
+          "gender": "MEN",
+          "par": 71,
+          "slope": 125,
+          "courseRating": 69
+        },
+        {
+          "externalTeeId": "usga-7607-231380",
+          "name": "White",
+          "gender": "MEN",
+          "par": 71,
+          "slope": 123,
+          "courseRating": 68.3
+        },
+        {
+          "externalTeeId": "usga-7607-499935",
+          "name": "Red",
+          "gender": "MEN",
+          "par": 71,
+          "slope": 119,
+          "courseRating": 66.6
+        }
+      ]
+    },
+    {
+      "sourceQuery": "Knollwood Club",
+      "externalCourseId": "usga-ncrdb-7639",
+      "name": "Knollwood Club",
+      "city": "Lake Forest",
+      "state": "IL",
+      "sourceUrl": "https://ncrdb.usga.org/courseTeeInfo?CourseID=7639",
+      "tees": [
+        {
+          "externalTeeId": "usga-7639-918368",
+          "name": "Alison (Women)",
+          "gender": "WOMEN",
+          "par": 72,
+          "slope": 145,
+          "courseRating": 78.3
+        },
+        {
+          "externalTeeId": "usga-7639-730293",
+          "name": "Alison / Middle (Women)",
+          "gender": "WOMEN",
+          "par": 72,
+          "slope": 141,
+          "courseRating": 76.1
+        },
+        {
+          "externalTeeId": "usga-7639-730291",
+          "name": "Middle (Women)",
+          "gender": "WOMEN",
+          "par": 72,
+          "slope": 138,
+          "courseRating": 74.8
+        },
+        {
+          "externalTeeId": "usga-7639-730279",
+          "name": "Back",
+          "gender": "MEN",
+          "par": 72,
+          "slope": 138,
+          "courseRating": 74.5
+        },
+        {
+          "externalTeeId": "usga-7639-728160",
+          "name": "Back / Alison",
+          "gender": "MEN",
+          "par": 72,
+          "slope": 134,
+          "courseRating": 73.1
+        },
+        {
+          "externalTeeId": "usga-7639-786368",
+          "name": "Middle / Front (Women)",
+          "gender": "WOMEN",
+          "par": 72,
+          "slope": 134,
+          "courseRating": 73.1
+        },
+        {
+          "externalTeeId": "usga-7639-728157",
+          "name": "Alison",
+          "gender": "MEN",
+          "par": 72,
+          "slope": 132,
+          "courseRating": 72.1
+        },
+        {
+          "externalTeeId": "usga-7639-728214",
+          "name": "Alison / Middle",
+          "gender": "MEN",
+          "par": 72,
+          "slope": 128,
+          "courseRating": 70.3
+        },
+        {
+          "externalTeeId": "usga-7639-728197",
+          "name": "Front (Women)",
+          "gender": "WOMEN",
+          "par": 72,
+          "slope": 128,
+          "courseRating": 70
+        },
+        {
+          "externalTeeId": "usga-7639-728162",
+          "name": "Middle",
+          "gender": "MEN",
+          "par": 72,
+          "slope": 125,
+          "courseRating": 69.2
+        },
+        {
+          "externalTeeId": "usga-7639-786372",
+          "name": "Middle / Front",
+          "gender": "MEN",
+          "par": 72,
+          "slope": 121,
+          "courseRating": 67.7
+        },
+        {
+          "externalTeeId": "usga-7639-728179",
+          "name": "Front",
+          "gender": "MEN",
+          "par": 72,
+          "slope": 115,
+          "courseRating": 65.2
+        }
+      ]
+    },
+    {
+      "sourceQuery": "Conway Farms Golf Club",
+      "externalCourseId": "usga-ncrdb-7514",
+      "name": "Conway Farms Golf Club",
+      "city": "Lake Forest",
+      "state": "IL",
+      "sourceUrl": "https://ncrdb.usga.org/courseTeeInfo?CourseID=7514",
+      "tees": [
+        {
+          "externalTeeId": "usga-7514-732292",
+          "name": "Black (Women)",
+          "gender": "WOMEN",
+          "par": 71,
+          "slope": 151,
+          "courseRating": 80.7
+        },
+        {
+          "externalTeeId": "usga-7514-732296",
+          "name": "Green Plus (Women)",
+          "gender": "WOMEN",
+          "par": 71,
+          "slope": 148,
+          "courseRating": 79.5
+        },
+        {
+          "externalTeeId": "usga-7514-732290",
+          "name": "Green (Women)",
+          "gender": "WOMEN",
+          "par": 71,
+          "slope": 145,
+          "courseRating": 78
+        },
+        {
+          "externalTeeId": "usga-7514-855873",
+          "name": "Blue Plus (Women)",
+          "gender": "WOMEN",
+          "par": 72,
+          "slope": 143,
+          "courseRating": 76.9
+        },
+        {
+          "externalTeeId": "usga-7514-729843",
+          "name": "Silver",
+          "gender": "MEN",
+          "par": 71,
+          "slope": 148,
+          "courseRating": 76.4
+        },
+        {
+          "externalTeeId": "usga-7514-682440",
+          "name": "Blue (Women)",
+          "gender": "WOMEN",
+          "par": 71,
+          "slope": 139,
+          "courseRating": 75.3
+        },
+        {
+          "externalTeeId": "usga-7514-729839",
+          "name": "Black",
+          "gender": "MEN",
+          "par": 71,
+          "slope": 143,
+          "courseRating": 74.2
+        },
+        {
+          "externalTeeId": "usga-7514-732304",
+          "name": "White Plus (Women)",
+          "gender": "WOMEN",
+          "par": 71,
+          "slope": 135,
+          "courseRating": 73.6
+        },
+        {
+          "externalTeeId": "usga-7514-732249",
+          "name": "Green Plus",
+          "gender": "MEN",
+          "par": 71,
+          "slope": 141,
+          "courseRating": 73.2
+        },
+        {
+          "externalTeeId": "usga-7514-729823",
+          "name": "Green",
+          "gender": "MEN",
+          "par": 71,
+          "slope": 138,
+          "courseRating": 72
+        },
+        {
+          "externalTeeId": "usga-7514-682443",
+          "name": "White (Women)",
+          "gender": "WOMEN",
+          "par": 71,
+          "slope": 130,
+          "courseRating": 71.2
+        },
+        {
+          "externalTeeId": "usga-7514-732254",
+          "name": "Blue Plus",
+          "gender": "MEN",
+          "par": 71,
+          "slope": 136,
+          "courseRating": 71.1
+        },
+        {
+          "externalTeeId": "usga-7514-682431",
+          "name": "Blue",
+          "gender": "MEN",
+          "par": 71,
+          "slope": 133,
+          "courseRating": 69.8
+        },
+        {
+          "externalTeeId": "usga-7514-732315",
+          "name": "Gold Plus (Women)",
+          "gender": "WOMEN",
+          "par": 71,
+          "slope": 126,
+          "courseRating": 69.3
+        },
+        {
+          "externalTeeId": "usga-7514-732258",
+          "name": "White Plus",
+          "gender": "MEN",
+          "par": 71,
+          "slope": 130,
+          "courseRating": 68.4
+        },
+        {
+          "externalTeeId": "usga-7514-729878",
+          "name": "White",
+          "gender": "MEN",
+          "par": 71,
+          "slope": 125,
+          "courseRating": 66.4
+        },
+        {
+          "externalTeeId": "usga-7514-682447",
+          "name": "Gold (Women)",
+          "gender": "WOMEN",
+          "par": 71,
+          "slope": 118,
+          "courseRating": 65.7
+        },
+        {
+          "externalTeeId": "usga-7514-732262",
+          "name": "Gold Plus",
+          "gender": "MEN",
+          "par": 71,
+          "slope": 122,
+          "courseRating": 65
+        },
+        {
+          "externalTeeId": "usga-7514-670541",
+          "name": "Gold",
+          "gender": "MEN",
+          "par": 71,
+          "slope": 115,
+          "courseRating": 62
+        }
+      ]
+    },
+    {
+      "sourceQuery": "Ravinia Green Country Club",
+      "externalCourseId": "usga-ncrdb-7655",
+      "name": "Ravinia Green Country Club",
+      "city": "Riverwoods",
+      "state": "IL",
+      "sourceUrl": "https://ncrdb.usga.org/courseTeeInfo?CourseID=7655",
+      "tees": [
+        {
+          "externalTeeId": "usga-7655-920091",
+          "name": "Blue (Women)",
+          "gender": "WOMEN",
+          "par": 72,
+          "slope": 143,
+          "courseRating": 78.6
+        },
+        {
+          "externalTeeId": "usga-7655-504178",
+          "name": "White (Women)",
+          "gender": "WOMEN",
+          "par": 72,
+          "slope": 138,
+          "courseRating": 76.4
+        },
+        {
+          "externalTeeId": "usga-7655-504180",
+          "name": "Black",
+          "gender": "MEN",
+          "par": 72,
+          "slope": 139,
+          "courseRating": 73.8
+        },
+        {
+          "externalTeeId": "usga-7655-238293",
+          "name": "White/Green (Women)",
+          "gender": "WOMEN",
+          "par": 72,
+          "slope": 133,
+          "courseRating": 73.8
+        },
+        {
+          "externalTeeId": "usga-7655-261576",
+          "name": "Black/Blue",
+          "gender": "MEN",
+          "par": 72,
+          "slope": 137,
+          "courseRating": 73
+        },
+        {
+          "externalTeeId": "usga-7655-178187",
+          "name": "Blue",
+          "gender": "MEN",
+          "par": 72,
+          "slope": 135,
+          "courseRating": 72.2
+        },
+        {
+          "externalTeeId": "usga-7655-504183",
+          "name": "Green (Women)",
+          "gender": "WOMEN",
+          "par": 72,
+          "slope": 129,
+          "courseRating": 72.1
+        },
+        {
+          "externalTeeId": "usga-7655-261577",
+          "name": "Blue/White",
+          "gender": "MEN",
+          "par": 72,
+          "slope": 133,
+          "courseRating": 71.3
+        },
+        {
+          "externalTeeId": "usga-7655-210219",
+          "name": "White",
+          "gender": "MEN",
+          "par": 72,
+          "slope": 131,
+          "courseRating": 70.6
+        },
+        {
+          "externalTeeId": "usga-7655-210220",
+          "name": "White/Green",
+          "gender": "MEN",
+          "par": 72,
+          "slope": 126,
+          "courseRating": 68.5
+        },
+        {
+          "externalTeeId": "usga-7655-504182",
+          "name": "Green",
+          "gender": "MEN",
+          "par": 72,
+          "slope": 121,
+          "courseRating": 67
+        }
+      ]
+    },
+    {
+      "sourceQuery": "The Glen Club",
+      "externalCourseId": "usga-ncrdb-7464",
+      "name": "The Glen Club",
+      "city": "Glenview",
+      "state": "IL",
+      "sourceUrl": "https://ncrdb.usga.org/courseTeeInfo?CourseID=7464",
+      "tees": [
+        {
+          "externalTeeId": "usga-7464-892025",
+          "name": "Blue (Women)",
+          "gender": "WOMEN",
+          "par": 72,
+          "slope": 145,
+          "courseRating": 79
+        },
+        {
+          "externalTeeId": "usga-7464-892040",
+          "name": "Silver/Blue (Women)",
+          "gender": "WOMEN",
+          "par": 72,
+          "slope": 142,
+          "courseRating": 77.4
+        },
+        {
+          "externalTeeId": "usga-7464-554956",
+          "name": "Silver (Women)",
+          "gender": "WOMEN",
+          "par": 72,
+          "slope": 138,
+          "courseRating": 75.9
+        },
+        {
+          "externalTeeId": "usga-7464-499599",
+          "name": "Gold",
+          "gender": "MEN",
+          "par": 72,
+          "slope": 143,
+          "courseRating": 75.1
+        },
+        {
+          "externalTeeId": "usga-7464-892032",
+          "name": "Blue/Gold",
+          "gender": "MEN",
+          "par": 72,
+          "slope": 140,
+          "courseRating": 73.8
+        },
+        {
+          "externalTeeId": "usga-7464-554947",
+          "name": "Red/Silver (Women)",
+          "gender": "WOMEN",
+          "par": 72,
+          "slope": 134,
+          "courseRating": 73.8
+        },
+        {
+          "externalTeeId": "usga-7464-499600",
+          "name": "Blue",
+          "gender": "MEN",
+          "par": 72,
+          "slope": 137,
+          "courseRating": 72.6
+        },
+        {
+          "externalTeeId": "usga-7464-554946",
+          "name": "Red (Women)",
+          "gender": "WOMEN",
+          "par": 72,
+          "slope": 129,
+          "courseRating": 71.8
+        },
+        {
+          "externalTeeId": "usga-7464-582843",
+          "name": "Silver/Blue",
+          "gender": "MEN",
+          "par": 72,
+          "slope": 134,
+          "courseRating": 71.3
+        },
+        {
+          "externalTeeId": "usga-7464-892009",
+          "name": "Silver",
+          "gender": "MEN",
+          "par": 72,
+          "slope": 131,
+          "courseRating": 70.1
+        },
+        {
+          "externalTeeId": "usga-7464-892035",
+          "name": "Red/Silver",
+          "gender": "MEN",
+          "par": 72,
+          "slope": 127,
+          "courseRating": 68.4
+        },
+        {
+          "externalTeeId": "usga-7464-892010",
+          "name": "Red",
+          "gender": "MEN",
+          "par": 72,
+          "slope": 123,
+          "courseRating": 66.7
+        }
+      ]
+    },
+    {
+      "sourceQuery": "Heritage Oaks Golf Club",
+      "externalCourseId": "usga-ncrdb-7437",
+      "name": "Heritage Oaks Golf Club - Classic 18",
+      "city": "Northbrook",
+      "state": "IL",
+      "sourceUrl": "https://ncrdb.usga.org/courseTeeInfo?CourseID=7437",
+      "tees": [
+        {
+          "externalTeeId": "usga-7437-667207",
+          "name": "Blue (Women)",
+          "gender": "WOMEN",
+          "par": 71,
+          "slope": 133,
+          "courseRating": 75.7
+        },
+        {
+          "externalTeeId": "usga-7437-667208",
+          "name": "Maroon (Women)",
+          "gender": "WOMEN",
+          "par": 71,
+          "slope": 130,
+          "courseRating": 74.1
+        },
+        {
+          "externalTeeId": "usga-7437-885895",
+          "name": "White (Women)",
+          "gender": "WOMEN",
+          "par": 71,
+          "slope": 126,
+          "courseRating": 72.2
+        },
+        {
+          "externalTeeId": "usga-7437-266536",
+          "name": "Blue",
+          "gender": "MEN",
+          "par": 70,
+          "slope": 128,
+          "courseRating": 70.2
+        },
+        {
+          "externalTeeId": "usga-7437-667210",
+          "name": "Grey (Women)",
+          "gender": "WOMEN",
+          "par": 71,
+          "slope": 120,
+          "courseRating": 69.4
+        },
+        {
+          "externalTeeId": "usga-7437-612687",
+          "name": "Maroon",
+          "gender": "MEN",
+          "par": 70,
+          "slope": 125,
+          "courseRating": 68.9
+        },
+        {
+          "externalTeeId": "usga-7437-935295",
+          "name": "Grey/Teal (Women)",
+          "gender": "WOMEN",
+          "par": 71,
+          "slope": 117,
+          "courseRating": 68.1
+        },
+        {
+          "externalTeeId": "usga-7437-612691",
+          "name": "White",
+          "gender": "MEN",
+          "par": 70,
+          "slope": 120,
+          "courseRating": 67.2
+        },
+        {
+          "externalTeeId": "usga-7437-667211",
+          "name": "Teal (Women)",
+          "gender": "WOMEN",
+          "par": 71,
+          "slope": 114,
+          "courseRating": 66.6
+        },
+        {
+          "externalTeeId": "usga-7437-612694",
+          "name": "Grey",
+          "gender": "MEN",
+          "par": 70,
+          "slope": 114,
+          "courseRating": 64.8
+        },
+        {
+          "externalTeeId": "usga-7437-935293",
+          "name": "Grey/Teal",
+          "gender": "MEN",
+          "par": 70,
+          "slope": 111,
+          "courseRating": 63.8
+        },
+        {
+          "externalTeeId": "usga-7437-612697",
+          "name": "Teal",
+          "gender": "MEN",
+          "par": 70,
+          "slope": 109,
+          "courseRating": 62.6
+        }
+      ]
+    },
+    {
+      "sourceQuery": "Heritage Oaks Golf Club",
+      "externalCourseId": "usga-ncrdb-7438",
+      "name": "Heritage Oaks Golf Club - Legacy 9",
+      "city": "Northbrook",
+      "state": "IL",
+      "sourceUrl": "https://ncrdb.usga.org/courseTeeInfo?CourseID=7438",
+      "tees": [
+        {
+          "externalTeeId": "usga-7438-266544",
+          "name": "Blue (Women)",
+          "gender": "WOMEN",
+          "par": 70,
+          "slope": 123,
+          "courseRating": 74.8
+        },
+        {
+          "externalTeeId": "usga-7438-266543",
+          "name": "Maroon (Women)",
+          "gender": "WOMEN",
+          "par": 70,
+          "slope": 119,
+          "courseRating": 73
+        },
+        {
+          "externalTeeId": "usga-7438-266542",
+          "name": "White (Women)",
+          "gender": "WOMEN",
+          "par": 70,
+          "slope": 115,
+          "courseRating": 71.2
+        },
+        {
+          "externalTeeId": "usga-7438-177735",
+          "name": "Gray (Women)",
+          "gender": "WOMEN",
+          "par": 70,
+          "slope": 112,
+          "courseRating": 69.6
+        },
+        {
+          "externalTeeId": "usga-7438-266541",
+          "name": "Blue",
+          "gender": "MEN",
+          "par": 70,
+          "slope": 123,
+          "courseRating": 69
+        },
+        {
+          "externalTeeId": "usga-7438-613133",
+          "name": "Maroon",
+          "gender": "MEN",
+          "par": 70,
+          "slope": 119,
+          "courseRating": 67.6
+        },
+        {
+          "externalTeeId": "usga-7438-613138",
+          "name": "White",
+          "gender": "MEN",
+          "par": 70,
+          "slope": 114,
+          "courseRating": 66
+        },
+        {
+          "externalTeeId": "usga-7438-613247",
+          "name": "Teal (Women)",
+          "gender": "WOMEN",
+          "par": 70,
+          "slope": 103,
+          "courseRating": 66
+        },
+        {
+          "externalTeeId": "usga-7438-613140",
+          "name": "Gray",
+          "gender": "MEN",
+          "par": 70,
+          "slope": 110,
+          "courseRating": 64.6
+        },
+        {
+          "externalTeeId": "usga-7438-613141",
+          "name": "Teal",
+          "gender": "MEN",
+          "par": 70,
+          "slope": 102,
+          "courseRating": 61.6
+        }
+      ]
+    },
+    {
+      "sourceQuery": "Wilmette Golf Club",
+      "externalCourseId": "usga-ncrdb-7429",
+      "name": "Wilmette Golf Course",
+      "city": "Wilmette",
+      "state": "IL",
+      "sourceUrl": "https://ncrdb.usga.org/courseTeeInfo?CourseID=7429",
+      "tees": [
+        {
+          "externalTeeId": "usga-7429-818347",
+          "name": "Black (Women)",
+          "gender": "WOMEN",
+          "par": 70,
+          "slope": 138,
+          "courseRating": 76.3
+        },
+        {
+          "externalTeeId": "usga-7429-505329",
+          "name": "Gold (Women)",
+          "gender": "WOMEN",
+          "par": 70,
+          "slope": 134,
+          "courseRating": 74.3
+        },
+        {
+          "externalTeeId": "usga-7429-254981",
+          "name": "Orange (Women)",
+          "gender": "WOMEN",
+          "par": 70,
+          "slope": 129,
+          "courseRating": 72.7
+        },
+        {
+          "externalTeeId": "usga-7429-177717",
+          "name": "Black",
+          "gender": "MEN",
+          "par": 70,
+          "slope": 127,
+          "courseRating": 70.3
+        },
+        {
+          "externalTeeId": "usga-7429-505334",
+          "name": "Gold",
+          "gender": "MEN",
+          "par": 70,
+          "slope": 123,
+          "courseRating": 68.8
+        },
+        {
+          "externalTeeId": "usga-7429-505333",
+          "name": "Green (Women)",
+          "gender": "WOMEN",
+          "par": 70,
+          "slope": 120,
+          "courseRating": 68.2
+        },
+        {
+          "externalTeeId": "usga-7429-254976",
+          "name": "Orange",
+          "gender": "MEN",
+          "par": 70,
+          "slope": 119,
+          "courseRating": 67.2
+        },
+        {
+          "externalTeeId": "usga-7429-254980",
+          "name": "White (Women)",
+          "gender": "WOMEN",
+          "par": 70,
+          "slope": 117,
+          "courseRating": 67
+        },
+        {
+          "externalTeeId": "usga-7429-505332",
+          "name": "Green",
+          "gender": "MEN",
+          "par": 70,
+          "slope": 111,
+          "courseRating": 63.6
+        },
+        {
+          "externalTeeId": "usga-7429-818335",
+          "name": "White",
+          "gender": "MEN",
+          "par": 70,
+          "slope": 108,
+          "courseRating": 62.5
+        }
+      ]
+    },
+    {
+      "sourceQuery": "Winnetka Golf Club",
+      "externalCourseId": "usga-ncrdb-7380",
+      "name": "Winnetka Golf Club",
+      "city": "Winnetka",
+      "state": "IL",
+      "sourceUrl": "https://ncrdb.usga.org/courseTeeInfo?CourseID=7380",
+      "tees": [
+        {
+          "externalTeeId": "usga-7380-922102",
+          "name": "Black (Women)",
+          "gender": "WOMEN",
+          "par": 71,
+          "slope": 141,
+          "courseRating": 79.2
+        },
+        {
+          "externalTeeId": "usga-7380-810688",
+          "name": "Blue (Women)",
+          "gender": "WOMEN",
+          "par": 72,
+          "slope": 138,
+          "courseRating": 77.6
+        },
+        {
+          "externalTeeId": "usga-7380-810663",
+          "name": "White (Women)",
+          "gender": "WOMEN",
+          "par": 72,
+          "slope": 133,
+          "courseRating": 75.2
+        },
+        {
+          "externalTeeId": "usga-7380-323754",
+          "name": "Black",
+          "gender": "MEN",
+          "par": 71,
+          "slope": 133,
+          "courseRating": 72.8
+        },
+        {
+          "externalTeeId": "usga-7380-323753",
+          "name": "Blue",
+          "gender": "MEN",
+          "par": 71,
+          "slope": 130,
+          "courseRating": 71.7
+        },
+        {
+          "externalTeeId": "usga-7380-810660",
+          "name": "Yellow (Women)",
+          "gender": "WOMEN",
+          "par": 72,
+          "slope": 123,
+          "courseRating": 70.6
+        },
+        {
+          "externalTeeId": "usga-7380-810651",
+          "name": "White",
+          "gender": "MEN",
+          "par": 71,
+          "slope": 124,
+          "courseRating": 69.4
+        },
+        {
+          "externalTeeId": "usga-7380-810656",
+          "name": "Yellow",
+          "gender": "MEN",
+          "par": 72,
+          "slope": 114,
+          "courseRating": 65.7
+        }
+      ]
+    },
+    {
+      "sourceQuery": "Canal Shores",
+      "externalCourseId": "usga-ncrdb-23788",
+      "name": "The Evans at Canal Shores",
+      "city": "Evanston",
+      "state": "IL",
+      "sourceUrl": "https://ncrdb.usga.org/courseTeeInfo?CourseID=23788",
+      "tees": [
+        {
+          "externalTeeId": "usga-23788-856324",
+          "name": "Black (Women)",
+          "gender": "WOMEN",
+          "par": 60,
+          "slope": 95,
+          "courseRating": 59.6
+        },
+        {
+          "externalTeeId": "usga-23788-892676",
+          "name": "Black (Owl) (Women)",
+          "gender": "WOMEN",
+          "par": 60,
+          "slope": 95,
+          "courseRating": 59.5
+        },
+        {
+          "externalTeeId": "usga-23788-892689",
+          "name": "Black (Owlet) (Women)",
+          "gender": "WOMEN",
+          "par": 60,
+          "slope": 94,
+          "courseRating": 59
+        },
+        {
+          "externalTeeId": "usga-23788-856321",
+          "name": "Black",
+          "gender": "MEN",
+          "par": 60,
+          "slope": 86,
+          "courseRating": 57.8
+        },
+        {
+          "externalTeeId": "usga-23788-889424",
+          "name": "Black (Owl)",
+          "gender": "MEN",
+          "par": 60,
+          "slope": 86,
+          "courseRating": 57.6
+        },
+        {
+          "externalTeeId": "usga-23788-892670",
+          "name": "Black (Owlet)",
+          "gender": "MEN",
+          "par": 60,
+          "slope": 85,
+          "courseRating": 57.2
+        },
+        {
+          "externalTeeId": "usga-23788-892680",
+          "name": "White (Owl) (Women)",
+          "gender": "WOMEN",
+          "par": 60,
+          "slope": 90,
+          "courseRating": 57.2
+        },
+        {
+          "externalTeeId": "usga-23788-892691",
+          "name": "White (Owlet) (Women)",
+          "gender": "WOMEN",
+          "par": 60,
+          "slope": 90,
+          "courseRating": 56.9
+        },
+        {
+          "externalTeeId": "usga-23788-889428",
+          "name": "White (Owl)",
+          "gender": "MEN",
+          "par": 60,
+          "slope": 81,
+          "courseRating": 55.9
+        },
+        {
+          "externalTeeId": "usga-23788-892672",
+          "name": "White (Owlet)",
+          "gender": "MEN",
+          "par": 60,
+          "slope": 81,
+          "courseRating": 55.4
+        },
+        {
+          "externalTeeId": "usga-23788-537954",
+          "name": "White (Women)",
+          "gender": "WOMEN",
+          "par": 60,
+          "slope": 83,
+          "courseRating": 54
+        },
+        {
+          "externalTeeId": "usga-23788-537950",
+          "name": "White",
+          "gender": "MEN",
+          "par": 60,
+          "slope": 75,
+          "courseRating": 53.3
+        }
+      ]
+    },
+    {
+      "sourceQuery": "Old Orchard Country Club",
+      "externalCourseId": "usga-ncrdb-31914",
+      "name": "Old Orchard Country Club",
+      "city": "Pittsfield",
+      "state": "IL",
+      "sourceUrl": "https://ncrdb.usga.org/courseTeeInfo?CourseID=31914",
+      "tees": [
+        {
+          "externalTeeId": "usga-31914-654578",
+          "name": "Yellow/Blue",
+          "gender": "MEN",
+          "par": 72,
+          "slope": 126,
+          "courseRating": 70.3
+        },
+        {
+          "externalTeeId": "usga-31914-654581",
+          "name": "Red/Red (Women)",
+          "gender": "WOMEN",
+          "par": 72,
+          "slope": 121,
+          "courseRating": 70.2
+        },
+        {
+          "externalTeeId": "usga-31914-654579",
+          "name": "Gold/Yellow",
+          "gender": "MEN",
+          "par": 72,
+          "slope": 119,
+          "courseRating": 67.6
+        },
+        {
+          "externalTeeId": "usga-31914-654580",
+          "name": "Gold/Gold",
+          "gender": "MEN",
+          "par": 72,
+          "slope": 115,
+          "courseRating": 65.8
+        },
+        {
+          "externalTeeId": "usga-31914-720123",
+          "name": "Pink/Pink (Women)",
+          "gender": "WOMEN",
+          "par": 72,
+          "slope": 110,
+          "courseRating": 64.2
+        }
+      ]
+    },
+    {
+      "sourceQuery": "Old Orchard Country Club",
+      "externalCourseId": "usga-ncrdb-7518",
+      "name": "Old Orchard Country Club",
+      "city": "Mt. Prospect",
+      "state": "IL",
+      "sourceUrl": "https://ncrdb.usga.org/courseTeeInfo?CourseID=7518",
+      "tees": [
+        {
+          "externalTeeId": "usga-7518-739732",
+          "name": "Black (Women)",
+          "gender": "WOMEN",
+          "par": 71,
+          "slope": 137,
+          "courseRating": 75.9
+        },
+        {
+          "externalTeeId": "usga-7518-739728",
+          "name": "White (Women)",
+          "gender": "WOMEN",
+          "par": 71,
+          "slope": 133,
+          "courseRating": 74
+        },
+        {
+          "externalTeeId": "usga-7518-177917",
+          "name": "Green (Women)",
+          "gender": "WOMEN",
+          "par": 71,
+          "slope": 127,
+          "courseRating": 71.1
+        },
+        {
+          "externalTeeId": "usga-7518-177916",
+          "name": "Black",
+          "gender": "MEN",
+          "par": 70,
+          "slope": 132,
+          "courseRating": 70.6
+        },
+        {
+          "externalTeeId": "usga-7518-247305",
+          "name": "White",
+          "gender": "MEN",
+          "par": 70,
+          "slope": 128,
+          "courseRating": 69
+        },
+        {
+          "externalTeeId": "usga-7518-739710",
+          "name": "Green",
+          "gender": "MEN",
+          "par": 70,
+          "slope": 123,
+          "courseRating": 66.7
+        }
+      ]
+    },
+    {
+      "sourceQuery": "Tam O'Shanter Golf Course",
+      "externalCourseId": "usga-ncrdb-28342",
+      "name": "Tam O'Shanter Golf Course",
+      "city": "Niles",
+      "state": "IL",
+      "sourceUrl": "https://ncrdb.usga.org/courseTeeInfo?CourseID=28342",
+      "tees": [
+        {
+          "externalTeeId": "usga-28342-893038",
+          "name": "Middle (Women)",
+          "gender": "WOMEN",
+          "par": 33,
+          "slope": 108,
+          "courseRating": 32.5
+        },
+        {
+          "externalTeeId": "usga-28342-371672",
+          "name": "Back",
+          "gender": "MEN",
+          "par": 33,
+          "slope": 106,
+          "courseRating": 31.6
+        },
+        {
+          "externalTeeId": "usga-28342-371671",
+          "name": "Forward (Women)",
+          "gender": "WOMEN",
+          "par": 32,
+          "slope": 104,
+          "courseRating": 30.7
+        },
+        {
+          "externalTeeId": "usga-28342-893041",
+          "name": "Middle",
+          "gender": "MEN",
+          "par": 33,
+          "slope": 95,
+          "courseRating": 30.4
+        }
+      ]
+    },
+    {
+      "sourceQuery": "Schaumburg Golf Club",
+      "externalCourseId": "usga-ncrdb-7336",
+      "name": "Schaumburg Golf Club - Players/Baer",
+      "city": "Schaumburg",
+      "state": "IL",
+      "sourceUrl": "https://ncrdb.usga.org/courseTeeInfo?CourseID=7336",
+      "tees": [
+        {
+          "externalTeeId": "usga-7336-920306",
+          "name": "Black (Women)",
+          "gender": "WOMEN",
+          "par": 71,
+          "slope": 134,
+          "courseRating": 77
+        },
+        {
+          "externalTeeId": "usga-7336-920304",
+          "name": "SGC (Women)",
+          "gender": "WOMEN",
+          "par": 71,
+          "slope": 131,
+          "courseRating": 75.4
+        },
+        {
+          "externalTeeId": "usga-7336-535985",
+          "name": "Stone (Women)",
+          "gender": "WOMEN",
+          "par": 71,
+          "slope": 129,
+          "courseRating": 74.3
+        },
+        {
+          "externalTeeId": "usga-7336-535984",
+          "name": "Grey (Women)",
+          "gender": "WOMEN",
+          "par": 71,
+          "slope": 122,
+          "courseRating": 71.1
+        },
+        {
+          "externalTeeId": "usga-7336-506599",
+          "name": "Black",
+          "gender": "MEN",
+          "par": 71,
+          "slope": 127,
+          "courseRating": 70.3
+        },
+        {
+          "externalTeeId": "usga-7336-535983",
+          "name": "Grey/Cedar (Women)",
+          "gender": "WOMEN",
+          "par": 71,
+          "slope": 119,
+          "courseRating": 69.8
+        },
+        {
+          "externalTeeId": "usga-7336-506694",
+          "name": "SGC",
+          "gender": "MEN",
+          "par": 71,
+          "slope": 124,
+          "courseRating": 69
+        },
+        {
+          "externalTeeId": "usga-7336-506598",
+          "name": "Stone",
+          "gender": "MEN",
+          "par": 71,
+          "slope": 123,
+          "courseRating": 68.5
+        },
+        {
+          "externalTeeId": "usga-7336-535982",
+          "name": "Cedar (Women)",
+          "gender": "WOMEN",
+          "par": 71,
+          "slope": 114,
+          "courseRating": 67.3
+        },
+        {
+          "externalTeeId": "usga-7336-506602",
+          "name": "Grey",
+          "gender": "MEN",
+          "par": 71,
+          "slope": 117,
+          "courseRating": 65.9
+        }
+      ]
+    },
+    {
+      "sourceQuery": "Schaumburg Golf Club",
+      "externalCourseId": "usga-ncrdb-7337",
+      "name": "Schaumburg Golf Club - Tournament/Baer",
+      "city": "Schaumburg",
+      "state": "IL",
+      "sourceUrl": "https://ncrdb.usga.org/courseTeeInfo?CourseID=7337",
+      "tees": [
+        {
+          "externalTeeId": "usga-7337-920301",
+          "name": "Black (Women)",
+          "gender": "WOMEN",
+          "par": 72,
+          "slope": 137,
+          "courseRating": 77.1
+        },
+        {
+          "externalTeeId": "usga-7337-920299",
+          "name": "SGC (Women)",
+          "gender": "WOMEN",
+          "par": 72,
+          "slope": 135,
+          "courseRating": 75.9
+        },
+        {
+          "externalTeeId": "usga-7337-506723",
+          "name": "Stone (Women)",
+          "gender": "WOMEN",
+          "par": 72,
+          "slope": 134,
+          "courseRating": 75.3
+        },
+        {
+          "externalTeeId": "usga-7337-506722",
+          "name": "Grey (Women)",
+          "gender": "WOMEN",
+          "par": 72,
+          "slope": 128,
+          "courseRating": 72.6
+        },
+        {
+          "externalTeeId": "usga-7337-506721",
+          "name": "Grey/Cedar (Women)",
+          "gender": "WOMEN",
+          "par": 72,
+          "slope": 125,
+          "courseRating": 71.2
+        },
+        {
+          "externalTeeId": "usga-7337-506706",
+          "name": "Black",
+          "gender": "MEN",
+          "par": 72,
+          "slope": 127,
+          "courseRating": 71
+        },
+        {
+          "externalTeeId": "usga-7337-506704",
+          "name": "SGC",
+          "gender": "MEN",
+          "par": 72,
+          "slope": 125,
+          "courseRating": 70
+        },
+        {
+          "externalTeeId": "usga-7337-506708",
+          "name": "Stone",
+          "gender": "MEN",
+          "par": 72,
+          "slope": 123,
+          "courseRating": 69.5
+        },
+        {
+          "externalTeeId": "usga-7337-569145",
+          "name": "Cedar (Women)",
+          "gender": "WOMEN",
+          "par": 72,
+          "slope": 120,
+          "courseRating": 68.8
+        },
+        {
+          "externalTeeId": "usga-7337-571328",
+          "name": "Grey",
+          "gender": "MEN",
+          "par": 72,
+          "slope": 118,
+          "courseRating": 67.3
+        }
+      ]
+    },
+    {
+      "sourceQuery": "Schaumburg Golf Club",
+      "externalCourseId": "usga-ncrdb-7338",
+      "name": "Schaumburg Golf Club - Tournament/Players",
+      "city": "Schaumburg",
+      "state": "IL",
+      "sourceUrl": "https://ncrdb.usga.org/courseTeeInfo?CourseID=7338",
+      "tees": [
+        {
+          "externalTeeId": "usga-7338-920604",
+          "name": "Black (Women)",
+          "gender": "WOMEN",
+          "par": 71,
+          "slope": 140,
+          "courseRating": 77.6
+        },
+        {
+          "externalTeeId": "usga-7338-920308",
+          "name": "SGC (Women)",
+          "gender": "WOMEN",
+          "par": 71,
+          "slope": 136,
+          "courseRating": 75.9
+        },
+        {
+          "externalTeeId": "usga-7338-506747",
+          "name": "Stone (Women)",
+          "gender": "WOMEN",
+          "par": 71,
+          "slope": 132,
+          "courseRating": 74.2
+        },
+        {
+          "externalTeeId": "usga-7338-506746",
+          "name": "Grey (Women)",
+          "gender": "WOMEN",
+          "par": 71,
+          "slope": 125,
+          "courseRating": 71.1
+        },
+        {
+          "externalTeeId": "usga-7338-506740",
+          "name": "Black",
+          "gender": "MEN",
+          "par": 71,
+          "slope": 128,
+          "courseRating": 70.3
+        },
+        {
+          "externalTeeId": "usga-7338-506745",
+          "name": "Grey/Cedar (Women)",
+          "gender": "WOMEN",
+          "par": 71,
+          "slope": 122,
+          "courseRating": 69.8
+        },
+        {
+          "externalTeeId": "usga-7338-506739",
+          "name": "SGC",
+          "gender": "MEN",
+          "par": 71,
+          "slope": 125,
+          "courseRating": 69.2
+        },
+        {
+          "externalTeeId": "usga-7338-506741",
+          "name": "Stone",
+          "gender": "MEN",
+          "par": 71,
+          "slope": 124,
+          "courseRating": 68.6
+        },
+        {
+          "externalTeeId": "usga-7338-506744",
+          "name": "Cedar (Women)",
+          "gender": "WOMEN",
+          "par": 71,
+          "slope": 119,
+          "courseRating": 67.9
+        },
+        {
+          "externalTeeId": "usga-7338-506743",
+          "name": "Grey",
+          "gender": "MEN",
+          "par": 71,
+          "slope": 118,
+          "courseRating": 66
+        }
+      ]
+    }
+  ],
+  "misses": [
+    "The Preserve of Highland Park",
+    "Sportsman's Country Club"
+  ]
+}

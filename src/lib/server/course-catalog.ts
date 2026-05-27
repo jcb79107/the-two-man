@@ -65,6 +65,23 @@ function normalizeText(value: string | null | undefined) {
     .trim();
 }
 
+function normalizeCourseNameKey(value: string | null | undefined) {
+  const text = normalizeText(value);
+  const tokens = text.split(" ").filter(Boolean);
+
+  if (tokens.length > 0 && tokens.length % 2 === 0) {
+    const midpoint = tokens.length / 2;
+    const firstHalf = tokens.slice(0, midpoint).join(" ");
+    const secondHalf = tokens.slice(midpoint).join(" ");
+
+    if (firstHalf === secondHalf) {
+      return firstHalf;
+    }
+  }
+
+  return text;
+}
+
 function getNamedRouting(value: string | null | undefined) {
   const text = normalizeText(value);
   const routings = ["blue red", "red white", "white blue"];
@@ -86,6 +103,10 @@ function getLookupScorecardHoles(result: CourseLookupResult) {
   }
 
   return null;
+}
+
+function isAuthoritativeCourseResult(result: CourseLookupResult) {
+  return result.provider === "curated-chicagoland" || result.provider === "usga-ncrdb-curated";
 }
 
 function courseSimilarityScore(left: CourseLookupResult, right: CourseLookupResult) {
@@ -121,18 +142,18 @@ function courseSimilarityScore(left: CourseLookupResult, right: CourseLookupResu
 }
 
 function mergeLookupResultGroup(group: CourseLookupResult[]) {
-  const hasCuratedResult = group.some((result) => result.provider === "curated-chicagoland");
+  const hasCuratedResult = group.some(isAuthoritativeCourseResult);
   const hasCuratedNamedRouting = group.some(
-    (result) => result.provider === "curated-chicagoland" && getNamedRouting(result.name)
+    (result) => isAuthoritativeCourseResult(result) && getNamedRouting(result.name)
   );
   let authoritativeGroup = group;
 
   if (hasCuratedNamedRouting) {
     authoritativeGroup = group.filter(
-      (result) => result.provider === "curated-chicagoland" && getNamedRouting(result.name)
+      (result) => isAuthoritativeCourseResult(result) && getNamedRouting(result.name)
     );
   } else if (hasCuratedResult) {
-    authoritativeGroup = group.filter((result) => result.provider === "curated-chicagoland");
+    authoritativeGroup = group.filter(isAuthoritativeCourseResult);
   }
 
   const base = authoritativeGroup
@@ -152,7 +173,9 @@ function mergeLookupResultGroup(group: CourseLookupResult[]) {
       return left.name.localeCompare(right.name);
     })[0];
   const scorecardHoles =
-    authoritativeGroup.map(getLookupScorecardHoles).find((holes): holes is TeeHoleLike[] => Boolean(holes)) ?? null;
+    authoritativeGroup.map(getLookupScorecardHoles).find((holes): holes is TeeHoleLike[] => Boolean(holes)) ??
+    group.map(getLookupScorecardHoles).find((holes): holes is TeeHoleLike[] => Boolean(holes)) ??
+    null;
   const teeByName = new Map<string, CourseLookupResult["tees"][number]>();
 
   for (const result of authoritativeGroup) {
@@ -408,14 +431,14 @@ async function searchStoredCourseCatalog(query: { name: string; state?: string }
     })
     .reduce<typeof courses>((deduped, entry) => {
       const key = [
-        normalizeText(entry.course.name),
+        normalizeCourseNameKey(entry.course.name),
         normalizeText(entry.course.city),
         entry.course.state?.toUpperCase() ?? ""
       ].join(":");
 
       if (!deduped.some((course) => {
         const existingKey = [
-          normalizeText(course.name),
+          normalizeCourseNameKey(course.name),
           normalizeText(course.city),
           course.state?.toUpperCase() ?? ""
         ].join(":");
@@ -443,12 +466,13 @@ function dedupeCourseCatalogResults<
 
   for (const course of courses) {
     const normalizedName = normalizeText(course.name);
+    const normalizedNameKey = normalizeCourseNameKey(course.name);
     const routing = getNamedRouting(course.name);
     const key =
       normalizedName.includes("northmoor") && routing
         ? ["northmoor", routing, course.state?.toUpperCase() ?? ""].join(":")
         : [
-            normalizedName,
+            normalizedNameKey,
             normalizeText(course.city),
             course.state?.toUpperCase() ?? ""
           ].join(":");
