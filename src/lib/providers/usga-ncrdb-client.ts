@@ -14,9 +14,15 @@ export type UsgaCourseRow = {
   country?: string;
 };
 
-type UsgaSession = {
+export type UsgaNcrdbSession = {
   cookie: string;
   token: string;
+};
+
+export type UsgaNcrdbCourseSearchInput = {
+  clubName?: string;
+  clubCity?: string;
+  state?: string;
 };
 
 function getSetCookieHeaders(headers: Headers) {
@@ -72,7 +78,7 @@ function parseVerificationToken(html: string) {
   return reversed?.[1] ?? "";
 }
 
-async function createUsgaSession(): Promise<UsgaSession> {
+async function createUsgaSession(): Promise<UsgaNcrdbSession> {
   const response = await fetch(USGA_LISTING_URL, {
     headers: {
       Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
@@ -162,7 +168,7 @@ function parseTeeRows(html: string, courseId: number): CourseLookupResult["tees"
   return tees.sort((left, right) => right.courseRating - left.courseRating);
 }
 
-async function fetchUsgaTees(courseId: number, session: UsgaSession) {
+async function fetchUsgaTees(courseId: number, session: UsgaNcrdbSession) {
   const url = new URL(USGA_TEE_INFO_URL);
   url.searchParams.set("CourseID", String(courseId));
 
@@ -259,10 +265,58 @@ function buildCourseResult(row: UsgaCourseRow, tees: CourseLookupResult["tees"])
   };
 }
 
+export async function createUsgaNcrdbSession() {
+  return createUsgaSession();
+}
+
+export async function loadUsgaNcrdbCourseRows(
+  input: UsgaNcrdbCourseSearchInput,
+  session: UsgaNcrdbSession
+): Promise<UsgaCourseRow[]> {
+  const state = normalizeStateDisplay(input.state);
+  const response = await fetch(USGA_LOAD_COURSES_URL, {
+    method: "POST",
+    headers: {
+      Accept: "application/json, text/javascript, */*; q=0.01",
+      "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+      Cookie: session.cookie,
+      Origin: "https://ncrdb.usga.org",
+      Referer: USGA_LISTING_URL,
+      RequestVerificationToken: session.token,
+      "X-Requested-With": "XMLHttpRequest"
+    },
+    body: new URLSearchParams({
+      clubName: String(input.clubName ?? "").trim().slice(0, 80),
+      clubCity: String(input.clubCity ?? "").trim().slice(0, 80),
+      clubState: normalizeUsgaStateParam(input.state),
+      clubCountry: "USA"
+    }),
+    cache: "no-store"
+  });
+
+  if (!response.ok) {
+    throw new Error(`USGA course search failed with status ${response.status}.`);
+  }
+
+  const rows = (await response.json()) as UsgaCourseRow[];
+
+  return (Array.isArray(rows) ? rows : []).filter(
+    (row) => !state || normalizeStateDisplay(String(row.stateDisplay ?? "")) === state
+  );
+}
+
+export async function hydrateUsgaNcrdbCourse(
+  row: UsgaCourseRow,
+  session: UsgaNcrdbSession
+): Promise<CourseLookupResult> {
+  const courseId = Number(row.courseID ?? 0);
+  const tees = courseId > 0 ? await fetchUsgaTees(courseId, session) : [];
+
+  return buildCourseResult(row, tees);
+}
+
 export async function searchUsgaNcrdbCourses(query: CourseLookupQuery): Promise<CourseLookupResult[]> {
   const session = await createUsgaSession();
-  const state = normalizeStateDisplay(query.state);
-  const usgaState = normalizeUsgaStateParam(query.state);
   const rowsByCourseId = new Map<number, UsgaCourseRow>();
   const searchRequests = [
     ...buildUsgaSearchVariants(query.name).map((searchName) => ({
@@ -276,36 +330,9 @@ export async function searchUsgaNcrdbCourses(query: CourseLookupQuery): Promise<
   ];
 
   for (const searchRequest of searchRequests) {
-    const response = await fetch(USGA_LOAD_COURSES_URL, {
-      method: "POST",
-      headers: {
-        Accept: "application/json, text/javascript, */*; q=0.01",
-        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-        Cookie: session.cookie,
-        Origin: "https://ncrdb.usga.org",
-        Referer: USGA_LISTING_URL,
-        RequestVerificationToken: session.token,
-        "X-Requested-With": "XMLHttpRequest"
-      },
-      body: new URLSearchParams({
-        clubName: searchRequest.clubName.slice(0, 80),
-        clubCity: searchRequest.clubCity.slice(0, 80),
-        clubState: usgaState,
-        clubCountry: "USA"
-      }),
-      cache: "no-store"
-    });
+    const rows = await loadUsgaNcrdbCourseRows({ ...searchRequest, state: query.state }, session);
 
-    if (!response.ok) {
-      throw new Error(`USGA course search failed with status ${response.status}.`);
-    }
-
-    const rows = (await response.json()) as UsgaCourseRow[];
-    const filteredRows = (Array.isArray(rows) ? rows : []).filter(
-      (row) => !state || normalizeStateDisplay(String(row.stateDisplay ?? "")) === state
-    );
-
-    for (const row of filteredRows) {
+    for (const row of rows) {
       const courseId = Number(row.courseID ?? 0);
 
       if (courseId > 0) {
@@ -322,10 +349,7 @@ export async function searchUsgaNcrdbCourses(query: CourseLookupQuery): Promise<
   const results: CourseLookupResult[] = [];
 
   for (const row of filteredRows) {
-    const courseId = Number(row.courseID ?? 0);
-    const tees = courseId > 0 ? await fetchUsgaTees(courseId, session) : [];
-
-    results.push(buildCourseResult(row, tees));
+    results.push(await hydrateUsgaNcrdbCourse(row, session));
   }
 
   return results;

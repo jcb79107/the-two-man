@@ -1,0 +1,226 @@
+{
+  "generatedAt": "2026-05-27T16:46:58.560Z",
+  "state": "IL",
+  "source": "USGA NCRListing",
+  "courses": [
+    {
+      "sourceQuery": "Randall Oaks Golf Club",
+      "externalCourseId": "usga-ncrdb-7642",
+      "name": "Randall Oaks Golf Club",
+      "city": "Dundee",
+      "state": "IL",
+      "sourceUrl": "https://ncrdb.usga.org/courseTeeInfo?CourseID=7642",
+      "tees": [
+        {
+          "externalTeeId": "usga-7642-920076",
+          "name": "Gold (Women)",
+          "gender": "WOMEN",
+          "par": 71,
+          "slope": 141,
+          "courseRating": 78.1
+        },
+        {
+          "externalTeeId": "usga-7642-192807",
+          "name": "Blue (Women)",
+          "gender": "WOMEN",
+          "par": 71,
+          "slope": 136,
+          "courseRating": 76.4
+        },
+        {
+          "externalTeeId": "usga-7642-827666",
+          "name": "Blue/White (Women)",
+          "gender": "WOMEN",
+          "par": 71,
+          "slope": 133,
+          "courseRating": 74.6
+        },
+        {
+          "externalTeeId": "usga-7642-192806",
+          "name": "White (Women)",
+          "gender": "WOMEN",
+          "par": 71,
+          "slope": 130,
+          "courseRating": 73.5
+        },
+        {
+          "externalTeeId": "usga-7642-192804",
+          "name": "Gold",
+          "gender": "MEN",
+          "par": 71,
+          "slope": 132,
+          "courseRating": 71.5
+        },
+        {
+          "externalTeeId": "usga-7642-827661",
+          "name": "Gold/Blue",
+          "gender": "MEN",
+          "par": 71,
+          "slope": 129,
+          "courseRating": 70.8
+        },
+        {
+          "externalTeeId": "usga-7642-178162",
+          "name": "Blue",
+          "gender": "MEN",
+          "par": 71,
+          "slope": 128,
+          "courseRating": 70
+        },
+        {
+          "externalTeeId": "usga-7642-827663",
+          "name": "Blue/White",
+          "gender": "MEN",
+          "par": 71,
+          "slope": 125,
+          "courseRating": 68.7
+        },
+        {
+          "externalTeeId": "usga-7642-178163",
+          "name": "Red (Women)",
+          "gender": "WOMEN",
+          "par": 71,
+          "slope": 120,
+          "courseRating": 68.7
+        },
+        {
+          "externalTeeId": "usga-7642-192805",
+          "name": "White",
+          "gender": "MEN",
+          "par": 71,
+          "slope": 122,
+          "courseRating": 67.6
+        },
+        {
+          "externalTeeId": "usga-7642-192900",
+          "name": "Red",
+          "gender": "MEN",
+          "par": 71,
+          "slope": 113,
+          "courseRating": 63.7
+        }
+      ]
+    },
+    {
+      "sourceQuery": "Countryside Golf Club",
+      "externalCourseId": "usga-ncrdb-7456",
+      "name": "Countryside Golf Club - Prairie",
+      "city": "Mundelein",
+      "state": "IL",
+      "sourceUrl": "https://ncrdb.usga.org/courseTeeInfo?CourseID=7456",
+      "tees": [
+        {
+          "externalTeeId": "usga-7456-826773",
+          "name": "Black (Women)",
+          "gender": "WOMEN",
+          "par": 72,
+          "slope": 138,
+          "courseRating": 78.2
+        },
+        {
+          "externalTeeId": "usga-7456-499104",
+          "name": "Blue (Women)",
+          "gender": "WOMEN",
+          "par": 72,
+          "slope": 132,
+          "courseRating": 75.5
+        },
+        {
+          "externalTeeId": "usga-7456-257649",
+          "name": "Black",
+          "gender": "MEN",
+          "par": 72,
+          "slope": 128,
+          "courseRating": 72
+        },
+        {
+          "externalTeeId": "usga-7456-177781",
+          "name": "Blue",
+          "gender": "MEN",
+          "par": 72,
+          "slope": 123,
+          "courseRating": 69.8
+        },
+        {
+          "externalTeeId": "usga-7456-177782",
+          "name": "Green (Women)",
+          "gender": "WOMEN",
+          "par": 72,
+          "slope": 118,
+          "courseRating": 68.7
+        },
+        {
+          "externalTeeId": "usga-7456-499102",
+          "name": "Green",
+          "gender": "MEN",
+          "par": 72,
+          "slope": 109,
+          "courseRating": 64.3
+        }
+      ]
+    },
+    {
+      "sourceQuery": "Countryside Golf Club",
+      "externalCourseId": "usga-ncrdb-7455",
+      "name": "Countryside Golf Club - Traditional",
+      "city": "Mundelein",
+      "state": "IL",
+      "sourceUrl": "https://ncrdb.usga.org/courseTeeInfo?CourseID=7455",
+      "tees": [
+        {
+          "externalTeeId": "usga-7455-826756",
+          "name": "Black (Women)",
+          "gender": "WOMEN",
+          "par": 72,
+          "slope": 136,
+          "courseRating": 77.2
+        },
+        {
+          "externalTeeId": "usga-7455-499096",
+          "name": "Blue (Women)",
+          "gender": "WOMEN",
+          "par": 72,
+          "slope": 132,
+          "courseRating": 75.1
+        },
+        {
+          "externalTeeId": "usga-7455-534316",
+          "name": "Black",
+          "gender": "MEN",
+          "par": 72,
+          "slope": 125,
+          "courseRating": 71.1
+        },
+        {
+          "externalTeeId": "usga-7455-177780",
+          "name": "Green (Women)",
+          "gender": "WOMEN",
+          "par": 72,
+          "slope": 122,
+          "courseRating": 70.3
+        },
+        {
+          "externalTeeId": "usga-7455-534317",
+          "name": "Blue",
+          "gender": "MEN",
+          "par": 72,
+          "slope": 121,
+          "courseRating": 69.4
+        },
+        {
+          "externalTeeId": "usga-7455-534318",
+          "name": "Green",
+          "gender": "MEN",
+          "par": 72,
+          "slope": 111,
+          "courseRating": 65.7
+        }
+      ]
+    }
+  ],
+  "misses": [
+    "Fresh Meadow Golf Club",
+    "Black Hawk Golf Club",
+    "Links & Tees Golf Facility"
+  ]
+}

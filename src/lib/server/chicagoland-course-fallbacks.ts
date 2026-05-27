@@ -1,7 +1,12 @@
 import "server-only";
 
 import type { CourseLookupResult } from "@/lib/providers/types";
+import usgaNcrdbChicagolandExpansionEnrichment from "../../../data/course-catalog/usga-ncrdb-chicagoland-expansion-enrichment.json";
+import usgaNcrdbLakeCookEnrichment from "../../../data/course-catalog/usga-ncrdb-lake-cook-enrichment.json";
+import usgaNcrdbNorthwestIndianaEnrichment from "../../../data/course-catalog/usga-ncrdb-northwest-indiana-enrichment.json";
 import usgaNcrdbPriorityEnrichment from "../../../data/course-catalog/usga-ncrdb-priority-enrichment.json";
+import usgaNcrdbTargetedIllinoisEnrichment from "../../../data/course-catalog/usga-ncrdb-targeted-illinois-enrichment.json";
+import usgaNcrdbWisconsinDriveEnrichment from "../../../data/course-catalog/usga-ncrdb-wisconsin-drive-enrichment.json";
 
 const BRYN_MAWR_HOLES = [
   { holeNumber: 1, par: 5, strokeIndex: 15, yardage: 476 },
@@ -243,7 +248,14 @@ function normalizeGeneratedUsgaCourse(course: (typeof usgaNcrdbPriorityEnrichmen
   };
 }
 
-const USGA_NCRDB_GENERATED_COURSES = usgaNcrdbPriorityEnrichment.courses.map(normalizeGeneratedUsgaCourse);
+const USGA_NCRDB_GENERATED_COURSES = [
+  ...usgaNcrdbPriorityEnrichment.courses,
+  ...usgaNcrdbLakeCookEnrichment.courses,
+  ...usgaNcrdbChicagolandExpansionEnrichment.courses,
+  ...usgaNcrdbNorthwestIndianaEnrichment.courses,
+  ...usgaNcrdbWisconsinDriveEnrichment.courses,
+  ...usgaNcrdbTargetedIllinoisEnrichment.courses
+].map(normalizeGeneratedUsgaCourse);
 
 const USGA_NCRDB_CURATED_COURSES: UsgaCuratedCourse[] = [
   {
@@ -269,7 +281,7 @@ const USGA_NCRDB_CURATED_COURSES: UsgaCuratedCourse[] = [
   {
     externalCourseId: "usga-ncrdb-7303",
     name: "Harborside International - Port",
-    city: "East Chicago",
+    city: "Chicago",
     state: "IL",
     sourceUrl: "https://ncrdb.usga.org/courseTeeInfo?CourseID=7303",
     tees: [
@@ -288,7 +300,7 @@ const USGA_NCRDB_CURATED_COURSES: UsgaCuratedCourse[] = [
   {
     externalCourseId: "usga-ncrdb-7302",
     name: "Harborside International - Starboard",
-    city: "East Chicago",
+    city: "Chicago",
     state: "IL",
     sourceUrl: "https://ncrdb.usga.org/courseTeeInfo?CourseID=7302",
     tees: [
@@ -571,7 +583,25 @@ const USGA_NCRDB_CURATED_COURSES: UsgaCuratedCourse[] = [
   }
 ];
 
-const CURATED_COURSES: CourseLookupResult[] = [
+function dedupeCourseResults(courses: CourseLookupResult[]) {
+  const seenExternalIds = new Set<string>();
+  const seenPlaces = new Set<string>();
+
+  return courses.filter((course) => {
+    const externalId = normalize(course.externalCourseId);
+    const place = normalize([course.name, course.city, course.state].filter(Boolean).join(" "));
+
+    if (seenExternalIds.has(externalId) || seenPlaces.has(place)) {
+      return false;
+    }
+
+    seenExternalIds.add(externalId);
+    seenPlaces.add(place);
+    return true;
+  });
+}
+
+const CURATED_COURSES: CourseLookupResult[] = dedupeCourseResults([
   {
     externalCourseId: "bryn-mawr-country-club-il",
     provider: "curated-chicagoland",
@@ -660,7 +690,7 @@ const CURATED_COURSES: CourseLookupResult[] = [
   }),
   ...USGA_NCRDB_CURATED_COURSES.map(buildUsgaCuratedCourse),
   ...USGA_NCRDB_GENERATED_COURSES.map(buildUsgaCuratedCourse)
-];
+]);
 
 function normalize(value: string | null | undefined) {
   return String(value ?? "")
