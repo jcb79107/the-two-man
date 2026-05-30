@@ -192,17 +192,34 @@ export function buildMatchPlayerSnapshots(input: {
   };
 }
 
-export function scoreMatch(input: MatchScoringInput): MatchScoringResult {
-  validateScoringInput(input);
-
-  const preview = buildMatchPlayerSnapshots({
-    allowancePct: input.allowancePct,
-    maxStrokesPerHole: input.maxStrokesPerHole,
-    players: input.players
-  });
-  const allowancePct = preview.allowancePct;
+function scoreWithSnapshots(input: {
+  players: PlayerHandicapSnapshot[];
+  holeScores: HoleScoreInput[];
+  allowancePct?: number;
+  maxStrokesPerHole?: number;
+  lowPlayerId?: string;
+}): MatchScoringResult {
+  const allowancePct = input.allowancePct ?? DEFAULT_ALLOWANCE_PCT;
+  const maxStrokesPerHole = input.maxStrokesPerHole ?? DEFAULT_MAX_STROKES_PER_HOLE;
   const teamIds = [...new Set(input.players.map((player) => player.teamId))];
-  const players = preview.players;
+
+  if (teamIds.length !== 2) {
+    throw new Error("Match scoring requires exactly two teams.");
+  }
+
+  if (input.players.length !== 4) {
+    throw new Error("Match scoring requires exactly four player entries.");
+  }
+
+  const players = input.players.map((player) => ({
+    ...player,
+    strokesByHole: Object.fromEntries(
+      Object.entries(player.strokesByHole).map(([holeNumber, strokes]) => [
+        Number(holeNumber),
+        Math.min(maxStrokesPerHole, Number(strokes) || 0)
+      ])
+    )
+  }));
   const snapshotsByPlayerId = Object.fromEntries(
     players.map((player) => [player.playerId, player])
   );
@@ -234,10 +251,7 @@ export function scoreMatch(input: MatchScoringInput): MatchScoringResult {
         throw new Error(`Missing gross score for player ${player.playerId} on hole ${holeScore.holeNumber}.`);
       }
 
-      const strokeCount = Math.min(
-        input.maxStrokesPerHole ?? DEFAULT_MAX_STROKES_PER_HOLE,
-        snapshotsByPlayerId[player.playerId]?.strokesByHole[holeScore.holeNumber] ?? 0
-      );
+      const strokeCount = snapshotsByPlayerId[player.playerId]?.strokesByHole[holeScore.holeNumber] ?? 0;
       playerNetScores[player.playerId] = gross - strokeCount;
     }
 
@@ -302,16 +316,48 @@ export function scoreMatch(input: MatchScoringInput): MatchScoringResult {
   );
   const winningTeamId =
     teamSummaries.find((summary) => summary.resultCode === "WIN")?.teamId ?? null;
+  const lowPlayerId =
+    input.lowPlayerId ??
+    players.reduce((lowest, player) =>
+      player.courseHandicap < lowest.courseHandicap ? player : lowest
+    ).playerId;
 
   return {
-    allowancePct: preview.allowancePct,
-    maxStrokesPerHole: preview.maxStrokesPerHole,
-    lowPlayerId: preview.lowPlayerId,
+    allowancePct,
+    maxStrokesPerHole,
+    lowPlayerId,
     winningTeamId,
     players,
     holes,
     teamSummaries
   };
+}
+
+export function scoreMatch(input: MatchScoringInput): MatchScoringResult {
+  validateScoringInput(input);
+
+  const preview = buildMatchPlayerSnapshots({
+    allowancePct: input.allowancePct,
+    maxStrokesPerHole: input.maxStrokesPerHole,
+    players: input.players
+  });
+  return scoreWithSnapshots({
+    players: preview.players,
+    holeScores: input.holeScores,
+    allowancePct: preview.allowancePct,
+    maxStrokesPerHole: preview.maxStrokesPerHole,
+    lowPlayerId: preview.lowPlayerId
+  });
+}
+
+export function scorePublishedMatch(input: {
+  players: PlayerHandicapSnapshot[];
+  holeScores: HoleScoreInput[];
+  allowancePct?: number;
+  maxStrokesPerHole?: number;
+  lowPlayerId?: string;
+}): MatchScoringResult {
+  return scoreWithSnapshots(input);
 }
 
 export function scoreForfeit(input: ForfeitScoringInput): TeamMatchSummary[] {

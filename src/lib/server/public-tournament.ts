@@ -1,6 +1,6 @@
 import "server-only";
 
-import { scoreForfeit, scoreMatch } from "@/lib/scoring/engine";
+import { scoreForfeit, scoreMatch, scorePublishedMatch } from "@/lib/scoring/engine";
 import type { TeamMatchSummary } from "@/lib/scoring/types";
 import { decorateBracketRounds } from "@/lib/server/bracket";
 import { db } from "@/lib/server/db";
@@ -167,28 +167,45 @@ function buildTeamSummariesFromMatch(match: {
     return null;
   }
 
-  const scorecard = scoreMatch({
-    players: match.playerSelections.map((selection) => ({
-      playerId: selection.playerId,
-      playerName: selection.player.displayName,
-      teamId: selection.teamId,
-      handicapIndex: Number(selection.handicapIndexSnapshot),
-      teeId: selection.teeId,
-      teeName: selection.teeNameSnapshot,
-      slope: selection.slopeSnapshot,
-      courseRating: Number(selection.courseRatingSnapshot),
-      par: selection.parSnapshot,
-      holes: selection.tee.holes.map((hole) => ({
-        holeNumber: hole.holeNumber,
-        par: hole.par,
-        strokeIndex: hole.strokeIndex
-      }))
-    })),
-    holeScores: holesTemplate.map((hole) => ({
-      holeNumber: hole.holeNumber,
-      scores: scoresByHole.get(hole.holeNumber) ?? {}
-    }))
-  });
+  const holeScores = holesTemplate.map((hole) => ({
+    holeNumber: hole.holeNumber,
+    scores: scoresByHole.get(hole.holeNumber) ?? {}
+  }));
+  const scorecard = ["FINAL", "SUBMITTED", "FORFEIT"].includes(match.status)
+    ? scorePublishedMatch({
+        players: match.playerSelections.map((selection) => ({
+          playerId: selection.playerId,
+          playerName: selection.player.displayName,
+          teamId: selection.teamId,
+          teeId: selection.teeId,
+          teeName: selection.teeNameSnapshot,
+          handicapIndex: Number(selection.handicapIndexSnapshot),
+          courseHandicap: selection.courseHandicap,
+          playingHandicap: selection.playingHandicap,
+          matchStrokeCount: selection.matchStrokeCount,
+          strokesByHole: selection.strokesByHole as Record<number, number>
+        })),
+        holeScores
+      })
+    : scoreMatch({
+        players: match.playerSelections.map((selection) => ({
+          playerId: selection.playerId,
+          playerName: selection.player.displayName,
+          teamId: selection.teamId,
+          handicapIndex: Number(selection.handicapIndexSnapshot),
+          teeId: selection.teeId,
+          teeName: selection.teeNameSnapshot,
+          slope: selection.slopeSnapshot,
+          courseRating: Number(selection.courseRatingSnapshot),
+          par: selection.parSnapshot,
+          holes: selection.tee.holes.map((hole) => ({
+            holeNumber: hole.holeNumber,
+            par: hole.par,
+            strokeIndex: hole.strokeIndex
+          }))
+        })),
+        holeScores
+      });
 
   return {
     teamSummaries: scorecard.teamSummaries,

@@ -1,7 +1,7 @@
 import "server-only";
 
 import { Prisma } from "@prisma/client";
-import { buildMatchPlayerSnapshots, scoreMatch } from "@/lib/scoring/engine";
+import { buildMatchPlayerSnapshots, scoreMatch, scorePublishedMatch } from "@/lib/scoring/engine";
 import type { MatchPlayerInput } from "@/lib/scoring/types";
 import { getStoredCourseCatalog } from "@/lib/server/course-catalog";
 import { db } from "@/lib/server/db";
@@ -319,13 +319,32 @@ export async function getPrivateMatchRecordByToken(token: string): Promise<Priva
 
     const scorecard =
       canScore && setupInputs.length === 4
-        ? scoreMatch({
-            players: setupInputs,
-            holeScores: holeInputs.map((hole) => ({
-              holeNumber: hole.holeNumber,
-              scores: hole.scores
-            }))
-          })
+        ? ["FINAL", "SUBMITTED", "FORFEIT"].includes(match.status)
+          ? scorePublishedMatch({
+              players: match.playerSelections.map((selection) => ({
+                playerId: selection.playerId,
+                playerName: selection.player.displayName,
+                teamId: selection.teamId,
+                teeId: selection.teeId,
+                teeName: selection.teeNameSnapshot,
+                handicapIndex: Number(selection.handicapIndexSnapshot),
+                courseHandicap: selection.courseHandicap,
+                playingHandicap: selection.playingHandicap,
+                matchStrokeCount: selection.matchStrokeCount,
+                strokesByHole: selection.strokesByHole as Record<number, number>
+              })),
+              holeScores: holeInputs.map((hole) => ({
+                holeNumber: hole.holeNumber,
+                scores: hole.scores
+              }))
+            })
+          : scoreMatch({
+              players: setupInputs,
+              holeScores: holeInputs.map((hole) => ({
+                holeNumber: hole.holeNumber,
+                scores: hole.scores
+              }))
+            })
         : null;
 
     return {
