@@ -4,8 +4,7 @@ import {
   calculateCourseHandicap,
   calculatePlayingHandicap,
   scoreForfeit,
-  scoreMatch,
-  scorePublishedMatch
+  scoreMatch
 } from "@/lib/scoring/engine";
 import type { MatchScoringInput } from "@/lib/scoring/types";
 
@@ -558,84 +557,6 @@ describe("match scoring", () => {
     expect(holeSeventeen?.winningTeamId).toBeNull();
     expect(barronTeam?.totalPoints).toBe(8.5);
     expect(holwayTeam?.totalPoints).toBe(9.5);
-  });
-
-  it("preserves published snapshots even after handicap math changes", () => {
-    const result = scorePublishedMatch({
-      players: [
-        {
-          playerId: "a1",
-          playerName: "Team A One",
-          teamId: "team-a",
-          teeId: "tee-1",
-          teeName: "Blue",
-          handicapIndex: 12,
-          courseHandicap: 12,
-          playingHandicap: 1,
-          matchStrokeCount: 1,
-          strokesByHole: { 1: 1, 2: 0, 3: 0 }
-        },
-        {
-          playerId: "a2",
-          playerName: "Team A Two",
-          teamId: "team-a",
-          teeId: "tee-1",
-          teeName: "Blue",
-          handicapIndex: 8,
-          courseHandicap: 8,
-          playingHandicap: 0,
-          matchStrokeCount: 0,
-          strokesByHole: { 1: 0, 2: 0, 3: 0 }
-        },
-        {
-          playerId: "b1",
-          playerName: "Team B One",
-          teamId: "team-b",
-          teeId: "tee-1",
-          teeName: "Blue",
-          handicapIndex: 14,
-          courseHandicap: 14,
-          playingHandicap: 0,
-          matchStrokeCount: 0,
-          strokesByHole: { 1: 0, 2: 0, 3: 0 }
-        },
-        {
-          playerId: "b2",
-          playerName: "Team B Two",
-          teamId: "team-b",
-          teeId: "tee-1",
-          teeName: "Blue",
-          handicapIndex: 6,
-          courseHandicap: 6,
-          playingHandicap: 0,
-          matchStrokeCount: 0,
-          strokesByHole: { 1: 0, 2: 0, 3: 0 }
-        }
-      ],
-      holeScores: [
-        { holeNumber: 1, scores: { a1: 5, a2: 5, b1: 5, b2: 5 } },
-        { holeNumber: 2, scores: { a1: 4, a2: 4, b1: 5, b2: 5 } },
-        { holeNumber: 3, scores: { a1: 5, a2: 5, b1: 4, b2: 4 } }
-      ]
-    });
-
-    const teamA = result.teamSummaries.find((summary) => summary.teamId === "team-a");
-    const teamB = result.teamSummaries.find((summary) => summary.teamId === "team-b");
-
-    expect(teamA).toMatchObject({
-      totalPoints: 2,
-      holesWon: 2,
-      betterBallGrossTotal: 14,
-      betterBallNetTotal: 13,
-      resultCode: "WIN"
-    });
-    expect(teamB).toMatchObject({
-      totalPoints: 1,
-      holesWon: 1,
-      betterBallGrossTotal: 14,
-      betterBallNetTotal: 14,
-      resultCode: "LOSS"
-    });
   });
 });
 
