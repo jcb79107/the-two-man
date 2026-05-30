@@ -48,7 +48,7 @@ export function calculatePlayingHandicap(input: {
 
 function buildPlayerSnapshot(
   player: MatchPlayerInput,
-  lowCourseHandicap: number,
+  lowUnroundedCourseHandicap: number,
   maxStrokeHoles: number,
   allowancePct: number
 ): PlayerHandicapSnapshot {
@@ -62,7 +62,9 @@ function buildPlayerSnapshot(
   const courseHandicap = roundHalfAwayFromZero(unroundedCourseHandicap);
   const playingHandicap = Math.max(
     0,
-    roundHalfAwayFromZero((courseHandicap - lowCourseHandicap) * allowancePct)
+    roundHalfAwayFromZero(
+      (unroundedCourseHandicap - lowUnroundedCourseHandicap) * allowancePct
+    )
   );
   const matchStrokeCount = Math.max(0, Math.min(maxStrokeHoles, playingHandicap));
   const strokesByHole = Object.fromEntries(
@@ -160,20 +162,20 @@ export function buildMatchPlayerSnapshots(input: {
     0,
     holeCount * (input.maxStrokesPerHole ?? DEFAULT_MAX_STROKES_PER_HOLE)
   );
-  const courseHandicaps = input.players.map((player) =>
-    roundHalfAwayFromZero(
-      calculateUnroundedCourseHandicap({
-        handicapIndex: player.handicapIndex,
-        slope: player.slope,
-        courseRating: player.courseRating,
-        par: player.par
-      })
-    )
+  const unroundedCourseHandicaps = input.players.map((player) =>
+    calculateUnroundedCourseHandicap({
+      handicapIndex: player.handicapIndex,
+      slope: player.slope,
+      courseRating: player.courseRating,
+      par: player.par
+    })
   );
-  const lowCourseHandicap = Math.min(...courseHandicaps);
-  const lowPlayer = input.players[courseHandicaps.indexOf(lowCourseHandicap)];
+  const lowUnroundedCourseHandicap = Math.min(...unroundedCourseHandicaps);
+  const lowPlayer = input.players[
+    unroundedCourseHandicaps.indexOf(lowUnroundedCourseHandicap)
+  ];
   const players = input.players.map((player) =>
-    buildPlayerSnapshot(player, lowCourseHandicap, maxStrokeHoles, allowancePct)
+    buildPlayerSnapshot(player, lowUnroundedCourseHandicap, maxStrokeHoles, allowancePct)
   );
 
   return {
