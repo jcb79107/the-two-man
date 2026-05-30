@@ -184,11 +184,11 @@ describe("handicap calculations", () => {
 
     expect(byPlayerId.get("usga-a")).toMatchObject({
       courseHandicap: 10,
-      playingHandicap: 8
+      playingHandicap: 9
     });
     expect(byPlayerId.get("usga-b")).toMatchObject({
       courseHandicap: 11,
-      playingHandicap: 10
+      playingHandicap: 9
     });
   });
 });
@@ -272,7 +272,7 @@ describe("match scoring", () => {
     expect(tenIndexPlayer?.strokesByHole[10]).toBe(0);
   });
 
-  it("matches GHIN-style 90% four-ball match play strokes from unrounded Course Handicap", () => {
+  it("matches GHIN-style 90% four-ball match play strokes from low course handicap", () => {
     const holes = Array.from({ length: 18 }, (_, index) => ({
       holeNumber: index + 1,
       par: 4,
@@ -344,22 +344,114 @@ describe("match scoring", () => {
     expect(result.lowPlayerId).toBe("jason-taitz");
     expect(byPlayerId.get("ryan-rabin")).toMatchObject({
       courseHandicap: 24,
-      playingHandicap: 22,
-      matchStrokeCount: 8
+      playingHandicap: 7,
+      matchStrokeCount: 7
     });
     expect(byPlayerId.get("jon-stone")).toMatchObject({
       courseHandicap: 17,
-      playingHandicap: 16,
-      matchStrokeCount: 2
+      playingHandicap: 1,
+      matchStrokeCount: 1
     });
     expect(byPlayerId.get("aaron-stone")).toMatchObject({
       courseHandicap: 17,
-      playingHandicap: 15,
+      playingHandicap: 1,
       matchStrokeCount: 1
     });
     expect(byPlayerId.get("jason-taitz")).toMatchObject({
       courseHandicap: 16,
-      playingHandicap: 14,
+      playingHandicap: 0,
+      matchStrokeCount: 0
+    });
+  });
+
+  it("matches the Heritage Oaks GHIN four-ball example", () => {
+    const holes = Array.from({ length: 18 }, (_, index) => ({
+      holeNumber: index + 1,
+      par: 4,
+      strokeIndex: index + 1
+    }));
+    const result = scoreMatch({
+      players: [
+        {
+          playerId: "brandon",
+          playerName: "Brandon Grant",
+          teamId: "grant-rausch",
+          handicapIndex: 23.5,
+          teeId: "heritage-oaks-blue",
+          teeName: "Blue",
+          slope: 128,
+          courseRating: 70.2,
+          par: 70,
+          holes
+        },
+        {
+          playerId: "ross",
+          playerName: "Ross Agins",
+          teamId: "agins-deutsch",
+          handicapIndex: 20,
+          teeId: "heritage-oaks-blue",
+          teeName: "Blue",
+          slope: 128,
+          courseRating: 70.2,
+          par: 70,
+          holes
+        },
+        {
+          playerId: "noah",
+          playerName: "Noah Deutsch",
+          teamId: "agins-deutsch",
+          handicapIndex: 13.7,
+          teeId: "heritage-oaks-blue",
+          teeName: "Blue",
+          slope: 128,
+          courseRating: 70.2,
+          par: 70,
+          holes
+        },
+        {
+          playerId: "andrew",
+          playerName: "Andrew Rausch",
+          teamId: "grant-rausch",
+          handicapIndex: 5.3,
+          teeId: "heritage-oaks-blue",
+          teeName: "Blue",
+          slope: 128,
+          courseRating: 70.2,
+          par: 70,
+          holes
+        }
+      ],
+      holeScores: holes.map((hole) => ({
+        holeNumber: hole.holeNumber,
+        scores: {
+          brandon: 4,
+          ross: 4,
+          noah: 4,
+          andrew: 4
+        }
+      }))
+    });
+    const byPlayerId = new Map(result.players.map((player) => [player.playerId, player]));
+
+    expect(result.lowPlayerId).toBe("andrew");
+    expect(byPlayerId.get("brandon")).toMatchObject({
+      courseHandicap: 27,
+      playingHandicap: 19,
+      matchStrokeCount: 18
+    });
+    expect(byPlayerId.get("ross")).toMatchObject({
+      courseHandicap: 23,
+      playingHandicap: 15,
+      matchStrokeCount: 15
+    });
+    expect(byPlayerId.get("noah")).toMatchObject({
+      courseHandicap: 16,
+      playingHandicap: 9,
+      matchStrokeCount: 9
+    });
+    expect(byPlayerId.get("andrew")).toMatchObject({
+      courseHandicap: 6,
+      playingHandicap: 0,
       matchStrokeCount: 0
     });
   });
@@ -446,19 +538,19 @@ describe("match scoring", () => {
 
     expect(byPlayerId.get("loewenstein")).toMatchObject({
       courseHandicap: 13,
-      playingHandicap: 12,
+      playingHandicap: 2,
       matchStrokeCount: 2
     });
     expect(byPlayerId.get("loewenstein")?.strokesByHole[4]).toBe(1);
     expect(byPlayerId.get("loewenstein")?.strokesByHole[17]).toBe(1);
     expect(byPlayerId.get("holway")).toMatchObject({
       courseHandicap: 12,
-      playingHandicap: 11,
+      playingHandicap: 1,
       matchStrokeCount: 1
     });
     expect(byPlayerId.get("chase")).toMatchObject({
       courseHandicap: 14,
-      playingHandicap: 13,
+      playingHandicap: 3,
       matchStrokeCount: 3
     });
     expect(byPlayerId.get("chase")?.strokesByHole[17]).toBe(1);

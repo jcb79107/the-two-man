@@ -48,7 +48,7 @@ export function calculatePlayingHandicap(input: {
 
 function buildPlayerSnapshot(
   player: MatchPlayerInput,
-  lowPlayingHandicap: number,
+  lowCourseHandicap: number,
   maxStrokeHoles: number,
   allowancePct: number
 ): PlayerHandicapSnapshot {
@@ -60,11 +60,11 @@ function buildPlayerSnapshot(
   };
   const unroundedCourseHandicap = calculateUnroundedCourseHandicap(courseHandicapInput);
   const courseHandicap = roundHalfAwayFromZero(unroundedCourseHandicap);
-  const playingHandicap = roundHalfAwayFromZero(unroundedCourseHandicap * allowancePct);
-  const matchStrokeCount = Math.max(
+  const playingHandicap = Math.max(
     0,
-    Math.min(maxStrokeHoles, playingHandicap - lowPlayingHandicap)
+    roundHalfAwayFromZero((courseHandicap - lowCourseHandicap) * allowancePct)
   );
+  const matchStrokeCount = Math.max(0, Math.min(maxStrokeHoles, playingHandicap));
   const strokesByHole = Object.fromEntries(
     player.holes.map((hole) => [
       hole.holeNumber,
@@ -160,25 +160,20 @@ export function buildMatchPlayerSnapshots(input: {
     0,
     holeCount * (input.maxStrokesPerHole ?? DEFAULT_MAX_STROKES_PER_HOLE)
   );
-  const playingHandicaps = input.players.map((player) =>
+  const courseHandicaps = input.players.map((player) =>
     roundHalfAwayFromZero(
       calculateUnroundedCourseHandicap({
         handicapIndex: player.handicapIndex,
         slope: player.slope,
         courseRating: player.courseRating,
         par: player.par
-      }) * allowancePct
+      })
     )
   );
-  const lowPlayingHandicap = Math.min(...playingHandicaps);
-  const lowPlayer = input.players[playingHandicaps.indexOf(lowPlayingHandicap)];
+  const lowCourseHandicap = Math.min(...courseHandicaps);
+  const lowPlayer = input.players[courseHandicaps.indexOf(lowCourseHandicap)];
   const players = input.players.map((player) =>
-    buildPlayerSnapshot(
-      player,
-      lowPlayingHandicap,
-      maxStrokeHoles,
-      allowancePct
-    )
+    buildPlayerSnapshot(player, lowCourseHandicap, maxStrokeHoles, allowancePct)
   );
 
   return {
