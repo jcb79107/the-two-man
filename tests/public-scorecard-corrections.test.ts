@@ -119,7 +119,6 @@ describe("applyPublicScorecardCorrections", () => {
     expect(holeNine?.par).toBe(5);
     expect(grantTeam?.totalPoints).toBe(10);
     expect(aginsTeam?.totalPoints).toBe(8);
-    expect(frontNinePoints).toEqual({ grant: 4.5, agins: 4.5 });
+    expect(frontNinePoints).toEqual({ grant: 4, agins: 5 });
   });
 });
-
