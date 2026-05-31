@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { scoreMatch } from "@/lib/scoring/engine";
-import { applyPublicScorecardCorrections } from "@/lib/server/public-scorecard-corrections";
+import {
+  applyComputedPublicScorecardCorrections,
+  applyPublicScorecardCorrections
+} from "@/lib/server/public-scorecard-corrections";
 
 describe("applyPublicScorecardCorrections", () => {
   it("fixes the Heritage Oaks public card to the official maroon-tee 10-8 result", () => {
@@ -136,6 +139,92 @@ describe("applyPublicScorecardCorrections", () => {
       grant: [1, 3, 7, 10, 14, 16, 17],
       agins: [2, 5, 8, 9, 12],
       tied: [4, 6, 11, 13, 15, 18]
+    });
+  });
+});
+
+describe("applyComputedPublicScorecardCorrections", () => {
+  it("applies the Briarwood 90-percent stroke correction from the posted scorecard", () => {
+    const corrected = applyComputedPublicScorecardCorrections("f13e674887224826adc18", {
+      players: [
+        {
+          playerId: "team-04-player-1",
+          playerName: "zack nankin",
+          teamId: "team-04",
+          teeName: "II",
+          handicapIndex: 5,
+          matchStrokeCount: 0,
+          strokesByHole: {},
+          grossByHole: { 1: 4, 2: 4, 3: 4, 4: 3, 5: 5, 6: 5, 7: 5, 8: 3, 9: 5, 10: 4, 11: 5, 12: 4, 13: 5, 14: 4, 15: 3, 16: 4, 17: 4, 18: 4 },
+          netByHole: {}
+        },
+        {
+          playerId: "team-04-player-2",
+          playerName: "Jonah Sacks",
+          teamId: "team-04",
+          teeName: "II",
+          handicapIndex: 15,
+          matchStrokeCount: 11,
+          strokesByHole: {},
+          grossByHole: { 1: 4, 2: 5, 3: 5, 4: 5, 5: 5, 6: 4, 7: 5, 8: 4, 9: 4, 10: 4, 11: 6, 12: 5, 13: 6, 14: 7, 15: 4, 16: 5, 17: 6, 18: 6 },
+          netByHole: {}
+        },
+        {
+          playerId: "team-17-player-1",
+          playerName: "Zach Lieberman",
+          teamId: "team-17",
+          teeName: "II",
+          handicapIndex: 14,
+          matchStrokeCount: 9,
+          strokesByHole: {},
+          grossByHole: { 1: 5, 2: 6, 3: 7, 4: 4, 5: 6, 6: 5, 7: 6, 8: 5, 9: 6, 10: 5, 11: 6, 12: 4, 13: 7, 14: 7, 15: 4, 16: 7, 17: 4, 18: 4 },
+          netByHole: {}
+        },
+        {
+          playerId: "team-17-player-2",
+          playerName: "Noah Pickus",
+          teamId: "team-17",
+          teeName: "II",
+          handicapIndex: 15,
+          matchStrokeCount: 11,
+          strokesByHole: {},
+          grossByHole: { 1: 5, 2: 6, 3: 7, 4: 4, 5: 6, 6: 4, 7: 6, 8: 5, 9: 5, 10: 6, 11: 3, 12: 5, 13: 6, 14: 5, 15: 3, 16: 5, 17: 6, 18: 5 },
+          netByHole: {}
+        }
+      ],
+      holes: Array.from({ length: 18 }, (_, index) => ({
+        holeNumber: index + 1,
+        teamPoints: {},
+        teamBetterBallNet: {},
+        winningTeamId: null
+      })),
+      teamSummaries: []
+    });
+
+    expect(corrected.players.find((player) => player.playerId === "team-17-player-1")).toMatchObject({
+      playerName: "Zak Lieberman",
+      handicapIndex: 11,
+      matchStrokeCount: 7
+    });
+    expect(corrected.players.find((player) => player.playerId === "team-17-player-2")).toMatchObject({
+      handicapIndex: 11.8,
+      matchStrokeCount: 8
+    });
+    expect(corrected.players.find((player) => player.playerId === "team-04-player-2")).toMatchObject({
+      handicapIndex: 12,
+      matchStrokeCount: 9
+    });
+    expect(corrected.teamSummaries).toEqual([
+      expect.objectContaining({ teamId: "team-04", totalPoints: 12.5, holesWon: 10 }),
+      expect.objectContaining({ teamId: "team-17", totalPoints: 5.5, holesWon: 3 })
+    ]);
+    expect(corrected.holes.find((hole) => hole.holeNumber === 13)).toMatchObject({
+      winningTeamId: "team-04",
+      teamPoints: { "team-04": 1, "team-17": 0 }
+    });
+    expect(corrected.holes.find((hole) => hole.holeNumber === 16)).toMatchObject({
+      winningTeamId: null,
+      teamPoints: { "team-04": 0.5, "team-17": 0.5 }
     });
   });
 });

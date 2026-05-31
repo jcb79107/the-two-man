@@ -2,7 +2,10 @@ import "server-only";
 
 import { scoreForfeit, scoreMatch } from "@/lib/scoring/engine";
 import type { TeamMatchSummary } from "@/lib/scoring/types";
-import { applyPublicScorecardCorrections } from "@/lib/server/public-scorecard-corrections";
+import {
+  applyComputedPublicScorecardCorrections,
+  applyPublicScorecardCorrections
+} from "@/lib/server/public-scorecard-corrections";
 import { decorateBracketRounds } from "@/lib/server/bracket";
 import { db } from "@/lib/server/db";
 import { computeQualifiedSeeds } from "@/lib/server/qualification";
@@ -869,8 +872,53 @@ export async function getPublicMatchState(slug: string, matchId: string) {
         : correctedMatch.scheduledAt instanceof Date
           ? correctedMatch.scheduledAt.toISOString()
           : typeof correctedMatch.scheduledAt === "string"
-            ? correctedMatch.scheduledAt
-            : null;
+        ? correctedMatch.scheduledAt
+        : null;
+
+  const correctedScorecard = computed
+    ? applyComputedPublicScorecardCorrections(match.id, {
+        ...computed,
+        holeMeta: (playerSelections[0]?.tee.holes ?? []).map((hole) => ({
+          holeNumber: hole.holeNumber,
+          par: hole.par,
+          strokeIndex: hole.strokeIndex,
+          yardage: hole.yardage ?? null
+        })),
+        players: playerSelections.map((selection) => {
+          const grossByHole = Object.fromEntries(
+            holeScores
+              .filter((holeScore) => holeScore.playerId === selection.playerId)
+              .map((holeScore) => [holeScore.holeNumber, holeScore.grossScore])
+          );
+          const snapshot = computed.players.find(
+            (player: {
+              playerId: string;
+              matchStrokeCount?: number;
+              strokesByHole?: Record<number, number>;
+            }) => player.playerId === selection.playerId
+          );
+
+          return {
+            playerId: selection.playerId,
+            playerName: selection.player.displayName,
+            teamId: selection.teamId,
+            teeName: selection.teeNameSnapshot,
+            handicapIndex: Number(selection.handicapIndexSnapshot),
+            matchStrokeCount: snapshot?.matchStrokeCount ?? 0,
+            strokesByHole: snapshot?.strokesByHole ?? {},
+            grossByHole,
+            netByHole: Object.fromEntries(
+              computed.holes.map(
+                (hole: { holeNumber: number; playerNetScores: Record<string, number | null> }) => [
+                  hole.holeNumber,
+                  hole.playerNetScores[selection.playerId] ?? null
+                ]
+              )
+            )
+          };
+        })
+      })
+    : null;
 
   return {
     tournamentName: tournamentState.tournament.name,
@@ -897,7 +945,7 @@ export async function getPublicMatchState(slug: string, matchId: string) {
       },
       courseName: matchCourse?.name ?? null,
       resultLabel: buildResultLabel(
-        computed?.teamSummaries ?? [],
+        correctedScorecard?.teamSummaries ?? computed?.teamSummaries ?? [],
         tournamentState.teamNames,
         correctedMatch.winningTeamId
       )
@@ -913,49 +961,6 @@ export async function getPublicMatchState(slug: string, matchId: string) {
       : null,
     homeTeam,
     awayTeam,
-    scorecard: computed
-      ? {
-          ...computed,
-          holeMeta: (playerSelections[0]?.tee.holes ?? []).map((hole) => ({
-            holeNumber: hole.holeNumber,
-            par: hole.par,
-            strokeIndex: hole.strokeIndex,
-            yardage: hole.yardage ?? null
-          })),
-          players: playerSelections.map((selection) => {
-            const grossByHole = Object.fromEntries(
-              holeScores
-                .filter((holeScore) => holeScore.playerId === selection.playerId)
-                .map((holeScore) => [holeScore.holeNumber, holeScore.grossScore])
-            );
-            const snapshot = computed.players.find(
-              (player: {
-                playerId: string;
-                matchStrokeCount?: number;
-                strokesByHole?: Record<number, number>;
-              }) => player.playerId === selection.playerId
-            );
-
-            return {
-              playerId: selection.playerId,
-              playerName: selection.player.displayName,
-              teamId: selection.teamId,
-              teeName: selection.teeNameSnapshot,
-              handicapIndex: Number(selection.handicapIndexSnapshot),
-              matchStrokeCount: snapshot?.matchStrokeCount ?? 0,
-              strokesByHole: snapshot?.strokesByHole ?? {},
-              grossByHole,
-              netByHole: Object.fromEntries(
-                computed.holes.map(
-                  (hole: { holeNumber: number; playerNetScores: Record<string, number | null> }) => [
-                    hole.holeNumber,
-                    hole.playerNetScores[selection.playerId] ?? null
-                  ]
-                )
-              )
-            };
-          })
-        }
-      : null
+    scorecard: correctedScorecard
   };
 }
