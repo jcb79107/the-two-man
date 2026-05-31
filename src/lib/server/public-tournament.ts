@@ -848,21 +848,22 @@ export async function getPublicMatchState(slug: string, matchId: string) {
     return null;
   }
 
+  const correctedMatch = applyPublicScorecardCorrections(match);
   const computed = tournamentState.summariesByMatchId.get(match.id);
-  const matchCourse = "course" in match ? match.course : null;
-  const homeTeam = "homeTeam" in match ? match.homeTeam : null;
-  const awayTeam = "awayTeam" in match ? match.awayTeam : null;
-  const playerSelections = "playerSelections" in match ? match.playerSelections : [];
-  const holeScores = "holeScores" in match ? match.holeScores : [];
+  const matchCourse = "course" in correctedMatch ? correctedMatch.course : null;
+  const homeTeam = "homeTeam" in correctedMatch ? correctedMatch.homeTeam : null;
+  const awayTeam = "awayTeam" in correctedMatch ? correctedMatch.awayTeam : null;
+  const playerSelections = "playerSelections" in correctedMatch ? correctedMatch.playerSelections : [];
+  const holeScores = "holeScores" in correctedMatch ? correctedMatch.holeScores : [];
   const playedOn =
-    match.finalizedAt instanceof Date
-      ? match.finalizedAt.toISOString()
-      : match.submittedAt instanceof Date
-        ? match.submittedAt.toISOString()
-        : match.scheduledAt instanceof Date
-          ? match.scheduledAt.toISOString()
-          : typeof match.scheduledAt === "string"
-            ? match.scheduledAt
+    correctedMatch.finalizedAt instanceof Date
+      ? correctedMatch.finalizedAt.toISOString()
+      : correctedMatch.submittedAt instanceof Date
+        ? correctedMatch.submittedAt.toISOString()
+        : correctedMatch.scheduledAt instanceof Date
+          ? correctedMatch.scheduledAt.toISOString()
+          : typeof correctedMatch.scheduledAt === "string"
+            ? correctedMatch.scheduledAt
             : null;
 
   return {
@@ -870,26 +871,30 @@ export async function getPublicMatchState(slug: string, matchId: string) {
     tournamentStartDate: tournamentState.tournament.startDate.toISOString(),
     match: buildMatchShell({
       match: {
-        ...match,
-        podId: match.podId ?? null,
-        bracketId: match.bracketId ?? null,
-        bracketRoundId: match.bracketRoundId ?? null,
-        scheduledAt: match.scheduledAt instanceof Date
-          ? match.scheduledAt
-          : match.scheduledAt
-            ? new Date(match.scheduledAt)
+        ...correctedMatch,
+        podId: correctedMatch.podId ?? null,
+        bracketId: correctedMatch.bracketId ?? null,
+        bracketRoundId: correctedMatch.bracketRoundId ?? null,
+        scheduledAt: correctedMatch.scheduledAt instanceof Date
+          ? correctedMatch.scheduledAt
+          : correctedMatch.scheduledAt
+            ? new Date(correctedMatch.scheduledAt)
             : null,
-        winningTeamId: match.winningTeamId ?? null,
-        courseId: match.courseId ?? null,
-        homeSeedNumber: match.homeSeedNumber ?? null,
-        awaySeedNumber: match.awaySeedNumber ?? null,
-        homeSeedLabel: match.homeSeedLabel ?? null,
-        awaySeedLabel: match.awaySeedLabel ?? null,
-        advancesToMatchId: match.advancesToMatchId ?? null,
-        advancesToSlot: match.advancesToSlot ?? null
+        winningTeamId: correctedMatch.winningTeamId ?? null,
+        courseId: correctedMatch.courseId ?? null,
+        homeSeedNumber: correctedMatch.homeSeedNumber ?? null,
+        awaySeedNumber: correctedMatch.awaySeedNumber ?? null,
+        homeSeedLabel: correctedMatch.homeSeedLabel ?? null,
+        awaySeedLabel: correctedMatch.awaySeedLabel ?? null,
+        advancesToMatchId: correctedMatch.advancesToMatchId ?? null,
+        advancesToSlot: correctedMatch.advancesToSlot ?? null
       },
       courseName: matchCourse?.name ?? null,
-      resultLabel: buildResultLabel(computed?.teamSummaries ?? [], tournamentState.teamNames, match.winningTeamId)
+      resultLabel: buildResultLabel(
+        computed?.teamSummaries ?? [],
+        tournamentState.teamNames,
+        correctedMatch.winningTeamId
+      )
     }),
     playedOn,
     course: matchCourse
