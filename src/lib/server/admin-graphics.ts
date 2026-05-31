@@ -7,6 +7,7 @@ import {
   demoMatches,
   demoTeams
 } from "@/lib/demo/mock-data";
+import { applyPublicScorecardCorrections } from "@/lib/server/public-scorecard-corrections";
 import { db } from "@/lib/server/db";
 
 export interface AdminGraphicRecapHole {
@@ -267,12 +268,14 @@ export async function getAdminGraphicRecaps(): Promise<AdminGraphicRecap[]> {
     const recaps: AdminGraphicRecap[] = [];
 
     for (const match of matches) {
-      if (!match.homeTeam || !match.awayTeam) {
+      const correctedMatch = applyPublicScorecardCorrections(match) as typeof match;
+
+      if (!correctedMatch.homeTeam || !correctedMatch.awayTeam) {
         continue;
       }
 
-      const homeTeamId = match.homeTeam.id;
-      const awayTeamId = match.awayTeam.id;
+      const homeTeamId = correctedMatch.homeTeam.id;
+      const awayTeamId = correctedMatch.awayTeam.id;
       let teamSummaries: Array<{
         teamId: string;
         totalPoints: number;
@@ -280,32 +283,32 @@ export async function getAdminGraphicRecaps(): Promise<AdminGraphicRecap[]> {
         betterBallNetTotal: number | null;
       }>;
       let holes: AdminGraphicRecapHole[] = [];
-      let winningTeamId = match.winningTeamId;
+      let winningTeamId = correctedMatch.winningTeamId;
 
-      if (match.status === "FORFEIT" && match.winningTeamId) {
-        const loserTeamId = match.winningTeamId === homeTeamId ? awayTeamId : homeTeamId;
+      if (correctedMatch.status === "FORFEIT" && correctedMatch.winningTeamId) {
+        const loserTeamId = correctedMatch.winningTeamId === homeTeamId ? awayTeamId : homeTeamId;
         teamSummaries = scoreForfeit({
-          winnerTeamId: match.winningTeamId,
+          winnerTeamId: correctedMatch.winningTeamId,
           loserTeamId,
-          awardedPoints: Number(match.tournament.forfeitPointsAwarded),
-          awardedHolesWon: match.tournament.forfeitHolesWonAwarded
+          awardedPoints: Number(correctedMatch.tournament.forfeitPointsAwarded),
+          awardedHolesWon: correctedMatch.tournament.forfeitHolesWonAwarded
         });
       } else {
-        if (match.playerSelections.length !== 4) {
+        if (correctedMatch.playerSelections.length !== 4) {
           continue;
         }
 
-        const holesTemplate = match.playerSelections[0]?.tee.holes ?? [];
+        const holesTemplate = correctedMatch.playerSelections[0]?.tee.holes ?? [];
         const scoresByHole = new Map<number, Record<string, number | null>>();
 
         for (const hole of holesTemplate) {
           scoresByHole.set(
             hole.holeNumber,
-            Object.fromEntries(match.playerSelections.map((selection) => [selection.playerId, null]))
+            Object.fromEntries(correctedMatch.playerSelections.map((selection) => [selection.playerId, null]))
           );
         }
 
-        for (const score of match.holeScores) {
+        for (const score of correctedMatch.holeScores) {
           const hole = scoresByHole.get(score.holeNumber);
 
           if (hole) {
@@ -314,7 +317,9 @@ export async function getAdminGraphicRecaps(): Promise<AdminGraphicRecap[]> {
         }
 
         const complete = Array.from(scoresByHole.values()).every((scores) =>
-          match.playerSelections.every((selection) => typeof scores[selection.playerId] === "number")
+          correctedMatch.playerSelections.every(
+            (selection) => typeof scores[selection.playerId] === "number"
+          )
         );
 
         if (!complete) {
@@ -322,7 +327,7 @@ export async function getAdminGraphicRecaps(): Promise<AdminGraphicRecap[]> {
         }
 
         const scored = scoreMatch({
-          players: match.playerSelections.map((selection) => ({
+          players: correctedMatch.playerSelections.map((selection) => ({
             playerId: selection.playerId,
             playerName: selection.player.displayName,
             teamId: selection.teamId,
@@ -345,7 +350,7 @@ export async function getAdminGraphicRecaps(): Promise<AdminGraphicRecap[]> {
         });
 
         teamSummaries = scored.teamSummaries;
-        winningTeamId = match.winningTeamId ?? scored.winningTeamId;
+        winningTeamId = correctedMatch.winningTeamId ?? scored.winningTeamId;
         holes = scored.holes.map((hole) => ({
           holeNumber: hole.holeNumber,
           par: holesTemplate.find((entry) => entry.holeNumber === hole.holeNumber)?.par ?? 0,
@@ -363,28 +368,28 @@ export async function getAdminGraphicRecaps(): Promise<AdminGraphicRecap[]> {
       const awaySummary = summaryForTeam(teamSummaries, awayTeamId);
 
       recaps.push({
-        id: match.id,
-        privateToken: match.privateToken,
-        publicScorecardSlug: match.publicScorecardSlug,
-        roundLabel: match.roundLabel,
-        stage: match.stage,
-        status: match.status,
-        playedOn: formatPlayedOn(match.finalizedAt ?? match.submittedAt ?? match.scheduledAt),
-        courseName: match.course?.name ?? "Course pending",
-        courseMeta: formatCourseMeta(match.course),
-        podName: match.pod?.name ?? null,
+        id: correctedMatch.id,
+        privateToken: correctedMatch.privateToken,
+        publicScorecardSlug: correctedMatch.publicScorecardSlug,
+        roundLabel: correctedMatch.roundLabel,
+        stage: correctedMatch.stage,
+        status: correctedMatch.status,
+        playedOn: formatPlayedOn(correctedMatch.finalizedAt ?? correctedMatch.submittedAt ?? correctedMatch.scheduledAt),
+        courseName: correctedMatch.course?.name ?? "Course pending",
+        courseMeta: formatCourseMeta(correctedMatch.course),
+        podName: correctedMatch.pod?.name ?? null,
         homeTeam: {
           id: homeTeamId,
-          name: match.homeTeam.name,
-          players: teamPlayers(match.homeTeam),
+          name: correctedMatch.homeTeam.name,
+          players: teamPlayers(correctedMatch.homeTeam),
           totalPoints: homeSummary.totalPoints,
           holesWon: homeSummary.holesWon,
           betterBallNetTotal: decimalToNumber(homeSummary.betterBallNetTotal)
         },
         awayTeam: {
           id: awayTeamId,
-          name: match.awayTeam.name,
-          players: teamPlayers(match.awayTeam),
+          name: correctedMatch.awayTeam.name,
+          players: teamPlayers(correctedMatch.awayTeam),
           totalPoints: awaySummary.totalPoints,
           holesWon: awaySummary.holesWon,
           betterBallNetTotal: decimalToNumber(awaySummary.betterBallNetTotal)
