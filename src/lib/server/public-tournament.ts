@@ -125,7 +125,7 @@ function buildTeamSummariesFromMatch(match: {
   holes: ReturnType<typeof scoreMatch>["holes"];
   players: PlayerHandicapSnapshot[];
 } | null {
-  const correctedMatch = applyPublicScorecardCorrections(match);
+  const correctedMatch = applyPublicScorecardCorrections(match) as typeof match;
 
   if (
     correctedMatch.status === "FORFEIT" &&
@@ -851,8 +851,14 @@ export async function getPublicMatchState(slug: string, matchId: string) {
   const correctedMatch = applyPublicScorecardCorrections(match);
   const computed = tournamentState.summariesByMatchId.get(match.id);
   const matchCourse = "course" in correctedMatch ? correctedMatch.course : null;
-  const homeTeam = "homeTeam" in correctedMatch ? correctedMatch.homeTeam : null;
-  const awayTeam = "awayTeam" in correctedMatch ? correctedMatch.awayTeam : null;
+  const homeTeam =
+    "homeTeam" in correctedMatch
+      ? (correctedMatch.homeTeam as typeof correctedMatch.homeTeam)
+      : null;
+  const awayTeam =
+    "awayTeam" in correctedMatch
+      ? (correctedMatch.awayTeam as typeof correctedMatch.awayTeam)
+      : null;
   const playerSelections = "playerSelections" in correctedMatch ? correctedMatch.playerSelections : [];
   const holeScores = "holeScores" in correctedMatch ? correctedMatch.holeScores : [];
   const playedOn =

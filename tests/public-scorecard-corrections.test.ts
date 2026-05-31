@@ -3,7 +3,7 @@ import { scoreMatch } from "@/lib/scoring/engine";
 import { applyPublicScorecardCorrections } from "@/lib/server/public-scorecard-corrections";
 
 describe("applyPublicScorecardCorrections", () => {
-  it("fixes the Heritage Oaks public card to a 10-8 Grant & Rausch win", () => {
+  it("fixes the Heritage Oaks public card to the official maroon-tee 10-8 result", () => {
     const holes = [
       { holeNumber: 1, par: 5, strokeIndex: 7 },
       { holeNumber: 2, par: 4, strokeIndex: 1 },
@@ -115,10 +115,27 @@ describe("applyPublicScorecardCorrections", () => {
         }),
         { grant: 0, agins: 0 }
       );
+    const winningHoles = {
+      grant: result.holes
+        .filter((hole) => hole.winningTeamId === "team-13")
+        .map((hole) => hole.holeNumber),
+      agins: result.holes
+        .filter((hole) => hole.winningTeamId === "team-15")
+        .map((hole) => hole.holeNumber),
+      tied: result.holes
+        .filter((hole) => hole.winningTeamId == null)
+        .map((hole) => hole.holeNumber)
+    };
 
-    expect(holeNine?.par).toBe(5);
+    expect(match.playerSelections[0]?.teeNameSnapshot).toBe("Maroon");
+    expect(holeNine?.par).toBe(4);
     expect(grantTeam?.totalPoints).toBe(10);
     expect(aginsTeam?.totalPoints).toBe(8);
     expect(frontNinePoints).toEqual({ grant: 4, agins: 5 });
+    expect(winningHoles).toEqual({
+      grant: [1, 3, 7, 10, 14, 16, 17],
+      agins: [2, 5, 8, 9, 12],
+      tied: [4, 6, 11, 13, 15, 18]
+    });
   });
 });

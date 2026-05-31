@@ -159,18 +159,20 @@ export default async function PublicMatchPage({
 
   if (data.scorecard) {
     const scorecard = data.scorecard as unknown as PublicScorecardData;
+    const homeTeam = data.homeTeam as { id: string; name: string } | null;
+    const awayTeam = data.awayTeam as { id: string; name: string } | null;
     const scorecardTeams = [
       {
-        id: data.homeTeam?.id ?? "home",
-        name: data.homeTeam?.name ?? data.match.homeSeedLabel ?? "Home team",
+        id: homeTeam?.id ?? "home",
+        name: homeTeam?.name ?? data.match.homeSeedLabel ?? "Home team",
         tone: "pine" as const,
-        players: scorecard.players.filter((player) => player.teamId === data.homeTeam?.id)
+        players: scorecard.players.filter((player) => player.teamId === homeTeam?.id)
       },
       {
-        id: data.awayTeam?.id ?? "away",
-        name: data.awayTeam?.name ?? data.match.awaySeedLabel ?? "Away team",
+        id: awayTeam?.id ?? "away",
+        name: awayTeam?.name ?? data.match.awaySeedLabel ?? "Away team",
         tone: "purple" as const,
-        players: scorecard.players.filter((player) => player.teamId === data.awayTeam?.id)
+        players: scorecard.players.filter((player) => player.teamId === awayTeam?.id)
       }
     ];
     const scoredHolesByNumber = new Map(
@@ -212,27 +214,29 @@ export default async function PublicMatchPage({
   }
 
   const legacyScorecard = data.scorecard as unknown as PublicScorecardData | null;
+  const homeTeam = data.homeTeam as { id: string; name: string } | null;
+  const awayTeam = data.awayTeam as { id: string; name: string } | null;
   const teams = [
     {
-      id: data.homeTeam?.id ?? "home",
-      name: data.homeTeam?.name ?? data.match.homeSeedLabel ?? "Home team",
+      id: homeTeam?.id ?? "home",
+      name: homeTeam?.name ?? data.match.homeSeedLabel ?? "Home team",
       headerClass: "bg-pine text-white",
       accentClass: "border-pine bg-[#f5fbf7]",
       chipClass: "bg-pine text-white",
       rowFillClass: "bg-[rgba(18,76,58,0.5)] text-pine",
       players: ((legacyScorecard?.players ?? []) as PublicScorecardPlayer[]).filter(
-        (player) => player.teamId === data.homeTeam?.id
+        (player) => player.teamId === homeTeam?.id
       )
     },
     {
-      id: data.awayTeam?.id ?? "away",
-      name: data.awayTeam?.name ?? data.match.awaySeedLabel ?? "Away team",
+      id: awayTeam?.id ?? "away",
+      name: awayTeam?.name ?? data.match.awaySeedLabel ?? "Away team",
       headerClass: "bg-[#5f4b8b] text-white",
       accentClass: "border-[#d8cffa] bg-[#fbf8ff]",
       chipClass: "bg-[#5f4b8b] text-white",
       rowFillClass: "bg-[rgba(95,75,139,0.5)] text-[#4f3e75]",
       players: ((legacyScorecard?.players ?? []) as PublicScorecardPlayer[]).filter(
-        (player) => player.teamId === data.awayTeam?.id
+        (player) => player.teamId === awayTeam?.id
       )
     }
   ];
