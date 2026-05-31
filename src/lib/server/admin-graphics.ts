@@ -7,7 +7,10 @@ import {
   demoMatches,
   demoTeams
 } from "@/lib/demo/mock-data";
-import { applyPublicScorecardCorrections } from "@/lib/server/public-scorecard-corrections";
+import {
+  applyComputedPublicScorecardCorrections,
+  applyPublicScorecardCorrections
+} from "@/lib/server/public-scorecard-corrections";
 import { db } from "@/lib/server/db";
 
 export interface AdminGraphicRecapHole {
@@ -349,13 +352,45 @@ export async function getAdminGraphicRecaps(): Promise<AdminGraphicRecap[]> {
           }))
         });
 
-        teamSummaries = scored.teamSummaries;
+        const correctedScored = applyComputedPublicScorecardCorrections(correctedMatch.id, {
+          ...scored,
+          holeMeta: holesTemplate.map((hole) => ({
+            holeNumber: hole.holeNumber,
+            par: hole.par,
+            strokeIndex: hole.strokeIndex,
+            yardage: hole.yardage ?? null
+          })),
+          players: correctedMatch.playerSelections.map((selection) => {
+            const grossByHole = Object.fromEntries(
+              correctedMatch.holeScores
+                .filter((holeScore) => holeScore.playerId === selection.playerId)
+                .map((holeScore) => [holeScore.holeNumber, holeScore.grossScore])
+            );
+            const snapshot = scored.players.find((player) => player.playerId === selection.playerId);
+
+            return {
+              playerId: selection.playerId,
+              playerName: selection.player.displayName,
+              teamId: selection.teamId,
+              teeName: selection.teeNameSnapshot,
+              handicapIndex: Number(selection.handicapIndexSnapshot),
+              matchStrokeCount: snapshot?.matchStrokeCount ?? 0,
+              strokesByHole: snapshot?.strokesByHole ?? {},
+              grossByHole,
+              netByHole: Object.fromEntries(
+                scored.holes.map((hole) => [hole.holeNumber, hole.playerNetScores[selection.playerId] ?? null])
+              )
+            };
+          })
+        });
+
+        teamSummaries = correctedScored.teamSummaries;
         winningTeamId = correctedMatch.winningTeamId ?? scored.winningTeamId;
-        holes = scored.holes.map((hole) => ({
+        holes = correctedScored.holes.map((hole) => ({
           holeNumber: hole.holeNumber,
-          par: holesTemplate.find((entry) => entry.holeNumber === hole.holeNumber)?.par ?? 0,
-          strokeIndex: holesTemplate.find((entry) => entry.holeNumber === hole.holeNumber)?.strokeIndex ?? 0,
-          yardage: holesTemplate.find((entry) => entry.holeNumber === hole.holeNumber)?.yardage ?? null,
+          par: correctedScored.holeMeta?.find((entry) => entry.holeNumber === hole.holeNumber)?.par ?? 0,
+          strokeIndex: correctedScored.holeMeta?.find((entry) => entry.holeNumber === hole.holeNumber)?.strokeIndex ?? 0,
+          yardage: correctedScored.holeMeta?.find((entry) => entry.holeNumber === hole.holeNumber)?.yardage ?? null,
           winningTeamId: hole.winningTeamId,
           homePoints: hole.teamPoints[homeTeamId] ?? 0,
           awayPoints: hole.teamPoints[awayTeamId] ?? 0,
