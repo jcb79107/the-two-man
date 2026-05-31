@@ -86,6 +86,27 @@ const BRIARWOOD_CORRECTED_MATCH_IDS = new Set([
   "f13e674887224826adc18"
 ]);
 
+const BRIARWOOD_II_TEE_HOLES: MatchHole[] = [
+  { holeNumber: 1, par: 4, strokeIndex: 7, yardage: 410 },
+  { holeNumber: 2, par: 4, strokeIndex: 11, yardage: 375 },
+  { holeNumber: 3, par: 5, strokeIndex: 1, yardage: 545 },
+  { holeNumber: 4, par: 3, strokeIndex: 15, yardage: 195 },
+  { holeNumber: 5, par: 5, strokeIndex: 13, yardage: 520 },
+  { holeNumber: 6, par: 4, strokeIndex: 9, yardage: 380 },
+  { holeNumber: 7, par: 4, strokeIndex: 5, yardage: 400 },
+  { holeNumber: 8, par: 3, strokeIndex: 17, yardage: 175 },
+  { holeNumber: 9, par: 4, strokeIndex: 3, yardage: 420 },
+  { holeNumber: 10, par: 4, strokeIndex: 10, yardage: 370 },
+  { holeNumber: 11, par: 3, strokeIndex: 16, yardage: 150 },
+  { holeNumber: 12, par: 4, strokeIndex: 2, yardage: 435 },
+  { holeNumber: 13, par: 5, strokeIndex: 14, yardage: 490 },
+  { holeNumber: 14, par: 4, strokeIndex: 6, yardage: 370 },
+  { holeNumber: 15, par: 3, strokeIndex: 18, yardage: 175 },
+  { holeNumber: 16, par: 4, strokeIndex: 4, yardage: 400 },
+  { holeNumber: 17, par: 4, strokeIndex: 8, yardage: 380 },
+  { holeNumber: 18, par: 4, strokeIndex: 12, yardage: 380 }
+];
+
 const correctedGrossScoresByPlayerName: Record<string, number[]> = {
   "Andrew Rausch": [6, 5, 5, 5, 5, 3, 6, 5, 6, 2, 4, 4, 5, 4, 4, 3, 4, 4],
   "Brandon Grant": [6, 7, 4, 5, 5, 4, 5, 6, 6, 3, 5, 7, 5, 3, 4, 5, 8, 6],
@@ -103,15 +124,49 @@ function isBriarwoodCorrectionTarget(matchId: string) {
 }
 
 export function applyPublicScorecardCorrections<T extends CorrectablePublicMatch>(match: T): T {
-  if (!isHeritageOaksCorrectionTarget(match)) {
-    return match;
+  if (isHeritageOaksCorrectionTarget(match)) {
+    const allPlayersPresent = match.playerSelections.every(
+      (selection) => correctedGrossScoresByPlayerName[selection.player.displayName]?.length === 18
+    );
+
+    if (!allPlayersPresent) {
+      return match;
+    }
+
+    return {
+      ...match,
+      playerSelections: match.playerSelections.map((selection) => ({
+        ...selection,
+        teeId: "usga-7437-612687",
+        teeNameSnapshot: "Maroon",
+        slopeSnapshot: 125,
+        courseRatingSnapshot: 68.9,
+        parSnapshot: 70,
+        tee: {
+          ...selection.tee,
+          holes: selection.tee.holes.map((hole) =>
+            hole.holeNumber === 9
+              ? {
+                  ...hole,
+                  par: 4
+                }
+              : hole
+          )
+        }
+      })),
+      holeScores: match.playerSelections.flatMap((selection) => {
+        const grossScores = correctedGrossScoresByPlayerName[selection.player.displayName];
+
+        return grossScores.map((grossScore, index) => ({
+          holeNumber: index + 1,
+          playerId: selection.playerId,
+          grossScore
+        }));
+      })
+    };
   }
 
-  const allPlayersPresent = match.playerSelections.every(
-    (selection) => correctedGrossScoresByPlayerName[selection.player.displayName]?.length === 18
-  );
-
-  if (!allPlayersPresent) {
+  if (!isBriarwoodCorrectionTarget(match.id) && !isBriarwoodCorrectionTarget(match.publicScorecardSlug)) {
     return match;
   }
 
@@ -119,39 +174,19 @@ export function applyPublicScorecardCorrections<T extends CorrectablePublicMatch
     ...match,
     playerSelections: match.playerSelections.map((selection) => ({
       ...selection,
-      teeId: "usga-7437-612687",
-      teeNameSnapshot: "Maroon",
-      slopeSnapshot: 125,
-      courseRatingSnapshot: 68.9,
-      parSnapshot: 70,
+      teeNameSnapshot: "II",
       tee: {
         ...selection.tee,
-        holes: selection.tee.holes.map((hole) =>
-          hole.holeNumber === 9
-            ? {
-                ...hole,
-                par: 4
-              }
-            : hole
-        )
+        holes: BRIARWOOD_II_TEE_HOLES
       }
-    })),
-    holeScores: match.playerSelections.flatMap((selection) => {
-      const grossScores = correctedGrossScoresByPlayerName[selection.player.displayName];
-
-      return grossScores.map((grossScore, index) => ({
-        holeNumber: index + 1,
-        playerId: selection.playerId,
-        grossScore
-      }));
-    })
+    }))
   };
 }
 
 const briarwoodStrokeOverrides: Record<string, { handicapIndex: number; playerName?: string; strokeHoles: number[] }> = {
   "team-04-player-1": { handicapIndex: 3.6, playerName: "Zach Nankin", strokeHoles: [] },
-  "team-04-player-2": { handicapIndex: 12.0, strokeHoles: [1, 3, 5, 7, 9, 12, 14, 16, 17] },
-  "team-17-player-1": { handicapIndex: 11.0, playerName: "Zak Lieberman", strokeHoles: [1, 3, 7, 9, 12, 16, 17] },
+  "team-04-player-2": { handicapIndex: 12.0, strokeHoles: [1, 3, 5, 6, 7, 9, 12, 14, 16] },
+  "team-17-player-1": { handicapIndex: 11.0, playerName: "Zak Lieberman", strokeHoles: [1, 3, 7, 9, 12, 16] },
   "team-17-player-2": { handicapIndex: 11.8, strokeHoles: [1, 3, 7, 9, 12, 14, 16, 17] }
 };
 
@@ -279,10 +314,27 @@ export function applyComputedPublicScorecardCorrections(
     resultCode: resultCodeFor(teamId, teamPoints)
   }));
 
+  const holeMeta = BRIARWOOD_II_TEE_HOLES.map((hole) => ({
+    holeNumber: hole.holeNumber,
+    par: hole.par,
+    strokeIndex: hole.strokeIndex,
+    yardage: hole.yardage ?? null
+  }));
+  const holeMetaByNumber = new Map(holeMeta.map((hole) => [hole.holeNumber, hole]));
+
   return {
     ...scorecard,
-    players,
-    holes,
-    teamSummaries
+    players: players.map((player) => ({
+      ...player,
+      teeName: "II"
+    })),
+    holes: holes.map((hole) => ({
+      ...hole,
+      par: holeMetaByNumber.get(hole.holeNumber)?.par ?? (hole as ComputedHole & { par?: number }).par,
+      strokeIndex: holeMetaByNumber.get(hole.holeNumber)?.strokeIndex ?? (hole as ComputedHole & { strokeIndex?: number }).strokeIndex,
+      yardage: holeMetaByNumber.get(hole.holeNumber)?.yardage ?? (hole as ComputedHole & { yardage?: number | null }).yardage ?? null
+    })) as ComputedHole[],
+    teamSummaries,
+    holeMeta
   };
 }

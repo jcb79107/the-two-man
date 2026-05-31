@@ -143,6 +143,54 @@ describe("applyPublicScorecardCorrections", () => {
   });
 });
 
+describe("applyPublicScorecardCorrections", () => {
+  it("forces the Briarwood public card onto the II-tee hole metadata", () => {
+    const match = applyPublicScorecardCorrections({
+      id: "f13e674887224826adc18",
+      publicScorecardSlug: "f13e674887224826adc18",
+      playerSelections: [
+        {
+          playerId: "team-04-player-1",
+          player: { displayName: "Zach Nankin" },
+          teamId: "team-04",
+          teeId: "briarwood-wrong-tee",
+          teeNameSnapshot: "III",
+          handicapIndexSnapshot: 3.6,
+          slopeSnapshot: 0,
+          courseRatingSnapshot: 0,
+          parSnapshot: 72,
+          tee: {
+            holes: Array.from({ length: 18 }, (_, index) => ({
+              holeNumber: index + 1,
+              par: 4,
+              strokeIndex: 18 - index,
+              yardage: 999
+            }))
+          }
+        }
+      ],
+      holeScores: []
+    });
+
+    expect(match.playerSelections[0]?.teeNameSnapshot).toBe("II");
+    expect(match.playerSelections[0]?.tee.holes.find((hole) => hole.holeNumber === 1)).toMatchObject({
+      par: 4,
+      strokeIndex: 7,
+      yardage: 410
+    });
+    expect(match.playerSelections[0]?.tee.holes.find((hole) => hole.holeNumber === 12)).toMatchObject({
+      par: 4,
+      strokeIndex: 2,
+      yardage: 435
+    });
+    expect(match.playerSelections[0]?.tee.holes.find((hole) => hole.holeNumber === 18)).toMatchObject({
+      par: 4,
+      strokeIndex: 12,
+      yardage: 380
+    });
+  });
+});
+
 describe("applyComputedPublicScorecardCorrections", () => {
   it("applies the Briarwood 90-percent stroke correction from the posted scorecard", () => {
     const corrected = applyComputedPublicScorecardCorrections("f13e674887224826adc18", {
@@ -204,7 +252,7 @@ describe("applyComputedPublicScorecardCorrections", () => {
     expect(corrected.players.find((player) => player.playerId === "team-17-player-1")).toMatchObject({
       playerName: "Zak Lieberman",
       handicapIndex: 11,
-      matchStrokeCount: 7
+      matchStrokeCount: 6
     });
     expect(corrected.players.find((player) => player.playerId === "team-17-player-2")).toMatchObject({
       handicapIndex: 11.8,
@@ -215,9 +263,13 @@ describe("applyComputedPublicScorecardCorrections", () => {
       matchStrokeCount: 9
     });
     expect(corrected.teamSummaries).toEqual([
-      expect.objectContaining({ teamId: "team-04", totalPoints: 12.5, holesWon: 10 }),
-      expect.objectContaining({ teamId: "team-17", totalPoints: 5.5, holesWon: 3 })
+      expect.objectContaining({ teamId: "team-04", totalPoints: 13.5, holesWon: 11 }),
+      expect.objectContaining({ teamId: "team-17", totalPoints: 4.5, holesWon: 2 })
     ]);
+    expect(corrected.holes.find((hole) => hole.holeNumber === 6)).toMatchObject({
+      winningTeamId: "team-04",
+      teamPoints: { "team-04": 1, "team-17": 0 }
+    });
     expect(corrected.holes.find((hole) => hole.holeNumber === 13)).toMatchObject({
       winningTeamId: "team-04",
       teamPoints: { "team-04": 1, "team-17": 0 }
@@ -225,6 +277,25 @@ describe("applyComputedPublicScorecardCorrections", () => {
     expect(corrected.holes.find((hole) => hole.holeNumber === 16)).toMatchObject({
       winningTeamId: null,
       teamPoints: { "team-04": 0.5, "team-17": 0.5 }
+    });
+    expect(corrected.holes.find((hole) => hole.holeNumber === 17)).toMatchObject({
+      winningTeamId: null,
+      teamPoints: { "team-04": 0.5, "team-17": 0.5 }
+    });
+    expect(corrected.holes.find((hole) => hole.holeNumber === 1)).toMatchObject({
+      par: 4,
+      strokeIndex: 7,
+      yardage: 410
+    });
+    expect(corrected.holes.find((hole) => hole.holeNumber === 12)).toMatchObject({
+      par: 4,
+      strokeIndex: 2,
+      yardage: 435
+    });
+    expect(corrected.holeMeta?.find((hole) => hole.holeNumber === 17)).toMatchObject({
+      par: 4,
+      strokeIndex: 8,
+      yardage: 380
     });
   });
 });
