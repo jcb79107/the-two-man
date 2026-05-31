@@ -266,6 +266,8 @@ describe("applyComputedPublicScorecardCorrections", () => {
       expect.objectContaining({ teamId: "team-04", totalPoints: 13.5, holesWon: 11 }),
       expect.objectContaining({ teamId: "team-17", totalPoints: 4.5, holesWon: 2 })
     ]);
+    expect(corrected.players.find((player) => player.playerId === "team-04-player-2")?.strokesByHole[5]).toBe(0);
+    expect(corrected.players.find((player) => player.playerId === "team-04-player-2")?.strokesByHole[17]).toBe(1);
     expect(corrected.holes.find((hole) => hole.holeNumber === 6)).toMatchObject({
       winningTeamId: "team-04",
       teamPoints: { "team-04": 1, "team-17": 0 }

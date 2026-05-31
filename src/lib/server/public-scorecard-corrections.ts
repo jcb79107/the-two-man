@@ -185,7 +185,7 @@ export function applyPublicScorecardCorrections<T extends CorrectablePublicMatch
 
 const briarwoodStrokeOverrides: Record<string, { handicapIndex: number; playerName?: string; strokeHoles: number[] }> = {
   "team-04-player-1": { handicapIndex: 3.6, playerName: "Zach Nankin", strokeHoles: [] },
-  "team-04-player-2": { handicapIndex: 12.0, strokeHoles: [1, 3, 5, 6, 7, 9, 12, 14, 16] },
+  "team-04-player-2": { handicapIndex: 12.0, strokeHoles: [1, 3, 6, 7, 9, 12, 14, 16, 17] },
   "team-17-player-1": { handicapIndex: 11.0, playerName: "Zak Lieberman", strokeHoles: [1, 3, 7, 9, 12, 16] },
   "team-17-player-2": { handicapIndex: 11.8, strokeHoles: [1, 3, 7, 9, 12, 14, 16, 17] }
 };
