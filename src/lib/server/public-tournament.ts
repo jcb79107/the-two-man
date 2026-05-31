@@ -2,6 +2,7 @@ import "server-only";
 
 import { scoreForfeit, scoreMatch } from "@/lib/scoring/engine";
 import type { TeamMatchSummary } from "@/lib/scoring/types";
+import { applyPublicScorecardCorrections } from "@/lib/server/public-scorecard-corrections";
 import { decorateBracketRounds } from "@/lib/server/bracket";
 import { db } from "@/lib/server/db";
 import { computeQualifiedSeeds } from "@/lib/server/qualification";
@@ -84,6 +85,8 @@ function buildComputedFeedEvent(input: {
 }
 
 function buildTeamSummariesFromMatch(match: {
+  id: string;
+  publicScorecardSlug: string;
   status: string;
   winningTeamId: string | null;
   homeTeamId: string | null;
@@ -122,36 +125,46 @@ function buildTeamSummariesFromMatch(match: {
   holes: ReturnType<typeof scoreMatch>["holes"];
   players: PlayerHandicapSnapshot[];
 } | null {
-  if (match.status === "FORFEIT" && match.winningTeamId && match.homeTeamId && match.awayTeamId) {
-    const loserTeamId = match.winningTeamId === match.homeTeamId ? match.awayTeamId : match.homeTeamId;
+  const correctedMatch = applyPublicScorecardCorrections(match);
+
+  if (
+    correctedMatch.status === "FORFEIT" &&
+    correctedMatch.winningTeamId &&
+    correctedMatch.homeTeamId &&
+    correctedMatch.awayTeamId
+  ) {
+    const loserTeamId =
+      correctedMatch.winningTeamId === correctedMatch.homeTeamId
+        ? correctedMatch.awayTeamId
+        : correctedMatch.homeTeamId;
 
     return {
       teamSummaries: scoreForfeit({
-        winnerTeamId: match.winningTeamId,
+        winnerTeamId: correctedMatch.winningTeamId,
         loserTeamId,
-        awardedPoints: match.tournament.forfeitPointsAwarded,
-        awardedHolesWon: match.tournament.forfeitHolesWonAwarded
+        awardedPoints: correctedMatch.tournament.forfeitPointsAwarded,
+        awardedHolesWon: correctedMatch.tournament.forfeitHolesWonAwarded
       }),
       holes: [],
       players: []
     };
   }
 
-  if (match.playerSelections.length !== 4) {
+  if (correctedMatch.playerSelections.length !== 4) {
     return null;
   }
 
-  const holesTemplate = match.playerSelections[0]?.tee.holes ?? [];
+  const holesTemplate = correctedMatch.playerSelections[0]?.tee.holes ?? [];
   const scoresByHole = new Map<number, Record<string, number | null>>();
 
   for (const hole of holesTemplate) {
     scoresByHole.set(
       hole.holeNumber,
-      Object.fromEntries(match.playerSelections.map((selection) => [selection.playerId, null]))
+      Object.fromEntries(correctedMatch.playerSelections.map((selection) => [selection.playerId, null]))
     );
   }
 
-  for (const holeScore of match.holeScores) {
+  for (const holeScore of correctedMatch.holeScores) {
     const scores = scoresByHole.get(holeScore.holeNumber);
 
     if (scores) {
@@ -160,7 +173,9 @@ function buildTeamSummariesFromMatch(match: {
   }
 
   const hasCompleteScores = Array.from(scoresByHole.values()).every((scores) =>
-    match.playerSelections.every((selection) => typeof scores[selection.playerId] === "number")
+    correctedMatch.playerSelections.every(
+      (selection) => typeof scores[selection.playerId] === "number"
+    )
   );
 
   if (!hasCompleteScores) {
@@ -168,7 +183,7 @@ function buildTeamSummariesFromMatch(match: {
   }
 
   const scorecard = scoreMatch({
-    players: match.playerSelections.map((selection) => ({
+    players: correctedMatch.playerSelections.map((selection) => ({
       playerId: selection.playerId,
       playerName: selection.player.displayName,
       teamId: selection.teamId,
