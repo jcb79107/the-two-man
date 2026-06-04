@@ -11,6 +11,7 @@ import {
   applyComputedPublicScorecardCorrections,
   applyPublicScorecardCorrections
 } from "@/lib/server/public-scorecard-corrections";
+import { normalizeKnownCourseHoles } from "@/lib/server/course-hole-corrections";
 import { db } from "@/lib/server/db";
 
 export interface AdminGraphicRecapHole {
@@ -301,7 +302,7 @@ export async function getAdminGraphicRecaps(): Promise<AdminGraphicRecap[]> {
           continue;
         }
 
-        const holesTemplate = correctedMatch.playerSelections[0]?.tee.holes ?? [];
+        const holesTemplate = normalizeKnownCourseHoles(correctedMatch.playerSelections[0]?.tee.holes ?? []);
         const scoresByHole = new Map<number, Record<string, number | null>>();
 
         for (const hole of holesTemplate) {
@@ -340,7 +341,7 @@ export async function getAdminGraphicRecaps(): Promise<AdminGraphicRecap[]> {
             slope: selection.slopeSnapshot,
             courseRating: Number(selection.courseRatingSnapshot),
             par: selection.parSnapshot,
-            holes: selection.tee.holes.map((hole) => ({
+            holes: normalizeKnownCourseHoles(selection.tee.holes).map((hole) => ({
               holeNumber: hole.holeNumber,
               par: hole.par,
               strokeIndex: hole.strokeIndex

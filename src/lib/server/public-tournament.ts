@@ -6,6 +6,7 @@ import {
   applyComputedPublicScorecardCorrections,
   applyPublicScorecardCorrections
 } from "@/lib/server/public-scorecard-corrections";
+import { normalizeKnownCourseHoles } from "@/lib/server/course-hole-corrections";
 import { decorateBracketRounds } from "@/lib/server/bracket";
 import { db } from "@/lib/server/db";
 import { computeQualifiedSeeds } from "@/lib/server/qualification";
@@ -24,6 +25,10 @@ import type {
   StandingsRow,
   TeamProfile
 } from "@/types/models";
+
+function shouldSkipDatabaseLookupDuringBuild() {
+  return process.env.NEXT_PHASE === "phase-production-build";
+}
 
 function decimalToNumber(value: unknown): number | null {
   if (value == null) {
@@ -157,7 +162,7 @@ function buildTeamSummariesFromMatch(match: {
     return null;
   }
 
-  const holesTemplate = correctedMatch.playerSelections[0]?.tee.holes ?? [];
+  const holesTemplate = normalizeKnownCourseHoles(correctedMatch.playerSelections[0]?.tee.holes ?? []);
   const scoresByHole = new Map<number, Record<string, number | null>>();
 
   for (const hole of holesTemplate) {
@@ -196,7 +201,7 @@ function buildTeamSummariesFromMatch(match: {
       slope: selection.slopeSnapshot,
       courseRating: Number(selection.courseRatingSnapshot),
       par: selection.parSnapshot,
-      holes: selection.tee.holes.map((hole) => ({
+      holes: normalizeKnownCourseHoles(selection.tee.holes).map((hole) => ({
         holeNumber: hole.holeNumber,
         par: hole.par,
         strokeIndex: hole.strokeIndex
@@ -449,6 +454,10 @@ function buildComputedFeed(input: {
 }
 
 export async function getPublicTournamentState(slug: string) {
+  if (shouldSkipDatabaseLookupDuringBuild()) {
+    return null;
+  }
+
   const tournament = await db.tournament.findUnique({
     where: {
       slug
@@ -635,6 +644,10 @@ export async function getPublicTournamentState(slug: string) {
 }
 
 export async function getLatestTournamentSlug() {
+  if (shouldSkipDatabaseLookupDuringBuild()) {
+    return null;
+  }
+
   const tournament = await db.tournament.findFirst({
     orderBy: {
       createdAt: "desc"
@@ -878,7 +891,7 @@ export async function getPublicMatchState(slug: string, matchId: string) {
   const correctedScorecard = computed
     ? applyComputedPublicScorecardCorrections(match.id, {
         ...computed,
-        holeMeta: (playerSelections[0]?.tee.holes ?? []).map((hole) => ({
+        holeMeta: normalizeKnownCourseHoles(playerSelections[0]?.tee.holes ?? []).map((hole) => ({
           holeNumber: hole.holeNumber,
           par: hole.par,
           strokeIndex: hole.strokeIndex,

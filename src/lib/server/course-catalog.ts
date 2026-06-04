@@ -6,6 +6,7 @@ import type { CourseLookupResult } from "@/lib/providers/types";
 import { golfCourseApiCourseDirectoryProvider } from "@/lib/providers/golf-course-api-provider";
 import { openGolfApiCourseDirectoryProvider } from "@/lib/providers/opengolfapi-provider";
 import { usgaCourseDirectoryProvider } from "@/lib/providers/usga-scrape-provider";
+import { normalizeKnownCourseHoles } from "@/lib/server/course-hole-corrections";
 import { searchCuratedChicagolandCourses } from "@/lib/server/chicagoland-course-fallbacks";
 import { db } from "@/lib/server/db";
 
@@ -26,11 +27,11 @@ type TeeLike<T extends TeeHoleLike = TeeHoleLike> = {
   holes?: T[];
 };
 
-export function hydrateTeeHolesFromSiblings<T extends TeeLike>(tee: T, tees: T[]) {
+export function hydrateTeeHolesFromSiblings<T extends TeeLike>(tee: T, tees: T[], courseName?: string | null) {
   const teeHoles = tee.holes ?? [];
 
   if (teeHoles.length === 18) {
-    return teeHoles.slice().sort((left, right) => left.holeNumber - right.holeNumber);
+    return normalizeKnownCourseHoles(teeHoles, { courseName });
   }
 
   const fullSiblingTees = tees.filter((candidate) => (candidate.holes ?? []).length === 18);
@@ -39,17 +40,20 @@ export function hydrateTeeHolesFromSiblings<T extends TeeLike>(tee: T, tees: T[]
     fullSiblingTees[0];
 
   if (!fallbackTee) {
-    return teeHoles.slice().sort((left, right) => left.holeNumber - right.holeNumber);
+    return normalizeKnownCourseHoles(teeHoles, { courseName });
   }
 
   const yardageByHoleNumber = new Map(teeHoles.map((hole) => [hole.holeNumber, hole.yardage ?? null]));
 
-  return (fallbackTee.holes ?? []).map((hole) => ({
-    holeNumber: hole.holeNumber,
-    par: hole.par,
-    strokeIndex: hole.strokeIndex,
-    yardage: yardageByHoleNumber.get(hole.holeNumber) ?? null
-  }));
+  return normalizeKnownCourseHoles(
+    (fallbackTee.holes ?? []).map((hole) => ({
+      holeNumber: hole.holeNumber,
+      par: hole.par,
+      strokeIndex: hole.strokeIndex,
+      yardage: yardageByHoleNumber.get(hole.holeNumber) ?? null
+    })),
+    { courseName }
+  );
 }
 
 function normalizeProviderKey(provider: string, externalId: string) {
@@ -279,7 +283,7 @@ export function serializeCourses(
       par: tee.par,
       slope: tee.slope,
       courseRating: Number(tee.courseRating),
-      holes: hydrateTeeHolesFromSiblings(tee, course.tees).map((hole) => ({
+      holes: hydrateTeeHolesFromSiblings(tee, course.tees, course.name).map((hole) => ({
         holeNumber: hole.holeNumber,
         par: hole.par,
         strokeIndex: hole.strokeIndex,
@@ -546,7 +550,7 @@ async function upsertCourseLookupResult(result: CourseLookupResult) {
 
   for (const tee of result.tees) {
     const teeId = `${courseId}-${tee.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
-    const hydratedHoles = hydrateTeeHolesFromSiblings(tee, result.tees);
+    const hydratedHoles = hydrateTeeHolesFromSiblings(tee, result.tees, result.name);
 
     const persistedTee = await db.courseTee.upsert({
       where: {

@@ -6,6 +6,7 @@ import type { MatchPlayerInput } from "@/lib/scoring/types";
 import { isAdminAuthenticated } from "@/lib/server/admin-auth";
 import { syncTournamentBracketTx } from "@/lib/server/bracket-sync";
 import { hydrateTeeHolesFromSiblings } from "@/lib/server/course-catalog";
+import { normalizeKnownCourseHoles } from "@/lib/server/course-hole-corrections";
 import { db } from "@/lib/server/db";
 import { getPrivateMatchRecordByToken } from "@/lib/server/matches";
 
@@ -365,7 +366,7 @@ export async function POST(
 
       const teeById = new Map(course.tees.map((tee) => [tee.id, tee]));
       const resolvedHolesByTeeId = new Map(
-        course.tees.map((tee) => [tee.id, hydrateTeeHolesFromSiblings(tee, course.tees)])
+        course.tees.map((tee) => [tee.id, hydrateTeeHolesFromSiblings(tee, course.tees, course.name)])
       );
       const overrideByTeeId = new Map(teeHoleOverrides.map((entry) => [entry.teeId, entry.holes]));
       const inputPlayers: MatchPlayerInput[] = players.map((player) => {
@@ -577,13 +578,13 @@ export async function POST(
             slope: selection.slopeSnapshot,
             courseRating: Number(selection.courseRatingSnapshot),
             par: selection.parSnapshot,
-            holes: selection.tee.holes.map((hole) => ({
+            holes: normalizeKnownCourseHoles(selection.tee.holes).map((hole) => ({
               holeNumber: hole.holeNumber,
               par: hole.par,
               strokeIndex: hole.strokeIndex
             }))
           }));
-          const holeTemplate = match.playerSelections[0]?.tee.holes ?? [];
+          const holeTemplate = normalizeKnownCourseHoles(match.playerSelections[0]?.tee.holes ?? []);
 
           const fullScorecard = scoreMatch({
             players: inputs,

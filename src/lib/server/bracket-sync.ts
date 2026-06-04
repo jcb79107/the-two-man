@@ -6,6 +6,7 @@ import { nanoid } from "nanoid";
 import { Prisma } from "@prisma/client";
 import { scoreForfeit, scoreMatch } from "@/lib/scoring/engine";
 import type { TeamMatchSummary } from "@/lib/scoring/types";
+import { normalizeKnownCourseHoles } from "@/lib/server/course-hole-corrections";
 import { db } from "@/lib/server/db";
 import { computeQualifiedSeeds } from "@/lib/server/qualification";
 import { computePodStandings, type MatchStandingInput } from "@/lib/server/standings";
@@ -81,7 +82,7 @@ function buildResultSummary(match: {
     return [];
   }
 
-  const holesTemplate = match.playerSelections[0]?.tee.holes ?? [];
+  const holesTemplate = normalizeKnownCourseHoles(match.playerSelections[0]?.tee.holes ?? []);
   const scoresByHole = new Map<number, Record<string, number | null>>();
 
   for (const hole of holesTemplate) {
@@ -118,7 +119,7 @@ function buildResultSummary(match: {
       slope: selection.slopeSnapshot,
       courseRating: Number(selection.courseRatingSnapshot),
       par: selection.parSnapshot,
-      holes: selection.tee.holes.map((hole) => ({
+      holes: normalizeKnownCourseHoles(selection.tee.holes).map((hole) => ({
         holeNumber: hole.holeNumber,
         par: hole.par,
         strokeIndex: hole.strokeIndex

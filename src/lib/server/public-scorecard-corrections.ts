@@ -1,3 +1,5 @@
+import { normalizeKnownCourseHoles } from "@/lib/server/course-hole-corrections";
+
 type MatchHole = {
   holeNumber: number;
   par: number;
@@ -124,8 +126,16 @@ function isBriarwoodCorrectionTarget(matchId: string) {
 }
 
 export function applyPublicScorecardCorrections<T extends CorrectablePublicMatch>(match: T): T {
+  const normalizedSelections = match.playerSelections.map((selection) => ({
+    ...selection,
+    tee: {
+      ...selection.tee,
+      holes: normalizeKnownCourseHoles(selection.tee.holes)
+    }
+  }));
+
   if (isHeritageOaksCorrectionTarget(match)) {
-    const allPlayersPresent = match.playerSelections.every(
+    const allPlayersPresent = normalizedSelections.every(
       (selection) => correctedGrossScoresByPlayerName[selection.player.displayName]?.length === 18
     );
 
@@ -135,7 +145,7 @@ export function applyPublicScorecardCorrections<T extends CorrectablePublicMatch
 
     return {
       ...match,
-      playerSelections: match.playerSelections.map((selection) => ({
+      playerSelections: normalizedSelections.map((selection) => ({
         ...selection,
         teeId: "usga-7437-612687",
         teeNameSnapshot: "Maroon",
@@ -154,7 +164,7 @@ export function applyPublicScorecardCorrections<T extends CorrectablePublicMatch
           )
         }
       })),
-      holeScores: match.playerSelections.flatMap((selection) => {
+      holeScores: normalizedSelections.flatMap((selection) => {
         const grossScores = correctedGrossScoresByPlayerName[selection.player.displayName];
 
         return grossScores.map((grossScore, index) => ({
@@ -167,12 +177,15 @@ export function applyPublicScorecardCorrections<T extends CorrectablePublicMatch
   }
 
   if (!isBriarwoodCorrectionTarget(match.id) && !isBriarwoodCorrectionTarget(match.publicScorecardSlug)) {
-    return match;
+    return {
+      ...match,
+      playerSelections: normalizedSelections
+    };
   }
 
   return {
     ...match,
-    playerSelections: match.playerSelections.map((selection) => ({
+    playerSelections: normalizedSelections.map((selection) => ({
       ...selection,
       teeNameSnapshot: "II",
       tee: {

@@ -3,6 +3,7 @@ import "server-only";
 import { Prisma } from "@prisma/client";
 import { buildMatchPlayerSnapshots, scoreMatch } from "@/lib/scoring/engine";
 import type { MatchPlayerInput } from "@/lib/scoring/types";
+import { normalizeKnownCourseHoles } from "@/lib/server/course-hole-corrections";
 import { getStoredCourseCatalog } from "@/lib/server/course-catalog";
 import { db } from "@/lib/server/db";
 
@@ -244,7 +245,7 @@ export async function getPrivateMatchRecordByToken(token: string): Promise<Priva
           slope: selection.slopeSnapshot,
           courseRating: Number(selection.courseRatingSnapshot),
           par: selection.parSnapshot,
-          holes: selection.tee.holes.map((hole) => ({
+          holes: normalizeKnownCourseHoles(selection.tee.holes).map((hole) => ({
             holeNumber: hole.holeNumber,
             par: hole.par,
             strokeIndex: hole.strokeIndex,

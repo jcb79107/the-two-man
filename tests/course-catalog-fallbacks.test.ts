@@ -265,6 +265,8 @@ describe("curated course fallbacks", () => {
     expect(brynMawrResults).toHaveLength(1);
     expect(sunsetResults[0].tees.every((tee) => tee.holes?.length === 18)).toBe(true);
     expect(brynMawrResults[0].tees.every((tee) => tee.holes?.length === 18)).toBe(true);
+    expect(brynMawrResults[0].tees[0]?.holes?.find((hole) => hole.holeNumber === 12)?.strokeIndex).toBe(6);
+    expect(brynMawrResults[0].tees[0]?.holes?.find((hole) => hole.holeNumber === 13)?.strokeIndex).toBe(4);
   });
 
   it("loads northwest Indiana NCRListing enrichment", () => {

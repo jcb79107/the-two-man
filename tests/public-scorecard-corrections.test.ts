@@ -6,6 +6,52 @@ import {
 } from "@/lib/server/public-scorecard-corrections";
 
 describe("applyPublicScorecardCorrections", () => {
+  it("normalizes legacy Bryn Mawr hole handicaps even when a public match is already posted", () => {
+    const holes = [
+      { holeNumber: 1, par: 5, strokeIndex: 15 },
+      { holeNumber: 2, par: 4, strokeIndex: 5 },
+      { holeNumber: 3, par: 4, strokeIndex: 11 },
+      { holeNumber: 4, par: 4, strokeIndex: 1 },
+      { holeNumber: 5, par: 5, strokeIndex: 7 },
+      { holeNumber: 6, par: 3, strokeIndex: 9 },
+      { holeNumber: 7, par: 4, strokeIndex: 17 },
+      { holeNumber: 8, par: 3, strokeIndex: 13 },
+      { holeNumber: 9, par: 4, strokeIndex: 3 },
+      { holeNumber: 10, par: 3, strokeIndex: 8 },
+      { holeNumber: 11, par: 4, strokeIndex: 16 },
+      { holeNumber: 12, par: 4, strokeIndex: 4 },
+      { holeNumber: 13, par: 5, strokeIndex: 6 },
+      { holeNumber: 14, par: 3, strokeIndex: 14 },
+      { holeNumber: 15, par: 5, strokeIndex: 10 },
+      { holeNumber: 16, par: 3, strokeIndex: 18 },
+      { holeNumber: 17, par: 4, strokeIndex: 2 },
+      { holeNumber: 18, par: 5, strokeIndex: 12 }
+    ];
+
+    const match = applyPublicScorecardCorrections({
+      id: "posted-bryn-mawr-match",
+      publicScorecardSlug: "posted-bryn-mawr-match",
+      playerSelections: [
+        {
+          playerId: "player-1",
+          player: { displayName: "Player 1" },
+          teamId: "team-a",
+          teeId: "tee-1",
+          teeNameSnapshot: "Langford",
+          handicapIndexSnapshot: 4.2,
+          slopeSnapshot: 130,
+          courseRatingSnapshot: 72.4,
+          parSnapshot: 72,
+          tee: { holes }
+        }
+      ],
+      holeScores: []
+    });
+
+    expect(match.playerSelections[0]?.tee.holes.find((hole) => hole.holeNumber === 12)?.strokeIndex).toBe(6);
+    expect(match.playerSelections[0]?.tee.holes.find((hole) => hole.holeNumber === 13)?.strokeIndex).toBe(4);
+  });
+
   it("fixes the Heritage Oaks public card to the official maroon-tee 10-8 result", () => {
     const holes = [
       { holeNumber: 1, par: 5, strokeIndex: 7 },
