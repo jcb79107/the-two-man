@@ -50,6 +50,52 @@ const SUNSET_VALLEY_HOLES = [
   { holeNumber: 18, par: 4, strokeIndex: 18, yardage: 344 }
 ];
 
+const GLENCOE_PARS = [4, 5, 4, 4, 4, 4, 3, 4, 4, 4, 4, 3, 4, 4, 3, 4, 5, 5];
+const GLENCOE_MEN_HANDICAPS = [1, 5, 15, 17, 11, 7, 3, 13, 9, 6, 12, 18, 2, 16, 14, 4, 10, 8];
+const GLENCOE_WOMEN_HANDICAPS = [3, 1, 13, 17, 7, 5, 15, 11, 9, 8, 12, 18, 4, 14, 16, 10, 2, 6];
+
+function buildGlencoeHoles(yardages: number[], strokeIndexes: number[]) {
+  return GLENCOE_PARS.map((par, index) => ({
+    holeNumber: index + 1,
+    par,
+    strokeIndex: strokeIndexes[index],
+    yardage: yardages[index]
+  }));
+}
+
+const GLENCOE_BLUE_MEN_HOLES = buildGlencoeHoles(
+  [400, 549, 329, 336, 369, 359, 233, 333, 360, 454, 386, 148, 412, 328, 173, 382, 508, 536],
+  GLENCOE_MEN_HANDICAPS
+);
+const GLENCOE_WHITE_MEN_HOLES = buildGlencoeHoles(
+  [382, 525, 315, 326, 355, 350, 207, 324, 348, 430, 356, 130, 393, 317, 154, 366, 492, 521],
+  GLENCOE_MEN_HANDICAPS
+);
+const GLENCOE_SILVER_MEN_HOLES = buildGlencoeHoles(
+  [363, 510, 313, 321, 341, 337, 154, 321, 346, 415, 338, 121, 378, 315, 135, 363, 434, 519],
+  GLENCOE_MEN_HANDICAPS
+);
+const GLENCOE_RED_HOLES = buildGlencoeHoles(
+  [360, 481, 293, 299, 337, 324, 140, 305, 317, 410, 322, 108, 373, 307, 130, 350, 432, 425],
+  GLENCOE_MEN_HANDICAPS
+);
+const GLENCOE_WHITE_WOMEN_HOLES = buildGlencoeHoles(
+  [382, 525, 315, 326, 355, 350, 207, 324, 348, 430, 356, 130, 393, 317, 154, 366, 492, 521],
+  GLENCOE_WOMEN_HANDICAPS
+);
+const GLENCOE_SILVER_WOMEN_HOLES = buildGlencoeHoles(
+  [363, 510, 313, 321, 341, 337, 154, 321, 346, 415, 338, 121, 378, 315, 135, 363, 434, 519],
+  GLENCOE_WOMEN_HANDICAPS
+);
+const GLENCOE_RED_WOMEN_HOLES = buildGlencoeHoles(
+  [360, 481, 293, 299, 337, 324, 140, 305, 317, 410, 322, 108, 373, 307, 130, 350, 432, 425],
+  GLENCOE_WOMEN_HANDICAPS
+);
+
+// Source: https://glencoegolfclub.com/scorecard-ratings/
+// Note: the published hole-by-hole yardages appear to duplicate 415 on hole 18 for the forward/red path,
+// but the same page's course-stat total is 5,713 yards. Using 425 on hole 18 matches the published total.
+
 type NorthmoorTeeColor = "black" | "blue" | "white" | "gold";
 type NorthmoorNineKey = "blue" | "red" | "white";
 
@@ -134,15 +180,11 @@ const NORTHMOOR_TEE_LABELS: Array<{
   gender: "MEN" | "WOMEN";
 }> = [
   { color: "black", externalKey: "black-men", name: "Black", gender: "MEN" },
-  { color: "blue", externalKey: "black-blue-men", name: "Black/Blue", gender: "MEN" },
   { color: "blue", externalKey: "blue-men", name: "Blue", gender: "MEN" },
-  { color: "white", externalKey: "blue-white-men", name: "Blue/White", gender: "MEN" },
   { color: "white", externalKey: "white-men", name: "White (Men)", gender: "MEN" },
-  { color: "gold", externalKey: "white-yellow-men", name: "White/Yellow (Men)", gender: "MEN" },
-  { color: "gold", externalKey: "yellow-men", name: "Yellow (Men)", gender: "MEN" },
+  { color: "gold", externalKey: "gold-men", name: "Gold (Men)", gender: "MEN" },
   { color: "white", externalKey: "white-women", name: "White (Women)", gender: "WOMEN" },
-  { color: "gold", externalKey: "white-yellow-women", name: "White/Yellow (Women)", gender: "WOMEN" },
-  { color: "gold", externalKey: "yellow-women", name: "Yellow (Women)", gender: "WOMEN" }
+  { color: "gold", externalKey: "gold-women", name: "Gold (Women)", gender: "WOMEN" }
 ];
 
 function buildNorthmoorHoles(frontNine: NorthmoorNineKey, backNine: NorthmoorNineKey, color: NorthmoorTeeColor) {
@@ -190,7 +232,8 @@ function buildNorthmoorCourse(
       holes: buildNorthmoorHoles(frontNine, backNine, tee.color)
     })),
     raw: {
-      source: "USGA course rating table and Northmoor official scorecard"
+      source: "Northmoor official scorecard",
+      sourceUrl: "https://www.northmoor.org/files/Final%20White%20Nine%20Scorecard.pdf"
     }
   };
 }
@@ -603,6 +646,25 @@ function dedupeCourseResults(courses: CourseLookupResult[]) {
 
 const CURATED_COURSES: CourseLookupResult[] = dedupeCourseResults([
   {
+    externalCourseId: "usga-ncrdb-7344",
+    provider: "curated-chicagoland",
+    name: "Glencoe Golf Club",
+    city: "Glencoe",
+    state: "IL",
+    tees: [
+      { externalTeeId: "usga-7344-276882", name: "Blue", gender: "MEN", par: 72, slope: 133, courseRating: 72.3, holes: GLENCOE_BLUE_MEN_HOLES },
+      { externalTeeId: "usga-7344-177526", name: "White", gender: "MEN", par: 72, slope: 129, courseRating: 70.7, holes: GLENCOE_WHITE_MEN_HOLES },
+      { externalTeeId: "usga-7344-276883", name: "Silver", gender: "MEN", par: 72, slope: 127, courseRating: 69.7, holes: GLENCOE_SILVER_MEN_HOLES },
+      { externalTeeId: "usga-7344-499794", name: "Red", gender: "MEN", par: 72, slope: 124, courseRating: 68.3, holes: GLENCOE_RED_HOLES },
+      { externalTeeId: "usga-7344-499789", name: "White (Women)", gender: "WOMEN", par: 73, slope: 137, courseRating: 76.2, holes: GLENCOE_WHITE_WOMEN_HOLES },
+      { externalTeeId: "usga-7344-276884", name: "Silver (Women)", gender: "WOMEN", par: 73, slope: 135, courseRating: 75, holes: GLENCOE_SILVER_WOMEN_HOLES },
+      { externalTeeId: "usga-7344-177527", name: "Red (Women)", gender: "WOMEN", par: 73, slope: 131, courseRating: 73.2, holes: GLENCOE_RED_WOMEN_HOLES }
+    ],
+    raw: {
+      source: "https://glencoegolfclub.com/scorecard-ratings/"
+    }
+  },
+  {
     externalCourseId: "bryn-mawr-country-club-il",
     provider: "curated-chicagoland",
     name: "Bryn Mawr Country Club",
@@ -654,39 +716,27 @@ const CURATED_COURSES: CourseLookupResult[] = dedupeCourseResults([
   },
   buildNorthmoorCourse("northmoor-country-club-blue-red-il", "Blue/Red", "blue", "red", {
     "black-men": { courseRating: 73.6, slope: 132 },
-    "black-blue-men": { courseRating: 72.5, slope: 129 },
-    "blue-men": { courseRating: 71.6, slope: 127 },
-    "blue-white-men": { courseRating: 70.1, slope: 123 },
+    "blue-men": { courseRating: 71.6, slope: 128 },
     "white-men": { courseRating: 68.6, slope: 119 },
-    "white-yellow-men": { courseRating: 66.8, slope: 115 },
-    "yellow-men": { courseRating: 65.5, slope: 112 },
+    "gold-men": { courseRating: 65.5, slope: 112 },
     "white-women": { courseRating: 73.3, slope: 133 },
-    "white-yellow-women": { courseRating: 71, slope: 128 },
-    "yellow-women": { courseRating: 69.4, slope: 124 }
+    "gold-women": { courseRating: 69.4, slope: 124 }
   }),
   buildNorthmoorCourse("northmoor-country-club-red-white-il", "Red/White", "red", "white", {
-    "black-men": { courseRating: 74, slope: 136 },
-    "black-blue-men": { courseRating: 72.8, slope: 133 },
+    "black-men": { courseRating: 74, slope: 137 },
     "blue-men": { courseRating: 72.1, slope: 132 },
-    "blue-white-men": { courseRating: 70.6, slope: 129 },
     "white-men": { courseRating: 69.2, slope: 126 },
-    "white-yellow-men": { courseRating: 67.5, slope: 122, par: 71 },
-    "yellow-men": { courseRating: 65.8, slope: 118 },
+    "gold-men": { courseRating: 65.8, slope: 118 },
     "white-women": { courseRating: 74.9, slope: 137 },
-    "white-yellow-women": { courseRating: 72.7, slope: 132 },
-    "yellow-women": { courseRating: 70.5, slope: 127 }
+    "gold-women": { courseRating: 70.5, slope: 127 }
   }),
   buildNorthmoorCourse("northmoor-country-club-white-blue-il", "White/Blue", "white", "blue", {
-    "black-men": { courseRating: 72.6, slope: 135 },
-    "black-blue-men": { courseRating: 71.9, slope: 134 },
-    "blue-men": { courseRating: 71.3, slope: 133 },
-    "blue-white-men": { courseRating: 70.1, slope: 129 },
+    "black-men": { courseRating: 72.6, slope: 136 },
+    "blue-men": { courseRating: 71.3, slope: 134 },
     "white-men": { courseRating: 68.4, slope: 126 },
-    "white-yellow-men": { courseRating: 66.7, slope: 122 },
-    "yellow-men": { courseRating: 65.1, slope: 118 },
-    "white-women": { courseRating: 73.4, slope: 135 },
-    "white-yellow-women": { courseRating: 71.3, slope: 133 },
-    "yellow-women": { courseRating: 69.3, slope: 128 }
+    "gold-men": { courseRating: 65.1, slope: 118 },
+    "white-women": { courseRating: 73.2, slope: 137 },
+    "gold-women": { courseRating: 69.3, slope: 128 }
   }),
   ...USGA_NCRDB_CURATED_COURSES.map(buildUsgaCuratedCourse),
   ...USGA_NCRDB_GENERATED_COURSES.map(buildUsgaCuratedCourse)

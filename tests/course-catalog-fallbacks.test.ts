@@ -64,15 +64,11 @@ describe("curated course fallbacks", () => {
 
     expect(course.tees).toEqual([
       { name: "Black", gender: "MEN", par: 71, courseRating: 73.6, slope: 132, holeCount: 18 },
-      { name: "Black/Blue", gender: "MEN", par: 71, courseRating: 72.5, slope: 129, holeCount: 18 },
-      { name: "Blue", gender: "MEN", par: 71, courseRating: 71.6, slope: 127, holeCount: 18 },
-      { name: "Blue/White", gender: "MEN", par: 71, courseRating: 70.1, slope: 123, holeCount: 18 },
+      { name: "Blue", gender: "MEN", par: 71, courseRating: 71.6, slope: 128, holeCount: 18 },
       { name: "White (Men)", gender: "MEN", par: 71, courseRating: 68.6, slope: 119, holeCount: 18 },
-      { name: "White/Yellow (Men)", gender: "MEN", par: 71, courseRating: 66.8, slope: 115, holeCount: 18 },
-      { name: "Yellow (Men)", gender: "MEN", par: 71, courseRating: 65.5, slope: 112, holeCount: 18 },
+      { name: "Gold (Men)", gender: "MEN", par: 71, courseRating: 65.5, slope: 112, holeCount: 18 },
       { name: "White (Women)", gender: "WOMEN", par: 71, courseRating: 73.3, slope: 133, holeCount: 18 },
-      { name: "White/Yellow (Women)", gender: "WOMEN", par: 71, courseRating: 71, slope: 128, holeCount: 18 },
-      { name: "Yellow (Women)", gender: "WOMEN", par: 71, courseRating: 69.4, slope: 124, holeCount: 18 }
+      { name: "Gold (Women)", gender: "WOMEN", par: 71, courseRating: 69.4, slope: 124, holeCount: 18 }
     ]);
   });
 
@@ -80,16 +76,12 @@ describe("curated course fallbacks", () => {
     const course = summarizeNorthmoor("Red/White");
 
     expect(course.tees).toEqual([
-      { name: "Black", gender: "MEN", par: 72, courseRating: 74, slope: 136, holeCount: 18 },
-      { name: "Black/Blue", gender: "MEN", par: 72, courseRating: 72.8, slope: 133, holeCount: 18 },
+      { name: "Black", gender: "MEN", par: 72, courseRating: 74, slope: 137, holeCount: 18 },
       { name: "Blue", gender: "MEN", par: 72, courseRating: 72.1, slope: 132, holeCount: 18 },
-      { name: "Blue/White", gender: "MEN", par: 72, courseRating: 70.6, slope: 129, holeCount: 18 },
       { name: "White (Men)", gender: "MEN", par: 72, courseRating: 69.2, slope: 126, holeCount: 18 },
-      { name: "White/Yellow (Men)", gender: "MEN", par: 71, courseRating: 67.5, slope: 122, holeCount: 18 },
-      { name: "Yellow (Men)", gender: "MEN", par: 72, courseRating: 65.8, slope: 118, holeCount: 18 },
+      { name: "Gold (Men)", gender: "MEN", par: 72, courseRating: 65.8, slope: 118, holeCount: 18 },
       { name: "White (Women)", gender: "WOMEN", par: 72, courseRating: 74.9, slope: 137, holeCount: 18 },
-      { name: "White/Yellow (Women)", gender: "WOMEN", par: 72, courseRating: 72.7, slope: 132, holeCount: 18 },
-      { name: "Yellow (Women)", gender: "WOMEN", par: 72, courseRating: 70.5, slope: 127, holeCount: 18 }
+      { name: "Gold (Women)", gender: "WOMEN", par: 72, courseRating: 70.5, slope: 127, holeCount: 18 }
     ]);
   });
 
@@ -97,16 +89,12 @@ describe("curated course fallbacks", () => {
     const course = summarizeNorthmoor("White/Blue");
 
     expect(course.tees).toEqual([
-      { name: "Black", gender: "MEN", par: 71, courseRating: 72.6, slope: 135, holeCount: 18 },
-      { name: "Black/Blue", gender: "MEN", par: 71, courseRating: 71.9, slope: 134, holeCount: 18 },
-      { name: "Blue", gender: "MEN", par: 71, courseRating: 71.3, slope: 133, holeCount: 18 },
-      { name: "Blue/White", gender: "MEN", par: 71, courseRating: 70.1, slope: 129, holeCount: 18 },
+      { name: "Black", gender: "MEN", par: 71, courseRating: 72.6, slope: 136, holeCount: 18 },
+      { name: "Blue", gender: "MEN", par: 71, courseRating: 71.3, slope: 134, holeCount: 18 },
       { name: "White (Men)", gender: "MEN", par: 71, courseRating: 68.4, slope: 126, holeCount: 18 },
-      { name: "White/Yellow (Men)", gender: "MEN", par: 71, courseRating: 66.7, slope: 122, holeCount: 18 },
-      { name: "Yellow (Men)", gender: "MEN", par: 71, courseRating: 65.1, slope: 118, holeCount: 18 },
-      { name: "White (Women)", gender: "WOMEN", par: 71, courseRating: 73.4, slope: 135, holeCount: 18 },
-      { name: "White/Yellow (Women)", gender: "WOMEN", par: 71, courseRating: 71.3, slope: 133, holeCount: 18 },
-      { name: "Yellow (Women)", gender: "WOMEN", par: 71, courseRating: 69.3, slope: 128, holeCount: 18 }
+      { name: "Gold (Men)", gender: "MEN", par: 71, courseRating: 65.1, slope: 118, holeCount: 18 },
+      { name: "White (Women)", gender: "WOMEN", par: 71, courseRating: 73.2, slope: 137, holeCount: 18 },
+      { name: "Gold (Women)", gender: "WOMEN", par: 71, courseRating: 69.3, slope: 128, holeCount: 18 }
     ]);
   });
 
@@ -162,6 +150,24 @@ describe("curated course fallbacks", () => {
     expect(findCourse("Briarwood Country Club").tees).toHaveLength(14);
     expect(findCourse("Deerfield Golf Club").tees).toHaveLength(11);
     expect(findCourse("Glencoe Golf Club").tees).toHaveLength(7);
+    expect(summarizeTee("Glencoe Golf Club", "White", "MEN")).toEqual({
+      par: 72,
+      courseRating: 70.7,
+      slope: 129,
+      holeCount: 18
+    });
+    expect(findCourse("Glencoe Golf Club").tees.find((tee) => tee.name === "White" && tee.gender === "MEN")?.holes?.[0]).toEqual({
+      holeNumber: 1,
+      par: 4,
+      strokeIndex: 1,
+      yardage: 382
+    });
+    expect(findCourse("Glencoe Golf Club").tees.find((tee) => tee.name === "White (Women)" && tee.gender === "WOMEN")?.holes?.[0]).toEqual({
+      holeNumber: 1,
+      par: 4,
+      strokeIndex: 3,
+      yardage: 382
+    });
     expect(findCourse("Lake Shore Country Club").tees).toHaveLength(14);
     expect(findCourse("Cog Hill Golf & Country Club - 1", "Cog Hill 1").tees).toHaveLength(10);
     expect(findCourse("Cog Hill Golf & Country Club - 2", "Cog Hill 2").tees).toHaveLength(10);
