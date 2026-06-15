@@ -193,7 +193,10 @@ export function PublicMatchScorecard({
     teams.find((team) => {
       const summary = summaryByTeamId.get(team.id);
       return summary?.resultCode === "WIN" || summary?.resultCode === "FORFEIT_WIN";
-    }) ?? teams[0];
+    }) ?? null;
+  const isTie =
+    summaries.length === 2 &&
+    summaries.every((summary) => summary.resultCode === "TIE");
   const activeHoleNumbers = segmentRanges[segment].holes;
   const activeHoles = holes.filter((hole) => activeHoleNumbers.includes(hole.holeNumber));
   const frontHoles = holes.filter((hole) => hole.holeNumber <= 9);
@@ -221,7 +224,7 @@ export function PublicMatchScorecard({
   );
   const summaryTeams: MatchScorecardSummaryTeam[] = teams.map((team) => {
     const summary = summaryByTeamId.get(team.id);
-    const isWinner = team.id === winner?.id;
+    const isWinner = !isTie && team.id === winner?.id;
     const front = splitSummary(frontHoles, team.id);
     const back = splitSummary(backHoles, team.id);
     const totalNet = summary?.betterBallNetTotal ?? sumTeamNet(holes, team.id);
@@ -230,7 +233,7 @@ export function PublicMatchScorecard({
     return {
       id: team.id,
       name: team.name,
-      label: isWinner ? "Winner" : "Runner-up",
+      label: isTie ? "Tie" : isWinner ? "Winner" : "Runner-up",
       score: formatStat(summary?.totalPoints),
       tone: team.tone,
       stats: [
@@ -254,7 +257,11 @@ export function PublicMatchScorecard({
 
       <MatchScorecardSummary
         eyebrow={roundLabel}
-        title={`${winner?.name ?? "Match"} wins`}
+        title={
+          isTie
+            ? `${teams[0]?.name ?? "Match"} tied ${teams[1]?.name ?? "opponent"}`
+            : `${winner?.name ?? "Match"} wins`
+        }
         headingLevel="h1"
         statusLabel={status}
         courseName={courseName}

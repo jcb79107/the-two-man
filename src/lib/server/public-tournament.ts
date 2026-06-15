@@ -9,7 +9,11 @@ import {
 import { normalizeKnownCourseHoles } from "@/lib/server/course-hole-corrections";
 import { decorateBracketRounds } from "@/lib/server/bracket";
 import { db } from "@/lib/server/db";
-import { computeQualifiedSeeds } from "@/lib/server/qualification";
+import { formatCompletedMatchFeedTitle } from "@/lib/server/public-feed-formatting";
+import {
+  computeProjectedPlayoffPicture,
+  computeQualifiedSeeds
+} from "@/lib/server/qualification";
 import {
   computePodStandings,
   type MatchStandingInput
@@ -325,6 +329,11 @@ function buildComputedFeed(input: {
       const scoreLine =
         winner && loser ? `${winner.totalPoints}-${loser.totalPoints}` : `${homeTeamName} vs ${awayTeamName}`;
       const courseLabel = match.course?.name ? ` at ${match.course.name}` : "";
+      const isTie =
+        !match.winningTeamId &&
+        winner != null &&
+        loser != null &&
+        winner.totalPoints === loser.totalPoints;
 
       events.push(
         buildComputedFeedEvent({
@@ -333,7 +342,12 @@ function buildComputedFeed(input: {
           type: "MATCH_COMPLETED",
           occurredAt: match.finalizedAt ?? match.submittedAt ?? match.updatedAt,
           icon: match.stage === "POD_PLAY" ? "🏌️" : "🏆",
-          title: `${winnerTeamName} def. ${loserTeamName} ${scoreLine}`,
+          title: formatCompletedMatchFeedTitle({
+            primaryTeamName: winnerTeamName,
+            secondaryTeamName: loserTeamName,
+            scoreLine,
+            isTie
+          }),
           body: `${match.roundLabel}${courseLabel}`,
           matchId: match.id,
           teamIds: [match.homeTeamId, match.awayTeamId].filter((value): value is string => Boolean(value)),
@@ -605,6 +619,12 @@ export async function getPublicTournamentState(slug: string) {
     podStandings,
     matches: tournament.matches
   });
+  const projectedPlayoffPicture = computeProjectedPlayoffPicture({
+    pods: tournament.pods.map((pod) => ({ id: pod.id, name: pod.name })),
+    standings,
+    podStandings,
+    matches: tournament.matches
+  });
   const wildCards = computedSeeds
     .filter((entry) => entry.qualifierType === "WILD_CARD")
     .map((entry) => {
@@ -634,6 +654,9 @@ export async function getPublicTournamentState(slug: string) {
     podStandings,
     podWinners,
     wildCards,
+    projectedPlayoffField: projectedPlayoffPicture.projectedPlayoffField,
+    wildCardProjection: projectedPlayoffPicture.wildCardProjection,
+    wildCardBubble: projectedPlayoffPicture.wildCardBubble,
     computedSeeds,
     matches,
     upcomingMatches,
@@ -718,7 +741,7 @@ export async function getPublicBracketState(slug: string) {
           totalNetBetterBall: leader?.cumulativeNetBetterBall ?? null
         };
       }),
-      wildCardProjection: state.wildCards.map((entry) => {
+      wildCardProjection: state.wildCardProjection.map((entry) => {
         const standing = state.standings.find((row) => row.teamId === entry.teamId);
         const pod = state.tournament.pods.find((candidate) => candidate.id === standing?.podId);
         return {
@@ -802,7 +825,7 @@ export async function getPublicBracketState(slug: string) {
     };
   });
 
-  const wildCardProjection = state.wildCards.map((entry) => {
+  const wildCardProjection = state.wildCardProjection.map((entry) => {
     const standing = state.standings.find((row) => row.teamId === entry.teamId);
     const pod = state.tournament.pods.find((candidate) => candidate.id === standing?.podId);
     return {

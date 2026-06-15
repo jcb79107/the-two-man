@@ -96,6 +96,55 @@ const GLENCOE_RED_WOMEN_HOLES = buildGlencoeHoles(
 // Note: the published hole-by-hole yardages appear to duplicate 415 on hole 18 for the forward/red path,
 // but the same page's course-stat total is 5,713 yards. Using 425 on hole 18 matches the published total.
 
+const SUNSET_VALLEY_BLUE_HOLES = [
+  { holeNumber: 1, par: 4, strokeIndex: 7, yardage: 325 },
+  { holeNumber: 2, par: 5, strokeIndex: 5, yardage: 494 },
+  { holeNumber: 3, par: 4, strokeIndex: 9, yardage: 370 },
+  { holeNumber: 4, par: 3, strokeIndex: 13, yardage: 137 },
+  { holeNumber: 5, par: 4, strokeIndex: 3, yardage: 416 },
+  { holeNumber: 6, par: 3, strokeIndex: 15, yardage: 132 },
+  { holeNumber: 7, par: 5, strokeIndex: 1, yardage: 540 },
+  { holeNumber: 8, par: 4, strokeIndex: 17, yardage: 345 },
+  { holeNumber: 9, par: 4, strokeIndex: 11, yardage: 362 },
+  { holeNumber: 10, par: 4, strokeIndex: 14, yardage: 325 },
+  { holeNumber: 11, par: 3, strokeIndex: 16, yardage: 158 },
+  { holeNumber: 12, par: 5, strokeIndex: 4, yardage: 488 },
+  { holeNumber: 13, par: 4, strokeIndex: 2, yardage: 406 },
+  { holeNumber: 14, par: 3, strokeIndex: 12, yardage: 192 },
+  { holeNumber: 15, par: 4, strokeIndex: 6, yardage: 398 },
+  { holeNumber: 16, par: 4, strokeIndex: 8, yardage: 400 },
+  { holeNumber: 17, par: 5, strokeIndex: 10, yardage: 474 },
+  { holeNumber: 18, par: 4, strokeIndex: 18, yardage: 328 }
+];
+
+const DEERFIELD_PAR_ROW = [4, 5, 3, 4, 4, 5, 4, 3, 4, 4, 5, 4, 3, 4, 4, 3, 4, 5];
+const DEERFIELD_HANDICAP_ROW = [13, 1, 17, 11, 5, 7, 3, 15, 9, 4, 8, 2, 18, 14, 16, 12, 6, 10];
+
+function buildDeerfieldHoles(yardages: number[]) {
+  return yardages.map((yardage, index) => ({
+    holeNumber: index + 1,
+    par: DEERFIELD_PAR_ROW[index],
+    strokeIndex: DEERFIELD_HANDICAP_ROW[index],
+    yardage
+  }));
+}
+
+const DEERFIELD_BLACK_HOLES = buildDeerfieldHoles([
+  322, 536, 184, 375, 413, 534, 417, 192, 409, 401, 564, 472, 159, 353, 402, 180, 385, 533
+]);
+const DEERFIELD_GOLD_HOLES = buildDeerfieldHoles([
+  315, 521, 170, 370, 399, 519, 410, 175, 401, 384, 545, 461, 145, 343, 391, 161, 370, 493
+]);
+const DEERFIELD_BLUE_HOLES = buildDeerfieldHoles([
+  315, 508, 158, 370, 379, 463, 382, 175, 401, 384, 444, 392, 145, 324, 391, 161, 308, 420
+]);
+const DEERFIELD_SILVER_HOLES = buildDeerfieldHoles([
+  281, 508, 158, 272, 379, 463, 382, 143, 332, 320, 444, 392, 110, 324, 317, 131, 308, 420
+]);
+const DEERFIELD_BRONZE_HOLES = buildDeerfieldHoles([
+  244, 380, 123, 267, 301, 410, 318, 139, 291, 327, 380, 345, 103, 256, 312, 122, 279, 412
+]);
+
 type NorthmoorTeeColor = "black" | "blue" | "white" | "gold";
 type NorthmoorNineKey = "blue" | "red" | "white";
 
@@ -173,18 +222,33 @@ const NORTHMOOR_NINES: Record<
   }
 };
 
-const NORTHMOOR_TEE_LABELS: Array<{
+type NorthmoorTeeLabel = {
   color: NorthmoorTeeColor;
   externalKey: string;
   name: string;
   gender: "MEN" | "WOMEN";
-}> = [
+};
+
+const NORTHMOOR_TEE_LABELS: NorthmoorTeeLabel[] = [
   { color: "black", externalKey: "black-men", name: "Black", gender: "MEN" },
   { color: "blue", externalKey: "blue-men", name: "Blue", gender: "MEN" },
   { color: "white", externalKey: "white-men", name: "White (Men)", gender: "MEN" },
   { color: "gold", externalKey: "gold-men", name: "Gold (Men)", gender: "MEN" },
   { color: "white", externalKey: "white-women", name: "White (Women)", gender: "WOMEN" },
   { color: "gold", externalKey: "gold-women", name: "Gold (Women)", gender: "WOMEN" }
+];
+
+const NORTHMOOR_EXPANDED_TEE_LABELS: NorthmoorTeeLabel[] = [
+  { color: "black", externalKey: "black-men", name: "Black", gender: "MEN" },
+  { color: "blue", externalKey: "black-blue-men", name: "Black/Blue", gender: "MEN" },
+  { color: "blue", externalKey: "blue-men", name: "Blue", gender: "MEN" },
+  { color: "white", externalKey: "blue-white-men", name: "Blue/White", gender: "MEN" },
+  { color: "white", externalKey: "white-men", name: "White (Men)", gender: "MEN" },
+  { color: "gold", externalKey: "white-yellow-men", name: "White/Yellow (Men)", gender: "MEN" },
+  { color: "gold", externalKey: "yellow-men", name: "Yellow (Men)", gender: "MEN" },
+  { color: "white", externalKey: "white-women", name: "White (Women)", gender: "WOMEN" },
+  { color: "gold", externalKey: "white-yellow-women", name: "White/Yellow (Women)", gender: "WOMEN" },
+  { color: "gold", externalKey: "yellow-women", name: "Yellow (Women)", gender: "WOMEN" }
 ];
 
 function buildNorthmoorHoles(frontNine: NorthmoorNineKey, backNine: NorthmoorNineKey, color: NorthmoorTeeColor) {
@@ -209,7 +273,8 @@ function buildNorthmoorCourse(
   label: string,
   frontNine: NorthmoorNineKey,
   backNine: NorthmoorNineKey,
-  ratings: Record<string, { courseRating: number; slope: number; par?: number }>
+  ratings: Record<string, { courseRating: number; slope: number; par?: number }>,
+  teeLabels = NORTHMOOR_TEE_LABELS
 ): CourseLookupResult {
   const par = [...NORTHMOOR_NINES[frontNine].par, ...NORTHMOOR_NINES[backNine].par].reduce(
     (sum, value) => sum + value,
@@ -222,7 +287,7 @@ function buildNorthmoorCourse(
     name: `Northmoor Country Club - ${label}`,
     city: "Highland Park",
     state: "IL",
-    tees: NORTHMOOR_TEE_LABELS.map((tee) => ({
+    tees: teeLabels.map((tee) => ({
       externalTeeId: `${externalCourseId}-${tee.externalKey}`,
       name: tee.name,
       gender: tee.gender,
@@ -251,6 +316,7 @@ type UsgaCuratedCourse = {
     par: number;
     slope: number;
     courseRating: number;
+    holes?: CourseLookupResult["tees"][number]["holes"];
   }>;
 };
 
@@ -402,17 +468,17 @@ const USGA_NCRDB_CURATED_COURSES: UsgaCuratedCourse[] = [
     state: "IL",
     sourceUrl: "https://ncrdb.usga.org/courseTeeInfo?CourseID=7412",
     tees: [
-      { externalTeeId: "usga-7412-267313", name: "Black", gender: "MEN", par: 72, slope: 131, courseRating: 72.7 },
-      { externalTeeId: "usga-7412-832905", name: "Gold", gender: "MEN", par: 72, slope: 128, courseRating: 71.5 },
-      { externalTeeId: "usga-7412-267314", name: "Blue", gender: "MEN", par: 72, slope: 123, courseRating: 69.3 },
-      { externalTeeId: "usga-7412-499223", name: "Silver", gender: "MEN", par: 72, slope: 118, courseRating: 67.3 },
+      { externalTeeId: "usga-7412-267313", name: "Black", gender: "MEN", par: 72, slope: 133, courseRating: 72.8, holes: DEERFIELD_BLACK_HOLES },
+      { externalTeeId: "usga-7412-832905", name: "Gold", gender: "MEN", par: 72, slope: 130, courseRating: 71.6, holes: DEERFIELD_GOLD_HOLES },
+      { externalTeeId: "usga-7412-267314", name: "Blue", gender: "MEN", par: 72, slope: 125, courseRating: 69.5, holes: DEERFIELD_BLUE_HOLES },
+      { externalTeeId: "usga-7412-499223", name: "Silver", gender: "MEN", par: 72, slope: 120, courseRating: 67.5, holes: DEERFIELD_SILVER_HOLES },
       { externalTeeId: "usga-7412-710797", name: "Green", gender: "MEN", par: 72, slope: 114, courseRating: 65.5 },
-      { externalTeeId: "usga-7412-527971", name: "Bronze", gender: "MEN", par: 72, slope: 111, courseRating: 64.2 },
-      { externalTeeId: "usga-7412-832948", name: "Gold (Women)", gender: "WOMEN", par: 72, slope: 138, courseRating: 78 },
-      { externalTeeId: "usga-7412-546573", name: "Blue (Women)", gender: "WOMEN", par: 72, slope: 132, courseRating: 75.3 },
-      { externalTeeId: "usga-7412-546572", name: "Silver (Women)", gender: "WOMEN", par: 72, slope: 127, courseRating: 72.9 },
+      { externalTeeId: "usga-7412-527971", name: "Bronze", gender: "MEN", par: 72, slope: 113, courseRating: 64.4, holes: DEERFIELD_BRONZE_HOLES },
+      { externalTeeId: "usga-7412-832948", name: "Gold (Women)", gender: "WOMEN", par: 72, slope: 139, courseRating: 77.8, holes: DEERFIELD_GOLD_HOLES },
+      { externalTeeId: "usga-7412-546573", name: "Blue (Women)", gender: "WOMEN", par: 72, slope: 134, courseRating: 75.3, holes: DEERFIELD_BLUE_HOLES },
+      { externalTeeId: "usga-7412-546572", name: "Silver (Women)", gender: "WOMEN", par: 72, slope: 129, courseRating: 72.9, holes: DEERFIELD_SILVER_HOLES },
       { externalTeeId: "usga-7412-710799", name: "Green (Women)", gender: "WOMEN", par: 72, slope: 122, courseRating: 70.7 },
-      { externalTeeId: "usga-7412-546571", name: "Bronze (Women)", gender: "WOMEN", par: 72, slope: 119, courseRating: 69.1 }
+      { externalTeeId: "usga-7412-546571", name: "Bronze (Women)", gender: "WOMEN", par: 72, slope: 121, courseRating: 69.2, holes: DEERFIELD_BRONZE_HOLES }
     ]
   },
   {
@@ -695,14 +761,14 @@ const CURATED_COURSES: CourseLookupResult[] = dedupeCourseResults([
     tees: [
       { externalTeeId: "sunset-valley-black-men", name: "Black", gender: "MEN", par: 72, slope: 134, courseRating: 72.2, holes: SUNSET_VALLEY_HOLES },
       { externalTeeId: "sunset-valley-gray-men", name: "Gray", gender: "MEN", par: 72, slope: 132, courseRating: 71.5, holes: SUNSET_VALLEY_HOLES },
-      { externalTeeId: "sunset-valley-blue-men", name: "Blue", gender: "MEN", par: 72, slope: 130, courseRating: 70.7, holes: SUNSET_VALLEY_HOLES },
+      { externalTeeId: "sunset-valley-blue-men", name: "Blue", gender: "MEN", par: 72, slope: 130, courseRating: 70.7, holes: SUNSET_VALLEY_BLUE_HOLES },
       { externalTeeId: "sunset-valley-teal-men", name: "Teal", gender: "MEN", par: 72, slope: 128, courseRating: 69.7, holes: SUNSET_VALLEY_HOLES },
       { externalTeeId: "sunset-valley-white-men", name: "White", gender: "MEN", par: 72, slope: 126, courseRating: 68.9, holes: SUNSET_VALLEY_HOLES },
       { externalTeeId: "sunset-valley-coral-men", name: "Coral", gender: "MEN", par: 72, slope: 121, courseRating: 67.5, holes: SUNSET_VALLEY_HOLES },
       { externalTeeId: "sunset-valley-red-men", name: "Red", gender: "MEN", par: 72, slope: 120, courseRating: 66.3, holes: SUNSET_VALLEY_HOLES },
       { externalTeeId: "sunset-valley-orange-men", name: "Orange", gender: "MEN", par: 72, slope: 115, courseRating: 65.1, holes: SUNSET_VALLEY_HOLES },
       { externalTeeId: "sunset-valley-gray-women", name: "Gray (Women)", gender: "WOMEN", par: 72, slope: 141, courseRating: 77.8, holes: SUNSET_VALLEY_HOLES },
-      { externalTeeId: "sunset-valley-blue-women", name: "Blue (Women)", gender: "WOMEN", par: 72, slope: 139, courseRating: 76.8, holes: SUNSET_VALLEY_HOLES },
+      { externalTeeId: "sunset-valley-blue-women", name: "Blue (Women)", gender: "WOMEN", par: 72, slope: 139, courseRating: 76.8, holes: SUNSET_VALLEY_BLUE_HOLES },
       { externalTeeId: "sunset-valley-teal-women", name: "Teal (Women)", gender: "WOMEN", par: 72, slope: 137, courseRating: 75.7, holes: SUNSET_VALLEY_HOLES },
       { externalTeeId: "sunset-valley-white-women", name: "White (Women)", gender: "WOMEN", par: 72, slope: 135, courseRating: 74.6, holes: SUNSET_VALLEY_HOLES },
       { externalTeeId: "sunset-valley-coral-women", name: "Coral (Women)", gender: "WOMEN", par: 72, slope: 131, courseRating: 72.8, holes: SUNSET_VALLEY_HOLES },
@@ -730,6 +796,18 @@ const CURATED_COURSES: CourseLookupResult[] = dedupeCourseResults([
     "white-women": { courseRating: 74.9, slope: 137 },
     "gold-women": { courseRating: 70.5, slope: 127 }
   }),
+  buildNorthmoorCourse("northmoor-country-club-white-red-il", "White/Red", "white", "red", {
+    "black-men": { courseRating: 74, slope: 136 },
+    "black-blue-men": { courseRating: 72.8, slope: 133 },
+    "blue-men": { courseRating: 72.1, slope: 132 },
+    "blue-white-men": { courseRating: 70.6, slope: 129 },
+    "white-men": { courseRating: 69.2, slope: 126 },
+    "white-yellow-men": { courseRating: 67.5, slope: 122, par: 71 },
+    "yellow-men": { courseRating: 65.8, slope: 118 },
+    "white-women": { courseRating: 74.9, slope: 137 },
+    "white-yellow-women": { courseRating: 72.7, slope: 132 },
+    "yellow-women": { courseRating: 70.5, slope: 127 }
+  }, NORTHMOOR_EXPANDED_TEE_LABELS),
   buildNorthmoorCourse("northmoor-country-club-white-blue-il", "White/Blue", "white", "blue", {
     "black-men": { courseRating: 72.6, slope: 136 },
     "blue-men": { courseRating: 71.3, slope: 134 },

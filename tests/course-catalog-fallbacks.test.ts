@@ -58,6 +58,29 @@ function summarizeTee(
   };
 }
 
+function summarizeHole(
+  courseName: string,
+  teeName: string,
+  gender: "MEN" | "WOMEN",
+  holeNumber: number,
+  queryName = courseName,
+  state = "IL"
+) {
+  const course = findCourse(courseName, queryName, state);
+  const tee = course.tees.find((candidate) => candidate.name === teeName && candidate.gender === gender);
+  const hole = tee?.holes?.find((candidate) => candidate.holeNumber === holeNumber);
+
+  if (!hole) {
+    throw new Error(`Missing ${courseName} ${teeName} ${gender} hole ${holeNumber}`);
+  }
+
+  return {
+    par: hole.par,
+    strokeIndex: hole.strokeIndex,
+    yardage: hole.yardage
+  };
+}
+
 describe("curated course fallbacks", () => {
   it("stores all verified Northmoor Blue/Red tees", () => {
     const course = summarizeNorthmoor("Blue/Red");
@@ -83,6 +106,33 @@ describe("curated course fallbacks", () => {
       { name: "White (Women)", gender: "WOMEN", par: 72, courseRating: 74.9, slope: 137, holeCount: 18 },
       { name: "Gold (Women)", gender: "WOMEN", par: 72, courseRating: 70.5, slope: 127, holeCount: 18 }
     ]);
+  });
+
+  it("stores all verified Northmoor White/Red tees", () => {
+    const course = summarizeNorthmoor("White/Red");
+
+    expect(course.tees).toEqual([
+      { name: "Black", gender: "MEN", par: 72, courseRating: 74, slope: 136, holeCount: 18 },
+      { name: "Black/Blue", gender: "MEN", par: 72, courseRating: 72.8, slope: 133, holeCount: 18 },
+      { name: "Blue", gender: "MEN", par: 72, courseRating: 72.1, slope: 132, holeCount: 18 },
+      { name: "Blue/White", gender: "MEN", par: 72, courseRating: 70.6, slope: 129, holeCount: 18 },
+      { name: "White (Men)", gender: "MEN", par: 72, courseRating: 69.2, slope: 126, holeCount: 18 },
+      { name: "White/Yellow (Men)", gender: "MEN", par: 71, courseRating: 67.5, slope: 122, holeCount: 18 },
+      { name: "Yellow (Men)", gender: "MEN", par: 72, courseRating: 65.8, slope: 118, holeCount: 18 },
+      { name: "White (Women)", gender: "WOMEN", par: 72, courseRating: 74.9, slope: 137, holeCount: 18 },
+      { name: "White/Yellow (Women)", gender: "WOMEN", par: 72, courseRating: 72.7, slope: 132, holeCount: 18 },
+      { name: "Yellow (Women)", gender: "WOMEN", par: 72, courseRating: 70.5, slope: 127, holeCount: 18 }
+    ]);
+    expect(summarizeHole("Northmoor Country Club - White/Red", "Black", "MEN", 1, "Northmoor White/Red")).toEqual({
+      par: 4,
+      strokeIndex: 9,
+      yardage: 402
+    });
+    expect(summarizeHole("Northmoor Country Club - White/Red", "Black", "MEN", 10, "Northmoor White/Red")).toEqual({
+      par: 4,
+      strokeIndex: 16,
+      yardage: 394
+    });
   });
 
   it("stores all verified Northmoor White/Blue tees", () => {
@@ -176,6 +226,30 @@ describe("curated course fallbacks", () => {
     expect(findCourse("Medinah Country Club - #2", "Medinah 2").tees).toHaveLength(10);
     expect(findCourse("Traditions at Chevy Chase").tees).toHaveLength(8);
     expect(findCourse("Arboretum Club").tees).toHaveLength(8);
+  });
+
+  it("uses the verified Deerfield Golf Club scorecard for Gold", () => {
+    expect(summarizeTee("Deerfield Golf Club", "Gold", "MEN")).toEqual({
+      par: 72,
+      courseRating: 71.6,
+      slope: 130,
+      holeCount: 18
+    });
+    expect(summarizeHole("Deerfield Golf Club", "Gold", "MEN", 10)).toEqual({
+      par: 4,
+      strokeIndex: 4,
+      yardage: 384
+    });
+    expect(summarizeHole("Deerfield Golf Club", "Gold", "MEN", 11)).toEqual({
+      par: 5,
+      strokeIndex: 8,
+      yardage: 545
+    });
+    expect(summarizeHole("Deerfield Golf Club", "Gold", "MEN", 12)).toEqual({
+      par: 4,
+      strokeIndex: 2,
+      yardage: 461
+    });
   });
 
   it("loads the generated NCRListing priority enrichment file", () => {
@@ -273,6 +347,30 @@ describe("curated course fallbacks", () => {
     expect(brynMawrResults[0].tees.every((tee) => tee.holes?.length === 18)).toBe(true);
     expect(brynMawrResults[0].tees[0]?.holes?.find((hole) => hole.holeNumber === 12)?.strokeIndex).toBe(6);
     expect(brynMawrResults[0].tees[0]?.holes?.find((hole) => hole.holeNumber === 13)?.strokeIndex).toBe(4);
+  });
+
+  it("uses the verified Sunset Valley Blue scorecard yardages", () => {
+    expect(summarizeTee("Sunset Valley Golf Club", "Blue", "MEN")).toEqual({
+      par: 72,
+      courseRating: 70.7,
+      slope: 130,
+      holeCount: 18
+    });
+    expect(summarizeHole("Sunset Valley Golf Club", "Blue", "MEN", 1)).toEqual({
+      par: 4,
+      strokeIndex: 7,
+      yardage: 325
+    });
+    expect(summarizeHole("Sunset Valley Golf Club", "Blue", "MEN", 10)).toEqual({
+      par: 4,
+      strokeIndex: 14,
+      yardage: 325
+    });
+    expect(summarizeHole("Sunset Valley Golf Club", "Blue", "MEN", 18)).toEqual({
+      par: 4,
+      strokeIndex: 18,
+      yardage: 328
+    });
   });
 
   it("loads northwest Indiana NCRListing enrichment", () => {

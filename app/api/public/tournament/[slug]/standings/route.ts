@@ -15,6 +15,9 @@ export async function GET(
   return NextResponse.json({
     tournamentSlug: slug,
     pods: state.podStandings,
-    wildCards: state.wildCards
+    wildCards: state.wildCards,
+    projectedPlayoffField: state.projectedPlayoffField,
+    wildCardProjection: state.wildCardProjection,
+    wildCardBubble: state.wildCardBubble
   });
 }

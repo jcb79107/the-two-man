@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { computeQualifiedSeeds } from "@/lib/server/qualification";
+import {
+  computeProjectedPlayoffPicture,
+  computeQualifiedSeeds
+} from "@/lib/server/qualification";
 import type { StandingsRow } from "@/types/models";
 
 function row(input: Partial<StandingsRow> & Pick<StandingsRow, "teamId" | "teamName" | "podId">): StandingsRow {
@@ -47,6 +50,113 @@ describe("qualification", () => {
     });
 
     expect(seeds).toHaveLength(0);
+  });
+
+  it("projects wild cards and bubble teams while official seeds are still unlocked", () => {
+    const standings = [
+      row({ teamId: "a1", teamName: "Alpha", podId: "pod-a", wins: 2, matchRecordPoints: 2, holePoints: 20 }),
+      row({ teamId: "a2", teamName: "Apex", podId: "pod-a", wins: 1, matchRecordPoints: 1, holePoints: 13 }),
+      row({ teamId: "a3", teamName: "Atlas", podId: "pod-a", wins: 0, matchRecordPoints: 0, holePoints: 8 }),
+      row({ teamId: "b1", teamName: "Bravo", podId: "pod-b", wins: 1, matchRecordPoints: 1, holePoints: 17 }),
+      row({
+        teamId: "b2",
+        teamName: "Beacon",
+        podId: "pod-b",
+        wins: 1,
+        matchRecordPoints: 1,
+        holePoints: 14,
+        holesWon: 8,
+        cumulativeNetBetterBall: 72
+      }),
+      row({ teamId: "b3", teamName: "Bolt", podId: "pod-b", wins: 0, matchRecordPoints: 0, holePoints: 7 }),
+      row({ teamId: "c1", teamName: "Charlie", podId: "pod-c", wins: 1, matchRecordPoints: 1, holePoints: 19 }),
+      row({
+        teamId: "c2",
+        teamName: "Comet",
+        podId: "pod-c",
+        wins: 1,
+        matchRecordPoints: 1,
+        holePoints: 14,
+        holesWon: 8,
+        cumulativeNetBetterBall: 70
+      }),
+      row({
+        teamId: "c3",
+        teamName: "Crown",
+        podId: "pod-c",
+        wins: 0,
+        matchRecordPoints: 0,
+        holePoints: 9
+      })
+    ];
+    const pods = [
+      { id: "pod-a", name: "Pod A" },
+      { id: "pod-b", name: "Pod B" },
+      { id: "pod-c", name: "Pod C" }
+    ];
+    const podStandings = pods.map((pod) => ({
+      pod,
+      rows: standings.filter((entry) => entry.podId === pod.id)
+    }));
+    const matches = [
+      { podId: "pod-a", stage: "POD_PLAY" as const, status: "FINAL" as const },
+      { podId: "pod-a", stage: "POD_PLAY" as const, status: "FINAL" as const },
+      { podId: "pod-b", stage: "POD_PLAY" as const, status: "FINAL" as const },
+      { podId: "pod-b", stage: "POD_PLAY" as const, status: "SCHEDULED" as const },
+      { podId: "pod-c", stage: "POD_PLAY" as const, status: "SCHEDULED" as const }
+    ];
+
+    expect(computeQualifiedSeeds({ pods, standings, podStandings, matches })).toHaveLength(0);
+
+    const projection = computeProjectedPlayoffPicture({ pods, standings, podStandings, matches });
+
+    expect(projection.projectedPlayoffField.map((entry) => `${entry.seedNumber}:${entry.teamId}`)).toEqual([
+      "1:a1",
+      "2:c1",
+      "3:b1",
+      "4:c2",
+      "5:b2"
+    ]);
+    expect(projection.wildCardProjection.map((entry) => entry.teamId)).toEqual(["c2", "b2"]);
+    expect(projection.wildCardBubble.map((entry) => entry.teamId)).toEqual(["a2", "c3", "a3", "b3"]);
+    expect(projection.wildCardBubble).toHaveLength(4);
+    expect(
+      [...projection.wildCardProjection, ...projection.wildCardBubble].some((entry) =>
+        ["a1", "b1", "c1"].includes(entry.teamId)
+      )
+    ).toBe(false);
+  });
+
+  it("keeps projections quiet until at least one pod-play result has posted", () => {
+    const standings = [
+      row({ teamId: "a1", teamName: "Alpha", podId: "pod-a" }),
+      row({ teamId: "b1", teamName: "Bravo", podId: "pod-b" }),
+      row({ teamId: "c1", teamName: "Charlie", podId: "pod-c" })
+    ];
+    const pods = [
+      { id: "pod-a", name: "Pod A" },
+      { id: "pod-b", name: "Pod B" },
+      { id: "pod-c", name: "Pod C" }
+    ];
+    const podStandings = pods.map((pod) => ({
+      pod,
+      rows: standings.filter((entry) => entry.podId === pod.id)
+    }));
+
+    const projection = computeProjectedPlayoffPicture({
+      pods,
+      standings,
+      podStandings,
+      matches: pods.map((pod) => ({
+        podId: pod.id,
+        stage: "POD_PLAY" as const,
+        status: "SCHEDULED" as const
+      }))
+    });
+
+    expect(projection.projectedPlayoffField).toHaveLength(0);
+    expect(projection.wildCardProjection).toHaveLength(0);
+    expect(projection.wildCardBubble).toHaveLength(0);
   });
 
   it("locks a pod winner early when a team reaches 2-0 even if the pod's last match is unplayed", () => {

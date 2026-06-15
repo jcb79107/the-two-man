@@ -42,16 +42,20 @@ export default async function TournamentStandingsPage({
     state.computedSeeds.length === Math.min(8, state.tournament.teams.length);
   const playoffFieldStatus = playoffFieldIsSet ? "Set" : "Projected";
 
+  const activePlayoffSeeds = playoffFieldIsSet ? state.computedSeeds : state.projectedPlayoffField;
+  const activeWildCards = playoffFieldIsSet ? state.wildCards : state.wildCardProjection;
   const wildCardTeamIds = new Set<string>(
-    state.wildCards.map((entry: { teamId: string }) => entry.teamId)
+    activeWildCards.map((entry: { teamId: string }) => entry.teamId)
   );
-  const seededTeamIds = new Set(state.computedSeeds.map((entry) => entry.teamId));
+  const wildCardPositionByTeamId = new Map(
+    activeWildCards.map((entry: { teamId: string }, index) => [entry.teamId, index + 1])
+  );
+  const seededTeamIds = new Set(activePlayoffSeeds.map((entry) => entry.teamId));
   const podWinnerTeamIds = new Set(
     state.computedSeeds
       .filter((entry) => entry.qualifierType === "POD_WINNER")
       .map((entry) => entry.teamId)
   );
-  const wildcardRows = state.standings.filter((row) => wildCardTeamIds.has(row.teamId));
   const podNameById = Object.fromEntries(state.tournament.pods.map((pod) => [pod.id, pod.name]));
   const podRankByTeamId = Object.fromEntries(
     state.podStandings.flatMap(({ rows }) => rows.map((row, index) => [row.teamId, index + 1]))
@@ -71,17 +75,27 @@ export default async function TournamentStandingsPage({
       totalNetBetterBall: leader?.cumulativeNetBetterBall ?? null
     };
   });
-  const playoffField = state.computedSeeds.map((entry) => {
+  const playoffField = activePlayoffSeeds.map((entry) => {
     const standing = state.standings.find((row) => row.teamId === entry.teamId);
     const pod = state.tournament.pods.find((candidate) => candidate.id === entry.podId);
+    const isPodWinner = entry.qualifierType === "POD_WINNER";
+    const wildCardPosition = wildCardPositionByTeamId.get(entry.teamId);
 
     return {
       id: entry.teamId,
-      slotLabel: `#${entry.seedNumber}`,
+      slotLabel: isPodWinner || !wildCardPosition
+        ? `#${entry.seedNumber}`
+        : `#${entry.seedNumber} WC${wildCardPosition}`,
       teamName: entry.teamName,
       detailLabel: pod?.name ?? "Wildcard",
-      typeLabel: entry.qualifierType === "POD_WINNER" ? "Pod winner" : "Wild card",
-      typeTone: entry.qualifierType === "POD_WINNER" ? "winner" : "wildcard",
+      typeLabel: playoffFieldIsSet
+        ? isPodWinner
+          ? "Pod winner"
+          : "Wild card"
+        : isPodWinner
+          ? "Projected pod winner"
+          : "Projected wild card",
+      typeTone: isPodWinner ? "winner" : "wildcard",
       wins: standing?.wins ?? 0,
       losses: standing?.losses ?? 0,
       ties: standing?.ties ?? 0,
@@ -108,7 +122,7 @@ export default async function TournamentStandingsPage({
             holesWon: entry.holesWon,
             totalNetBetterBall: entry.totalNetBetterBall
           })),
-          ...state.wildCards.map((entry, index) => {
+          ...activeWildCards.map((entry, index) => {
             const standing = state.standings.find((row) => row.teamId === entry.teamId);
             const pod = state.tournament.pods.find((candidate) => candidate.id === standing?.podId);
             return {
@@ -116,7 +130,7 @@ export default async function TournamentStandingsPage({
               slotLabel: `WC${index + 1}`,
               teamName: entry.teamName,
               detailLabel: pod?.name ?? "Wildcard",
-              typeLabel: "Wild card line",
+              typeLabel: playoffFieldIsSet ? "Wild card line" : "Projected wild card",
               typeTone: "wildcard" as const,
               wins: standing?.wins ?? 0,
               losses: standing?.losses ?? 0,
@@ -127,6 +141,25 @@ export default async function TournamentStandingsPage({
             };
           })
         ];
+  const wildCardBubbleRows = state.wildCardBubble.map((entry, index) => {
+    const standing = state.standings.find((row) => row.teamId === entry.teamId);
+    const pod = state.tournament.pods.find((candidate) => candidate.id === entry.podId);
+
+    return {
+      id: entry.teamId,
+      slotLabel: `B${index + 1}`,
+      teamName: entry.teamName,
+      detailLabel: pod?.name ?? "Wildcard",
+      typeLabel: "On bubble",
+      typeTone: "bubble" as const,
+      wins: standing?.wins ?? 0,
+      losses: standing?.losses ?? 0,
+      ties: standing?.ties ?? 0,
+      holePoints: standing?.holePoints ?? 0,
+      holesWon: standing?.holesWon ?? 0,
+      totalNetBetterBall: standing?.cumulativeNetBetterBall ?? null
+    };
+  });
   const allTeamsRows: AllTeamsRow[] = state.standings.map((row) => ({
     teamId: row.teamId,
     teamName: row.teamName,
@@ -211,7 +244,7 @@ export default async function TournamentStandingsPage({
                       markerTeamIds={rows
                         .filter((row) => wildCardTeamIds.has(row.teamId))
                         .map((row) => row.teamId)}
-                      markerLabel={playoffFieldIsSet ? "Clinched wildcard" : "Current wild card"}
+                      markerLabel={playoffFieldIsSet ? "Clinched wildcard" : "Projected wild card"}
                       winnerTeamIds={rows[0] ? [rows[0].teamId] : []}
                       winnerLabel={playoffFieldIsSet ? "Pod winner" : "Current pod leader"}
                     />
@@ -282,34 +315,26 @@ export default async function TournamentStandingsPage({
               {hasPostedPodPlayResults ? (
                 <>
                   <div className="overflow-hidden rounded-2xl border border-mist bg-white">
-                    <div className="hidden grid-cols-[84px_minmax(0,1.2fr)_110px_94px_94px_94px_104px] bg-sand text-left text-[11px] font-semibold uppercase tracking-[0.2em] text-fairway/80 md:grid">
-                      <div className="px-4 py-3">Slot</div>
-                      <div className="px-4 py-3">Team</div>
-                      <div className="px-3 py-3">Type</div>
-                      <div className="px-3 py-3">Record</div>
-                      <div className="px-3 py-3">Hole Pts</div>
-                      <div className="px-3 py-3">Holes Won</div>
-                      <div className="px-3 py-3">Total Net BB</div>
-                    </div>
-
                     <div className="divide-y divide-mist/80">
                       {playoffPictureRows.map((entry) => (
-                        <article key={entry.id} className="px-4 py-4 md:grid md:grid-cols-[84px_minmax(0,1.2fr)_110px_94px_94px_94px_104px] md:items-center md:gap-0 md:px-0 md:py-0">
-                          <div className="md:px-4 md:py-4">
+                        <article key={entry.id} className="px-4 py-4">
+                          <div>
                             <span className="inline-flex rounded-full bg-pine px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-white">
                               {entry.slotLabel}
                             </span>
                           </div>
-                          <div className="mt-3 md:mt-0 md:px-4 md:py-4">
+                          <div className="mt-3">
                             <p className="text-base font-semibold text-ink">{entry.teamName}</p>
                             <p className="mt-1 text-xs uppercase tracking-[0.16em] text-fairway/68">{entry.detailLabel}</p>
                           </div>
-                          <div className="mt-3 md:mt-0 md:px-3 md:py-4">
+                          <div className="mt-3">
                             <span
                               className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] ${
                                 entry.typeTone === "winner"
                                   ? "bg-[#e3f1ea] text-[#174f38]"
-                                  : "bg-[#efe7ff] text-[#5f47a6]"
+                                  : entry.typeTone === "wildcard"
+                                    ? "bg-[#efe7ff] text-[#5f47a6]"
+                                    : "bg-sand text-fairway/72"
                               }`}
                             >
                               {entry.typeTone === "winner" ? <PodWinnerIcon className="h-3 w-3" /> : null}
@@ -317,30 +342,84 @@ export default async function TournamentStandingsPage({
                               {entry.typeLabel}
                             </span>
                           </div>
-                          <div className="mt-4 grid grid-cols-4 overflow-hidden rounded-2xl border border-mist bg-sand/45 md:contents md:overflow-visible md:rounded-none md:border-0 md:bg-transparent">
-                            <div className="border-r border-mist px-2.5 py-2.5 last:border-r-0 md:rounded-none md:border-r-0 md:bg-transparent md:px-3 md:py-4">
-                              <p className="text-[9px] font-semibold uppercase tracking-[0.12em] text-fairway/62 md:hidden">Rec</p>
-                              <p className="mt-1 text-sm font-semibold text-ink md:mt-0">
+                          <div className="mt-4 grid grid-cols-4 overflow-hidden rounded-2xl border border-mist bg-sand/45">
+                            <div className="border-r border-mist px-2.5 py-2.5 last:border-r-0">
+                              <p className="text-[9px] font-semibold uppercase tracking-[0.12em] text-fairway/62">Rec</p>
+                              <p className="mt-1 text-sm font-semibold text-ink">
                                 {entry.wins}-{entry.losses}-{entry.ties}
                               </p>
                             </div>
-                            <div className="border-r border-mist px-2.5 py-2.5 last:border-r-0 md:rounded-none md:border-r-0 md:bg-transparent md:px-3 md:py-4">
-                              <p className="text-[9px] font-semibold uppercase tracking-[0.12em] text-fairway/62 md:hidden">Pts</p>
-                              <p className="mt-1 text-sm font-semibold text-ink md:mt-0">{entry.holePoints}</p>
+                            <div className="border-r border-mist px-2.5 py-2.5 last:border-r-0">
+                              <p className="text-[9px] font-semibold uppercase tracking-[0.12em] text-fairway/62">Pts</p>
+                              <p className="mt-1 text-sm font-semibold text-ink">{entry.holePoints}</p>
                             </div>
-                            <div className="border-r border-mist px-2.5 py-2.5 last:border-r-0 md:rounded-none md:border-r-0 md:bg-transparent md:px-3 md:py-4">
-                              <p className="text-[9px] font-semibold uppercase tracking-[0.12em] text-fairway/62 md:hidden">Won</p>
-                              <p className="mt-1 text-sm font-semibold text-ink md:mt-0">{entry.holesWon}</p>
+                            <div className="border-r border-mist px-2.5 py-2.5 last:border-r-0">
+                              <p className="text-[9px] font-semibold uppercase tracking-[0.12em] text-fairway/62">Won</p>
+                              <p className="mt-1 text-sm font-semibold text-ink">{entry.holesWon}</p>
                             </div>
-                            <div className="px-2.5 py-2.5 md:rounded-none md:bg-transparent md:px-3 md:py-4">
-                              <p className="text-[9px] font-semibold uppercase tracking-[0.12em] text-fairway/62 md:hidden">Net</p>
-                              <p className="mt-1 text-sm font-semibold text-ink md:mt-0">{entry.totalNetBetterBall ?? "-"}</p>
+                            <div className="px-2.5 py-2.5">
+                              <p className="text-[9px] font-semibold uppercase tracking-[0.12em] text-fairway/62">Net</p>
+                              <p className="mt-1 text-sm font-semibold text-ink">{entry.totalNetBetterBall ?? "-"}</p>
                             </div>
                           </div>
                         </article>
                       ))}
                     </div>
                   </div>
+
+                  {!playoffFieldIsSet && wildCardBubbleRows.length > 0 ? (
+                    <div className="mt-4 overflow-hidden rounded-2xl border border-mist bg-white">
+                      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-mist bg-sand/65 px-4 py-3">
+                        <div>
+                          <p className="text-sm font-semibold text-ink">Wild Card Bubble</p>
+                          <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-fairway/62">
+                            Next 4 out
+                          </p>
+                        </div>
+                        <span className="inline-flex rounded-full bg-white px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-fairway/72">
+                          If ended today
+                        </span>
+                      </div>
+                      <div className="divide-y divide-mist/80">
+                        {wildCardBubbleRows.map((entry) => (
+                          <article
+                            key={entry.id}
+                            className="grid grid-cols-[auto_minmax(0,1fr)] gap-3 px-4 py-3 sm:grid-cols-[auto_minmax(0,1fr)_auto]"
+                          >
+                            <span className="mt-0.5 inline-flex h-8 min-w-8 items-center justify-center rounded-full bg-sand px-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-fairway/76">
+                              {entry.slotLabel}
+                            </span>
+                            <div className="min-w-0">
+                              <p className="truncate text-sm font-semibold text-ink">{entry.teamName}</p>
+                              <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-fairway/62">
+                                {entry.detailLabel}
+                              </p>
+                            </div>
+                            <div className="col-span-2 grid grid-cols-4 overflow-hidden rounded-2xl border border-mist bg-sand/35 text-sm sm:col-span-1 sm:min-w-[260px]">
+                              <div className="border-r border-mist px-2.5 py-2">
+                                <p className="text-[9px] font-semibold uppercase tracking-[0.12em] text-fairway/60">Rec</p>
+                                <p className="mt-1 font-semibold text-ink">
+                                  {entry.wins}-{entry.losses}-{entry.ties}
+                                </p>
+                              </div>
+                              <div className="border-r border-mist px-2.5 py-2">
+                                <p className="text-[9px] font-semibold uppercase tracking-[0.12em] text-fairway/60">Pts</p>
+                                <p className="mt-1 font-semibold text-ink">{entry.holePoints}</p>
+                              </div>
+                              <div className="border-r border-mist px-2.5 py-2">
+                                <p className="text-[9px] font-semibold uppercase tracking-[0.12em] text-fairway/60">Won</p>
+                                <p className="mt-1 font-semibold text-ink">{entry.holesWon}</p>
+                              </div>
+                              <div className="px-2.5 py-2">
+                                <p className="text-[9px] font-semibold uppercase tracking-[0.12em] text-fairway/60">Net</p>
+                                <p className="mt-1 font-semibold text-ink">{entry.totalNetBetterBall ?? "-"}</p>
+                              </div>
+                            </div>
+                          </article>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
                 </>
               ) : (
                 <div className="rounded-[24px] border border-mist bg-white px-4 py-4">
