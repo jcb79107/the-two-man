@@ -29,13 +29,15 @@ function buildMatch(
   id: string,
   podId: string,
   summaries: TeamMatchSummary[],
-  status: MatchStandingInput["status"] = "FINAL"
+  status: MatchStandingInput["status"] = "FINAL",
+  winningTeamId?: string | null
 ): MatchStandingInput {
   return {
     id,
     podId,
     stage: "POD_PLAY",
     status,
+    winningTeamId,
     teamSummaries: summaries
   };
 }
@@ -142,6 +144,52 @@ describe("computePodStandings", () => {
     expect(standings[1]).toMatchObject({
       matchesPlayed: 0,
       holePoints: 0
+    });
+  });
+
+  it("honors an official cleared winner as a tied match in standings", () => {
+    const teams = [
+      buildTeam("team-a", "Alpha", "pod-1"),
+      buildTeam("team-b", "Bravo", "pod-1")
+    ];
+    const standings = computePodStandings(teams, [
+      buildMatch(
+        "m1",
+        "pod-1",
+        [
+          buildSummary("team-a", {
+            resultCode: "WIN",
+            totalPoints: 9.5,
+            holesWon: 6,
+            betterBallNetTotal: 72
+          }),
+          buildSummary("team-b", {
+            resultCode: "LOSS",
+            totalPoints: 8.5,
+            holesWon: 5,
+            betterBallNetTotal: 73
+          })
+        ],
+        "FINAL",
+        null
+      )
+    ]);
+
+    expect(standings[0]).toMatchObject({
+      teamId: "team-a",
+      wins: 0,
+      losses: 0,
+      ties: 1,
+      matchRecordPoints: 0.5,
+      holePoints: 9.5
+    });
+    expect(standings[1]).toMatchObject({
+      teamId: "team-b",
+      wins: 0,
+      losses: 0,
+      ties: 1,
+      matchRecordPoints: 0.5,
+      holePoints: 8.5
     });
   });
 });

@@ -15,6 +15,7 @@ import {
   computeQualifiedSeeds
 } from "@/lib/server/qualification";
 import {
+  applyOfficialResultToTeamSummaries,
   computePodStandings,
   type MatchStandingInput
 } from "@/lib/server/standings";
@@ -218,7 +219,7 @@ function buildTeamSummariesFromMatch(match: {
   });
 
   return {
-    teamSummaries: scorecard.teamSummaries,
+    teamSummaries: applyOfficialResultToTeamSummaries(scorecard.teamSummaries, correctedMatch.winningTeamId),
     holes: scorecard.holes,
     players: scorecard.players
   };
@@ -333,7 +334,8 @@ function buildComputedFeed(input: {
         !match.winningTeamId &&
         winner != null &&
         loser != null &&
-        winner.totalPoints === loser.totalPoints;
+        winner.resultCode === "TIE" &&
+        loser.resultCode === "TIE";
 
       events.push(
         buildComputedFeedEvent({
@@ -576,6 +578,7 @@ export async function getPublicTournamentState(slug: string) {
     podId: match.podId,
     stage: match.stage,
     status: match.status,
+    winningTeamId: match.winningTeamId,
     teamSummaries: summariesByMatchId.get(match.id)?.teamSummaries ?? []
   }));
 
@@ -955,6 +958,15 @@ export async function getPublicMatchState(slug: string, matchId: string) {
         })
       })
     : null;
+  const officialScorecard = correctedScorecard
+    ? {
+        ...correctedScorecard,
+        teamSummaries: applyOfficialResultToTeamSummaries(
+          correctedScorecard.teamSummaries,
+          correctedMatch.winningTeamId
+        )
+      }
+    : null;
 
   return {
     tournamentName: tournamentState.tournament.name,
@@ -981,7 +993,7 @@ export async function getPublicMatchState(slug: string, matchId: string) {
       },
       courseName: matchCourse?.name ?? null,
       resultLabel: buildResultLabel(
-        correctedScorecard?.teamSummaries ?? computed?.teamSummaries ?? [],
+        officialScorecard?.teamSummaries ?? computed?.teamSummaries ?? [],
         tournamentState.teamNames,
         correctedMatch.winningTeamId
       )
@@ -997,6 +1009,6 @@ export async function getPublicMatchState(slug: string, matchId: string) {
       : null,
     homeTeam,
     awayTeam,
-    scorecard: correctedScorecard
+    scorecard: officialScorecard
   };
 }

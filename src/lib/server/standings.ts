@@ -7,6 +7,7 @@ export interface MatchStandingInput {
   stage: MatchStage;
   status: MatchStatus;
   teamSummaries: TeamMatchSummary[];
+  winningTeamId?: string | null;
 }
 
 function resultToRecordPoints(resultCode: TeamMatchSummary["resultCode"]): number {
@@ -19,6 +20,34 @@ function resultToRecordPoints(resultCode: TeamMatchSummary["resultCode"]): numbe
     default:
       return 0;
   }
+}
+
+export function applyOfficialResultToTeamSummaries(
+  teamSummaries: TeamMatchSummary[],
+  winningTeamId: string | null | undefined
+): TeamMatchSummary[] {
+  if (winningTeamId === undefined || teamSummaries.length !== 2) {
+    return teamSummaries;
+  }
+
+  if (teamSummaries.some((summary) => summary.resultCode.startsWith("FORFEIT"))) {
+    return teamSummaries;
+  }
+
+  const teamIds = new Set(teamSummaries.map((summary) => summary.teamId));
+  if (winningTeamId !== null && !teamIds.has(winningTeamId)) {
+    return teamSummaries;
+  }
+
+  return teamSummaries.map((summary) => ({
+    ...summary,
+    resultCode:
+      winningTeamId === null
+        ? "TIE"
+        : summary.teamId === winningTeamId
+          ? "WIN"
+          : "LOSS"
+  }));
 }
 
 export function computePodStandings(
@@ -52,7 +81,7 @@ export function computePodStandings(
       continue;
     }
 
-    for (const summary of match.teamSummaries) {
+    for (const summary of applyOfficialResultToTeamSummaries(match.teamSummaries, match.winningTeamId)) {
       const row = rows.get(summary.teamId);
 
       if (!row) {
