@@ -69,7 +69,7 @@ function subscribeToStorage(onChange: () => void) {
 
 function getInviteSentMapSnapshot() {
   if (typeof window === "undefined") {
-    return {};
+    return EMPTY_INVITE_SNAPSHOT;
   }
 
   try {
@@ -81,7 +81,7 @@ function getInviteSentMapSnapshot() {
     if (!raw) {
       inviteSnapshotCacheKey = raw;
       inviteSnapshotCache = {};
-      return {};
+      return inviteSnapshotCache;
     }
 
     const parsed = JSON.parse(raw);
@@ -91,7 +91,7 @@ function getInviteSentMapSnapshot() {
   } catch {
     inviteSnapshotCacheKey = undefined;
     inviteSnapshotCache = {};
-    return {};
+    return inviteSnapshotCache;
   }
 }
 

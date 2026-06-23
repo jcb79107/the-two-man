@@ -70,12 +70,12 @@ export function parseTournamentForm(formData: FormData) {
 }
 
 export const adminLoginFormSchema = z.object({
-  password: z.string().regex(/^\d{4}$/, "Enter the 4-digit admin passcode.")
+  password: z.string().min(1, "Enter the admin password.").max(256, "Admin password is too long.")
 });
 
 export function parseAdminLoginForm(formData: FormData) {
   return adminLoginFormSchema.parse({
-    password: requiredString(formData.get("password"), "Admin passcode")
+    password: requiredString(formData.get("password"), "Admin password")
   });
 }
 

@@ -261,7 +261,7 @@ function AdminLoginCard({
           <div className="space-y-4">
             <div className="flex items-center gap-3 px-1">
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[#d8c07d]/45 bg-sand/70">
-                <TwoManLogo className="h-10 w-10" />
+                <TwoManLogo className="h-10 w-10" priority />
               </div>
               <div className="min-w-0">
                 <p className="label-caps text-fairway/66">Commissioner desk</p>
@@ -270,19 +270,16 @@ function AdminLoginCard({
             </div>
             <form action={adminLoginAction} className="flex items-center gap-3">
               <label className="sr-only" htmlFor="admin-password">
-                Admin passcode
+                Admin password
               </label>
               <div className={`flex-1 rounded-[22px] border ${kind === "error" ? "border-[#d48f8f]" : "border-mist"} bg-white`}>
                 <input
                   id="admin-password"
                   name="password"
                   type="password"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  maxLength={4}
-                  autoComplete="one-time-code"
-                  placeholder="4-digit passcode"
-                  aria-label="Admin passcode"
+                  autoComplete="current-password"
+                  placeholder="Admin password"
+                  aria-label="Admin password"
                   className="w-full rounded-[22px] bg-transparent px-4 py-3 text-sm text-ink outline-none placeholder:text-ink/38"
                 />
               </div>
@@ -495,7 +492,7 @@ export default async function AdminPage({
         <div className="flex items-start justify-between gap-4">
           <div className="flex min-w-0 items-center gap-3">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[#d8c07d]/45 bg-sand/70 md:h-14 md:w-14">
-              <TwoManLogo className="h-10 w-10 md:h-12 md:w-12" />
+              <TwoManLogo className="h-10 w-10 md:h-12 md:w-12" priority />
             </div>
             <div className="min-w-0">
               <p className="label-caps text-fairway/66">

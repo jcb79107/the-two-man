@@ -53,6 +53,7 @@ export function PublicNav({ slug, seasonIsLive = false }: PublicNavProps) {
             <TwoManLogo
               className="h-10 w-10 shrink-0 sm:h-12 sm:w-12"
               imageClassName="drop-shadow-[0_8px_16px_rgba(17,32,23,0.14)]"
+              priority
             />
             <div className="min-w-0 space-y-1">
               <p className="truncate text-[15px] font-semibold text-ink sm:text-base">The Two Man</p>

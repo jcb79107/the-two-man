@@ -296,6 +296,10 @@ export function serializeCourses(
 const MAX_SEARCH_RESULTS_TO_PERSIST = 12;
 const MAX_STORED_SEARCH_RESULTS = 12;
 
+function fullScorecardCourses<T extends { tees: Array<{ holes: Array<unknown> }> }>(courses: T[]) {
+  return courses.filter((course) => course.tees.some((tee) => tee.holes.length === 18));
+}
+
 function scoreStoredCourseMatch(
   course: {
     name: string;
@@ -661,6 +665,13 @@ async function lookupCourses(query: { name: string; state?: string }) {
 }
 
 export async function searchCourseCatalog(query: { name: string; state?: string }) {
+  const storedCourses = await searchStoredCourseCatalog(query);
+  const storedFullScorecardCourses = fullScorecardCourses(storedCourses);
+
+  if (storedFullScorecardCourses.length > 0) {
+    return serializeCourses(storedFullScorecardCourses.slice(0, MAX_STORED_SEARCH_RESULTS));
+  }
+
   const results = (await lookupCourses(query)).slice(0, MAX_SEARCH_RESULTS_TO_PERSIST);
   const persistedCourses = [];
 
@@ -670,30 +681,23 @@ export async function searchCourseCatalog(query: { name: string; state?: string 
   }
 
   if (persistedCourses.length > 0) {
-    const storedCourses = await searchStoredCourseCatalog(query);
+    const refreshedStoredCourses = await searchStoredCourseCatalog(query);
     const courses = dedupeCourseCatalogResults([
       ...persistedCourses.filter(
         (
           course
         ): course is NonNullable<typeof course> => Boolean(course)
       ),
-      ...storedCourses
+      ...refreshedStoredCourses
     ]);
-    const fullScorecardCourses = courses.filter((course) =>
-      course.tees.some((tee) => tee.holes.length === 18)
-    );
+    const providerFullScorecardCourses = fullScorecardCourses(courses);
 
     return serializeCourses(
-      (fullScorecardCourses.length > 0 ? fullScorecardCourses : courses).slice(0, MAX_STORED_SEARCH_RESULTS)
+      (providerFullScorecardCourses.length > 0 ? providerFullScorecardCourses : courses).slice(0, MAX_STORED_SEARCH_RESULTS)
     );
   }
 
-  const storedCourses = await searchStoredCourseCatalog(query);
-  const fullScorecardCourses = storedCourses.filter((course) =>
-    course.tees.some((tee) => tee.holes.length === 18)
-  );
-
-  return serializeCourses(fullScorecardCourses.length > 0 ? fullScorecardCourses : storedCourses);
+  return serializeCourses(storedCourses);
 }
 
 export async function getStoredCourseCatalog() {

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  parseAdminLoginForm,
   parseMatchForm,
   parsePodAssignmentForm,
   parseTeamForm,
@@ -17,6 +18,16 @@ function buildFormData(entries: Record<string, string>) {
 }
 
 describe("admin validation safeguards", () => {
+  it("accepts configured admin passwords that are not four digit passcodes", () => {
+    const formData = buildFormData({
+      password: "password"
+    });
+
+    expect(parseAdminLoginForm(formData)).toEqual({
+      password: "password"
+    });
+  });
+
   it("rejects teams that reuse the same player twice", () => {
     const formData = buildFormData({
       name: "Two Putts",

@@ -1,7 +1,7 @@
 # Dry Run Report
 
-- Date: 2026-03-31T02:58:16.547Z
-- Tournament: The Two-Man (two-match-2026)
+- Date: 2026-06-23T02:05:23.704Z
+- Tournament: The Two Man (the-two-man-2026)
 - Seed count locked: 8/8
 - Pod matches completed: 18
 - Playoff matches completed: 7/7
@@ -22,4 +22,4 @@
 
 - Dry-run course used: Dry Run Golf Club / Championship
 - Handicap entry path simulated with current-index snapshots of 0.0 to keep score math deterministic
-- Reset to clean launch state with: `npm run tournament:reset:state two-match-2026`
+- Reset to clean launch state with: `npm run tournament:reset:state the-two-man-2026`
