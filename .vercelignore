@@ -7,3 +7,4 @@ dist
 .env
 .env.local
 .env*.local
+public/two-man-export-font.woff2

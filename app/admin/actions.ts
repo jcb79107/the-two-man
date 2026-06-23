@@ -1,6 +1,7 @@
 "use server";
 
 import { nanoid } from "nanoid";
+import { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { parseBulkRosterCsv, readBulkRosterText } from "@/lib/server/admin-import";
@@ -13,6 +14,11 @@ import {
 } from "@/lib/server/admin-auth";
 import { db } from "@/lib/server/db";
 import { createMatchInvitation } from "@/lib/server/invitations";
+import {
+  computeOfficialResultSnapshotForMatch,
+  OFFICIAL_RESULT_SNAPSHOT_VERSION,
+  officialResultSnapshotToJson
+} from "@/lib/server/official-result-snapshot";
 import {
   parseAdminLoginForm,
   parseBracketSettingsForm,
@@ -475,7 +481,10 @@ export async function reopenMatchAction(formData: FormData) {
           submittedAt: null,
           winningTeamId: null,
           isOverride: true,
-          overrideNote: parsed.overrideNote ?? "Reopened by commissioner for correction."
+          overrideNote: parsed.overrideNote ?? "Reopened by commissioner for correction.",
+          officialResultSnapshot: Prisma.DbNull,
+          officialResultSnapshotVersion: null,
+          officialResultSnapshotAt: null
         }
       });
 
@@ -546,7 +555,10 @@ export async function resetMatchCardAction(formData: FormData) {
           finalizedAt: null,
           reopenedAt: null,
           isOverride: true,
-          overrideNote: parsed.overrideNote ?? "Reset by commissioner to rebuild the scorecard."
+          overrideNote: parsed.overrideNote ?? "Reset by commissioner to rebuild the scorecard.",
+          officialResultSnapshot: Prisma.DbNull,
+          officialResultSnapshotVersion: null,
+          officialResultSnapshotAt: null
         }
       });
 
@@ -583,6 +595,12 @@ export async function forfeitMatchAction(formData: FormData) {
         id: parsed.matchId
       },
       include: {
+        tournament: {
+          select: {
+            forfeitPointsAwarded: true,
+            forfeitHolesWonAwarded: true
+          }
+        },
         homeTeam: true,
         awayTeam: true
       }
@@ -597,6 +615,18 @@ export async function forfeitMatchAction(formData: FormData) {
       parsed.winnerTeamId !== match.awayTeamId
     ) {
       throw new Error("Forfeit winner must be one of the teams in this match.");
+    }
+
+    const officialResultSnapshot = computeOfficialResultSnapshotForMatch({
+      ...match,
+      status: "FORFEIT",
+      winningTeamId: parsed.winnerTeamId,
+      playerSelections: [],
+      holeScores: []
+    });
+
+    if (!officialResultSnapshot) {
+      throw new Error("Could not freeze the official forfeit result.");
     }
 
     await db.$transaction(async (tx) => {
@@ -617,7 +647,10 @@ export async function forfeitMatchAction(formData: FormData) {
           finalizedAt: new Date(),
           reopenedAt: null,
           isOverride: true,
-          overrideNote: parsed.overrideNote ?? "Marked as a forfeit by the commissioner."
+          overrideNote: parsed.overrideNote ?? "Marked as a forfeit by the commissioner.",
+          officialResultSnapshot: officialResultSnapshotToJson(officialResultSnapshot),
+          officialResultSnapshotVersion: OFFICIAL_RESULT_SNAPSHOT_VERSION,
+          officialResultSnapshotAt: new Date(officialResultSnapshot.generatedAt)
         }
       });
 

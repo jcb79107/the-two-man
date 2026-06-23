@@ -6,6 +6,7 @@ import type { MatchPlayerInput } from "@/lib/scoring/types";
 import { normalizeKnownCourseHoles } from "@/lib/server/course-hole-corrections";
 import { getStoredCourseCatalog } from "@/lib/server/course-catalog";
 import { db } from "@/lib/server/db";
+import { getOfficialResultSnapshotForMatch } from "@/lib/server/official-result-snapshot";
 
 function decimalToNumber(value: Prisma.Decimal | number | null | undefined) {
   if (value == null) {
@@ -139,7 +140,7 @@ export interface PrivateMatchView {
           teamBetterBallGross: Record<string, number>;
           teamBetterBallNet: Record<string, number>;
           winningTeamId: string | null;
-          playerNetScores: Record<string, number>;
+          playerNetScores: Record<string, number | null>;
         }>;
       }
     | null;
@@ -154,7 +155,9 @@ export async function getPrivateMatchRecordByToken(token: string): Promise<Priva
       include: {
         tournament: {
           select: {
-            slug: true
+            slug: true,
+            forfeitPointsAwarded: true,
+            forfeitHolesWonAwarded: true
           }
         },
         homeTeam: {
@@ -318,8 +321,13 @@ export async function getPrivateMatchRecordByToken(token: string): Promise<Priva
         rosterPlayers.every((player) => typeof hole.scores[player.playerId] === "number")
       );
 
+    const officialSnapshot =
+      ["FINAL", "SUBMITTED", "FORFEIT"].includes(match.status)
+        ? getOfficialResultSnapshotForMatch(match)
+        : null;
     const scorecard =
-      canScore && setupInputs.length === 4
+      officialSnapshot ??
+      (canScore && setupInputs.length === 4
         ? scoreMatch({
             players: setupInputs,
             holeScores: holeInputs.map((hole) => ({
@@ -327,7 +335,7 @@ export async function getPrivateMatchRecordByToken(token: string): Promise<Priva
               scores: hole.scores
             }))
           })
-        : null;
+        : null);
 
     return {
       match: {

@@ -10,3 +10,4 @@ dist
 prisma/dev.db
 .vercel
 .env*.local
+public/two-man-export-font.woff2

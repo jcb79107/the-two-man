@@ -258,6 +258,9 @@ model Match {
   reopenedAt          DateTime?
   isOverride          Boolean         @default(false)
   overrideNote        String?
+  officialResultSnapshot Json?
+  officialResultSnapshotVersion Int?
+  officialResultSnapshotAt DateTime?
   createdAt           DateTime        @default(now())
   updatedAt           DateTime        @updatedAt
   tournament          Tournament      @relation(fields: [tournamentId], references: [id], onDelete: Cascade)

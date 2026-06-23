@@ -248,7 +248,7 @@ function buildPodMatches(): MatchShell[] {
             : pod.id === "pod-c"
               ? `${teamName(teamA)} 10 - 8 ${teamName(teamC)}`
               : pod.id === "pod-e"
-                ? `${teamName(teamC)} 10 - 8 ${teamName(teamA)}`
+                ? `${teamName(teamC)} 9.5 - 8.5 ${teamName(teamA)}`
                 : `${teamName(teamA)} 10 - 8 ${teamName(teamC)}`,
         winningTeamId:
           pod.id === "pod-a" ? null : pod.id === "pod-e" ? teamC : teamA
@@ -500,8 +500,8 @@ const podStandingInputs: MatchStandingInput[] = [
     stage: "POD_PLAY",
     status: "FINAL",
     teamSummaries: [
-      createTeamSummary("team-13", 8, 4, 82, 77, "LOSS"),
-      createTeamSummary("team-15", 10, 6, 79, 73, "WIN")
+      createTeamSummary("team-13", 8.5, 4, 82, 77, "LOSS"),
+      createTeamSummary("team-15", 9.5, 5, 79, 73, "WIN")
     ]
   },
   {

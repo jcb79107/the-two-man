@@ -9,6 +9,11 @@ import { hydrateTeeHolesFromSiblings } from "@/lib/server/course-catalog";
 import { normalizeKnownCourseHoles } from "@/lib/server/course-hole-corrections";
 import { db } from "@/lib/server/db";
 import { getPrivateMatchRecordByToken } from "@/lib/server/matches";
+import {
+  computeOfficialResultSnapshotForMatch,
+  OFFICIAL_RESULT_SNAPSHOT_VERSION,
+  officialResultSnapshotToJson
+} from "@/lib/server/official-result-snapshot";
 
 function decimal(value: number) {
   return new Prisma.Decimal(value.toFixed(1));
@@ -143,6 +148,12 @@ async function loadMatchForUpdate(token: string) {
       privateToken: token
     },
     include: {
+      tournament: {
+        select: {
+          forfeitPointsAwarded: true,
+          forfeitHolesWonAwarded: true
+        }
+      },
       homeTeam: {
         include: {
           roster: {
@@ -466,7 +477,10 @@ export async function POST(
             status: "READY",
             winningTeamId: null,
             submittedAt: null,
-            finalizedAt: null
+            finalizedAt: null,
+            officialResultSnapshot: Prisma.DbNull,
+            officialResultSnapshotVersion: null,
+            officialResultSnapshotAt: null
           }
         });
 
@@ -614,6 +628,17 @@ export async function POST(
             );
           }
 
+          const officialResultSnapshot = computeOfficialResultSnapshotForMatch({
+            ...match,
+            status: "FINAL",
+            winningTeamId: resolvedWinningTeamId,
+            holeScores: persistedRows
+          });
+
+          if (!officialResultSnapshot) {
+            throw new Error("Could not freeze the official scorecard result.");
+          }
+
           await tx.match.update({
             where: {
               id: match.id
@@ -626,7 +651,10 @@ export async function POST(
               finalizedAt: new Date(),
               reopenedAt: null,
               isOverride: isAdminOverrideSession,
-              overrideNote: isAdminOverrideSession ? "Published as an admin scorecard override." : match.overrideNote
+              overrideNote: isAdminOverrideSession ? "Published as an admin scorecard override." : match.overrideNote,
+              officialResultSnapshot: officialResultSnapshotToJson(officialResultSnapshot),
+              officialResultSnapshotVersion: OFFICIAL_RESULT_SNAPSHOT_VERSION,
+              officialResultSnapshotAt: new Date(officialResultSnapshot.generatedAt)
             }
           });
 
@@ -673,7 +701,14 @@ export async function POST(
               submittedAt: isAdminOverrideSession ? null : match.submittedAt,
               winningTeamId: isAdminOverrideSession ? null : match.winningTeamId,
               isOverride: isAdminOverrideSession ? true : match.isOverride,
-              overrideNote: isAdminOverrideSession ? "Admin override draft in progress." : match.overrideNote
+              overrideNote: isAdminOverrideSession ? "Admin override draft in progress." : match.overrideNote,
+              ...(isAdminOverrideSession
+                ? {
+                    officialResultSnapshot: Prisma.DbNull,
+                    officialResultSnapshotVersion: null,
+                    officialResultSnapshotAt: null
+                  }
+                : {})
             }
           });
 

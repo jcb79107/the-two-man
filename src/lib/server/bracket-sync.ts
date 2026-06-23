@@ -4,10 +4,9 @@ if (typeof window !== "undefined") {
 
 import { nanoid } from "nanoid";
 import { Prisma } from "@prisma/client";
-import { scoreForfeit, scoreMatch } from "@/lib/scoring/engine";
 import type { TeamMatchSummary } from "@/lib/scoring/types";
-import { normalizeKnownCourseHoles } from "@/lib/server/course-hole-corrections";
 import { db } from "@/lib/server/db";
+import { getOfficialResultSnapshotForMatch } from "@/lib/server/official-result-snapshot";
 import { computeQualifiedSeeds } from "@/lib/server/qualification";
 import { computePodStandings, type MatchStandingInput } from "@/lib/server/standings";
 
@@ -33,8 +32,11 @@ function buildPublicSlug(label: string, matchId: string) {
 }
 
 function buildResultSummary(match: {
+  id: string;
   status: string;
   winningTeamId: string | null;
+  publicScorecardSlug: string;
+  officialResultSnapshot?: unknown;
   homeTeamId: string | null;
   awayTeamId: string | null;
   tournament: {
@@ -67,69 +69,7 @@ function buildResultSummary(match: {
     grossScore: number;
   }>;
 }): TeamMatchSummary[] {
-  if (match.status === "FORFEIT" && match.winningTeamId && match.homeTeamId && match.awayTeamId) {
-    const loserTeamId = match.winningTeamId === match.homeTeamId ? match.awayTeamId : match.homeTeamId;
-
-    return scoreForfeit({
-      winnerTeamId: match.winningTeamId,
-      loserTeamId,
-      awardedPoints: match.tournament.forfeitPointsAwarded,
-      awardedHolesWon: match.tournament.forfeitHolesWonAwarded
-    });
-  }
-
-  if (match.playerSelections.length !== 4) {
-    return [];
-  }
-
-  const holesTemplate = normalizeKnownCourseHoles(match.playerSelections[0]?.tee.holes ?? []);
-  const scoresByHole = new Map<number, Record<string, number | null>>();
-
-  for (const hole of holesTemplate) {
-    scoresByHole.set(
-      hole.holeNumber,
-      Object.fromEntries(match.playerSelections.map((selection) => [selection.playerId, null]))
-    );
-  }
-
-  for (const holeScore of match.holeScores) {
-    const scores = scoresByHole.get(holeScore.holeNumber);
-
-    if (scores) {
-      scores[holeScore.playerId] = holeScore.grossScore;
-    }
-  }
-
-  const hasCompleteScores = Array.from(scoresByHole.values()).every((scores) =>
-    match.playerSelections.every((selection) => typeof scores[selection.playerId] === "number")
-  );
-
-  if (!hasCompleteScores) {
-    return [];
-  }
-
-  return scoreMatch({
-    players: match.playerSelections.map((selection) => ({
-      playerId: selection.playerId,
-      playerName: selection.player.displayName,
-      teamId: selection.teamId,
-      handicapIndex: Number(selection.handicapIndexSnapshot),
-      teeId: selection.teeId,
-      teeName: selection.teeNameSnapshot,
-      slope: selection.slopeSnapshot,
-      courseRating: Number(selection.courseRatingSnapshot),
-      par: selection.parSnapshot,
-      holes: normalizeKnownCourseHoles(selection.tee.holes).map((hole) => ({
-        holeNumber: hole.holeNumber,
-        par: hole.par,
-        strokeIndex: hole.strokeIndex
-      }))
-    })),
-    holeScores: holesTemplate.map((hole) => ({
-      holeNumber: hole.holeNumber,
-      scores: scoresByHole.get(hole.holeNumber) ?? {}
-    }))
-  }).teamSummaries;
+  return getOfficialResultSnapshotForMatch(match)?.teamSummaries ?? [];
 }
 
 async function ensureStandardBracketRounds(tx: SyncClient, bracket: {

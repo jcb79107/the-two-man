@@ -515,7 +515,7 @@ describe("match scoring", () => {
       barron: [5, 5, 4, 4, 6, 3, 5, 3, 4, 4, 5, 4, 6, 4, 6, 4, 5, 5],
       loewenstein: [5, 4, 5, 5, 8, 4, 4, 4, 5, 4, 4, 6, 6, 3, 6, 3, 5, 7],
       holway: [7, 6, 5, 4, 5, 4, 5, 5, 6, 5, 4, 4, 5, 5, 5, 3, 6, 5],
-      chase: [6, 4, 5, 3, 7, 4, 3, 4, 5, 3, 4, 4, 6, 4, 5, 3, 5, 6]
+      chase: [6, 4, 5, 3, 7, 4, 3, 4, 5, 3, 4, 4, 6, 4, 5, 3, 6, 6]
     };
     const result = scoreMatch({
       players,
@@ -554,9 +554,9 @@ describe("match scoring", () => {
       matchStrokeCount: 3
     });
     expect(byPlayerId.get("chase")?.strokesByHole[17]).toBe(1);
-    expect(holeSeventeen?.winningTeamId).toBe("holway-chase");
-    expect(barronTeam?.totalPoints).toBe(8);
-    expect(holwayTeam?.totalPoints).toBe(10);
+    expect(holeSeventeen?.winningTeamId).toBeNull();
+    expect(barronTeam?.totalPoints).toBe(8.5);
+    expect(holwayTeam?.totalPoints).toBe(9.5);
   });
 });
 

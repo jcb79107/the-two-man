@@ -88,6 +88,18 @@ const BRIARWOOD_CORRECTED_MATCH_IDS = new Set([
   "f13e674887224826adc18"
 ]);
 
+const BRYN_MAWR_HOLWAY_CHASE_CORRECTED_MATCH_IDS = new Set([
+  "790d2420711943629dafc"
+]);
+
+const BRYN_MAWR_DAITCH_REIMER_TIE_CORRECTED_MATCH_IDS = new Set([
+  "5d58d0c0b37f4b87a570a"
+]);
+
+const SUNSET_STONE_RABIN_CORRECTED_MATCH_IDS = new Set([
+  "a33ade26035147989b239"
+]);
+
 const BRIARWOOD_II_TEE_HOLES: MatchHole[] = [
   { holeNumber: 1, par: 4, strokeIndex: 7, yardage: 410 },
   { holeNumber: 2, par: 4, strokeIndex: 11, yardage: 375 },
@@ -123,6 +135,20 @@ function isHeritageOaksCorrectionTarget(match: CorrectablePublicMatch) {
 
 function isBriarwoodCorrectionTarget(matchId: string) {
   return BRIARWOOD_CORRECTED_MATCH_IDS.has(matchId);
+}
+
+function isBrynMawrHolwayChaseCorrectionTarget(match: CorrectablePublicMatch) {
+  return BRYN_MAWR_HOLWAY_CHASE_CORRECTED_MATCH_IDS.has(match.id) ||
+    BRYN_MAWR_HOLWAY_CHASE_CORRECTED_MATCH_IDS.has(match.publicScorecardSlug);
+}
+
+function isBrynMawrDaitchReimerTieCorrectionTarget(matchId: string) {
+  return BRYN_MAWR_DAITCH_REIMER_TIE_CORRECTED_MATCH_IDS.has(matchId);
+}
+
+function isSunsetStoneRabinCorrectionTarget(match: CorrectablePublicMatch) {
+  return SUNSET_STONE_RABIN_CORRECTED_MATCH_IDS.has(match.id) ||
+    SUNSET_STONE_RABIN_CORRECTED_MATCH_IDS.has(match.publicScorecardSlug);
 }
 
 export function applyPublicScorecardCorrections<T extends CorrectablePublicMatch>(match: T): T {
@@ -176,6 +202,62 @@ export function applyPublicScorecardCorrections<T extends CorrectablePublicMatch
     };
   }
 
+  if (isBrynMawrHolwayChaseCorrectionTarget(match)) {
+    const chaseSelection = normalizedSelections.find((selection) =>
+      /\bChase$/i.test(selection.player.displayName.trim())
+    );
+
+    if (!chaseSelection) {
+      return {
+        ...match,
+        playerSelections: normalizedSelections
+      };
+    }
+
+    return {
+      ...match,
+      playerSelections: normalizedSelections,
+      holeScores: match.holeScores.map((score) =>
+        score.playerId === chaseSelection.playerId &&
+        score.holeNumber === 17 &&
+        score.grossScore === 5
+          ? {
+              ...score,
+              grossScore: 6
+            }
+          : score
+      )
+    };
+  }
+
+  if (isSunsetStoneRabinCorrectionTarget(match)) {
+    const rabinSelection = normalizedSelections.find((selection) =>
+      /\bRabin$/i.test(selection.player.displayName.trim())
+    );
+
+    if (!rabinSelection) {
+      return {
+        ...match,
+        playerSelections: normalizedSelections
+      };
+    }
+
+    return {
+      ...match,
+      playerSelections: normalizedSelections,
+      holeScores: match.holeScores.map((score) =>
+        score.playerId === rabinSelection.playerId &&
+        score.holeNumber === 18 &&
+        score.grossScore === 5
+          ? {
+              ...score,
+              grossScore: 6
+            }
+          : score
+      )
+    };
+  }
+
   if (!isBriarwoodCorrectionTarget(match.id) && !isBriarwoodCorrectionTarget(match.publicScorecardSlug)) {
     return {
       ...match,
@@ -203,6 +285,16 @@ const briarwoodStrokeOverrides: Record<string, { handicapIndex: number; playerNa
   "team-17-player-2": { handicapIndex: 11.8, strokeHoles: [1, 3, 7, 9, 12, 14, 16, 17] }
 };
 
+const brynMawrDaitchReimerStrokeOverrides: Array<{
+  namePattern: RegExp;
+  strokeHoles: number[];
+}> = [
+  { namePattern: /\bMalkin$/i, strokeHoles: [4] },
+  { namePattern: /\bJolcol?ver$/i, strokeHoles: [4] },
+  { namePattern: /\bDaitch$/i, strokeHoles: [2, 3, 4, 5, 6, 9, 10, 12, 13, 15, 17, 18] },
+  { namePattern: /\bReimer$/i, strokeHoles: [] }
+];
+
 function resultCodeFor(teamId: string, teamPoints: Record<string, number>): ComputedResultCode {
   const entries = Object.entries(teamPoints).sort((a, b) => b[1] - a[1]);
   if (entries.length !== 2) {
@@ -216,56 +308,63 @@ function resultCodeFor(teamId: string, teamPoints: Record<string, number>): Comp
   return entries[0][0] === teamId ? "WIN" : "LOSS";
 }
 
-export function applyComputedPublicScorecardCorrections(
-  matchId: string,
-  scorecard: ComputedScorecard
+function applyStrokeOverride(
+  player: ComputedPlayer,
+  override: { handicapIndex?: number; playerName?: string; strokeHoles: number[] }
+): ComputedPlayer {
+  const strokeHoles = new Set(override.strokeHoles);
+  const strokesByHole = Object.fromEntries(
+    Object.keys(player.grossByHole).map((holeNumber) => {
+      const hole = Number(holeNumber);
+      return [hole, strokeHoles.has(hole) ? 1 : 0];
+    })
+  );
+  const netByHole = Object.fromEntries(
+    Object.entries(player.grossByHole).map(([holeNumber, gross]) => {
+      const hole = Number(holeNumber);
+      return [hole, typeof gross === "number" ? gross - (strokesByHole[hole] ?? 0) : null];
+    })
+  );
+
+  return {
+    ...player,
+    playerName: override.playerName ?? player.playerName,
+    handicapIndex: override.handicapIndex ?? player.handicapIndex,
+    matchStrokeCount: override.strokeHoles.length,
+    strokesByHole,
+    netByHole
+  };
+}
+
+function recomputeComputedScorecard(
+  scorecard: ComputedScorecard,
+  players: ComputedPlayer[],
+  holeMeta?: ComputedScorecard["holeMeta"]
 ): ComputedScorecard {
-  if (!isBriarwoodCorrectionTarget(matchId)) {
-    return scorecard;
+  const teamIds = [...new Set(players.map((player) => player.teamId))];
+
+  if (teamIds.length !== 2) {
+    return {
+      ...scorecard,
+      players
+    };
   }
 
-  const players = scorecard.players.map((player) => {
-    const override = briarwoodStrokeOverrides[player.playerId];
-
-    if (!override) {
-      return player;
-    }
-
-    const strokeHoles = new Set(override.strokeHoles);
-    const strokesByHole = Object.fromEntries(
-      Object.keys(player.grossByHole).map((holeNumber) => {
-        const hole = Number(holeNumber);
-        return [hole, strokeHoles.has(hole) ? 1 : 0];
-      })
-    );
-    const netByHole = Object.fromEntries(
-      Object.entries(player.grossByHole).map(([holeNumber, gross]) => {
-        const hole = Number(holeNumber);
-        return [hole, gross - (strokesByHole[hole] ?? 0)];
-      })
-    );
-
-    return {
-      ...player,
-      playerName: override.playerName ?? player.playerName,
-      handicapIndex: override.handicapIndex,
-      matchStrokeCount: override.strokeHoles.length,
-      strokesByHole,
-      netByHole
-    };
-  });
-
-  const teamIds = [...new Set(players.map((player) => player.teamId))];
   const teamPoints: Record<string, number> = Object.fromEntries(teamIds.map((teamId) => [teamId, 0]));
   const holesWon: Record<string, number> = Object.fromEntries(teamIds.map((teamId) => [teamId, 0]));
   const betterBallGrossTotals: Record<string, number> = Object.fromEntries(teamIds.map((teamId) => [teamId, 0]));
   const betterBallNetTotals: Record<string, number> = Object.fromEntries(teamIds.map((teamId) => [teamId, 0]));
+  const holeMetaByNumber = new Map((holeMeta ?? scorecard.holeMeta ?? []).map((hole) => [hole.holeNumber, hole]));
 
   const holes = scorecard.holes.map((hole) => {
     const teamBetterBallGross = Object.fromEntries(
       teamIds.map((teamId) => [
         teamId,
-        Math.min(...players.filter((player) => player.teamId === teamId).map((player) => player.grossByHole[hole.holeNumber]))
+        Math.min(
+          ...players
+            .filter((player) => player.teamId === teamId)
+            .map((player) => player.grossByHole[hole.holeNumber])
+        )
       ])
     );
     const playerNetScores = Object.fromEntries(
@@ -308,8 +407,13 @@ export function applyComputedPublicScorecardCorrections(
       holesWon[winningTeamId] += 1;
     }
 
+    const meta = holeMetaByNumber.get(hole.holeNumber);
+
     return {
       ...hole,
+      par: meta?.par ?? (hole as ComputedHole & { par?: number }).par,
+      strokeIndex: meta?.strokeIndex ?? (hole as ComputedHole & { strokeIndex?: number }).strokeIndex,
+      yardage: meta?.yardage ?? (hole as ComputedHole & { yardage?: number | null }).yardage ?? null,
       teamPoints: holePoints,
       teamBetterBallGross,
       teamBetterBallNet,
@@ -318,14 +422,64 @@ export function applyComputedPublicScorecardCorrections(
     };
   });
 
-  const teamSummaries = teamIds.map((teamId) => ({
-    teamId,
-    totalPoints: teamPoints[teamId],
-    holesWon: holesWon[teamId],
-    betterBallGrossTotal: betterBallGrossTotals[teamId],
-    betterBallNetTotal: betterBallNetTotals[teamId],
-    resultCode: resultCodeFor(teamId, teamPoints)
-  }));
+  return {
+    ...scorecard,
+    players,
+    holes: holes as ComputedHole[],
+    teamSummaries: teamIds.map((teamId) => ({
+      teamId,
+      totalPoints: teamPoints[teamId],
+      holesWon: holesWon[teamId],
+      betterBallGrossTotal: betterBallGrossTotals[teamId],
+      betterBallNetTotal: betterBallNetTotals[teamId],
+      resultCode: resultCodeFor(teamId, teamPoints)
+    })),
+    holeMeta: holeMeta ?? scorecard.holeMeta
+  };
+}
+
+function applyBrynMawrDaitchReimerTieCorrection(scorecard: ComputedScorecard): ComputedScorecard {
+  const players = scorecard.players.map((player) => {
+    const override = brynMawrDaitchReimerStrokeOverrides.find((candidate) =>
+      candidate.namePattern.test(player.playerName.trim())
+    );
+
+    return override ? applyStrokeOverride(player, override) : player;
+  });
+  const correctedPlayers = players.filter((player) =>
+    brynMawrDaitchReimerStrokeOverrides.some((candidate) =>
+      candidate.namePattern.test(player.playerName.trim())
+    )
+  );
+
+  if (correctedPlayers.length !== 4) {
+    return scorecard;
+  }
+
+  return recomputeComputedScorecard(scorecard, players);
+}
+
+export function applyComputedPublicScorecardCorrections(
+  matchId: string,
+  scorecard: ComputedScorecard
+): ComputedScorecard {
+  if (isBrynMawrDaitchReimerTieCorrectionTarget(matchId)) {
+    return applyBrynMawrDaitchReimerTieCorrection(scorecard);
+  }
+
+  if (!isBriarwoodCorrectionTarget(matchId)) {
+    return scorecard;
+  }
+
+  const players = scorecard.players.map((player) => {
+    const override = briarwoodStrokeOverrides[player.playerId];
+
+    if (!override) {
+      return player;
+    }
+
+    return applyStrokeOverride(player, override);
+  });
 
   const holeMeta = BRIARWOOD_II_TEE_HOLES.map((hole) => ({
     holeNumber: hole.holeNumber,
@@ -333,21 +487,13 @@ export function applyComputedPublicScorecardCorrections(
     strokeIndex: hole.strokeIndex,
     yardage: hole.yardage ?? null
   }));
-  const holeMetaByNumber = new Map(holeMeta.map((hole) => [hole.holeNumber, hole]));
+  const recomputed = recomputeComputedScorecard(scorecard, players, holeMeta);
 
   return {
-    ...scorecard,
-    players: players.map((player) => ({
+    ...recomputed,
+    players: recomputed.players.map((player) => ({
       ...player,
       teeName: "II"
-    })),
-    holes: holes.map((hole) => ({
-      ...hole,
-      par: holeMetaByNumber.get(hole.holeNumber)?.par ?? (hole as ComputedHole & { par?: number }).par,
-      strokeIndex: holeMetaByNumber.get(hole.holeNumber)?.strokeIndex ?? (hole as ComputedHole & { strokeIndex?: number }).strokeIndex,
-      yardage: holeMetaByNumber.get(hole.holeNumber)?.yardage ?? (hole as ComputedHole & { yardage?: number | null }).yardage ?? null
-    })) as ComputedHole[],
-    teamSummaries,
-    holeMeta
+    }))
   };
 }
