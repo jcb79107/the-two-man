@@ -258,26 +258,37 @@ function AdminLoginCard({
 
       <section className="w-full rounded-[30px] border border-white/70 bg-white/86 p-4 shadow-[0_24px_70px_rgba(17,32,23,0.1)]">
         {configured ? (
-          <form action={adminLoginAction} className="flex items-center gap-3">
-            <label className="sr-only" htmlFor="admin-password">
-              Admin passcode
-            </label>
-            <div className={`flex-1 rounded-[22px] border ${kind === "error" ? "border-[#d48f8f]" : "border-mist"} bg-white`}>
-              <input
-                id="admin-password"
-                name="password"
-                type="password"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                maxLength={4}
-                autoComplete="one-time-code"
-                placeholder="4-digit passcode"
-                aria-label="Admin passcode"
-                className="w-full rounded-[22px] bg-transparent px-4 py-3 text-sm text-ink outline-none placeholder:text-ink/38"
-              />
+          <div className="space-y-4">
+            <div className="flex items-center gap-3 px-1">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[#d8c07d]/45 bg-sand/70">
+                <TwoManLogo className="h-10 w-10" />
+              </div>
+              <div className="min-w-0">
+                <p className="label-caps text-fairway/66">Commissioner desk</p>
+                <h1 className="mt-1 text-xl font-semibold leading-tight text-pine">The Two Man</h1>
+              </div>
             </div>
-            <FormSubmitButton label="→" pendingLabel="…" />
-          </form>
+            <form action={adminLoginAction} className="flex items-center gap-3">
+              <label className="sr-only" htmlFor="admin-password">
+                Admin passcode
+              </label>
+              <div className={`flex-1 rounded-[22px] border ${kind === "error" ? "border-[#d48f8f]" : "border-mist"} bg-white`}>
+                <input
+                  id="admin-password"
+                  name="password"
+                  type="password"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  maxLength={4}
+                  autoComplete="one-time-code"
+                  placeholder="4-digit passcode"
+                  aria-label="Admin passcode"
+                  className="w-full rounded-[22px] bg-transparent px-4 py-3 text-sm text-ink outline-none placeholder:text-ink/38"
+                />
+              </div>
+              <FormSubmitButton label="→" pendingLabel="…" />
+            </form>
+          </div>
         ) : (
           <div className="rounded-2xl border border-[#e0b6b6] bg-[#fff1f1] px-4 py-4 text-sm leading-6 text-[#8f3f3f]">
             Set `ADMIN_PASSWORD` and `ADMIN_SESSION_SECRET` in your environment before using the

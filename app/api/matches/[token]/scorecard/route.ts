@@ -14,6 +14,10 @@ import {
   OFFICIAL_RESULT_SNAPSHOT_VERSION,
   officialResultSnapshotToJson
 } from "@/lib/server/official-result-snapshot";
+import {
+  buildPublishedHoleScores,
+  validateSubmittedScoreRows
+} from "@/lib/server/scorecard-validation";
 
 function decimal(value: number) {
   return new Prisma.Decimal(value.toFixed(1));
@@ -520,53 +524,17 @@ export async function POST(
         ? (body.scores as Array<{ holeNumber?: unknown; scores?: Record<string, unknown> }>)
         : [];
       const playerIds = match.playerSelections.map((selection) => selection.playerId);
-
-      if (scores.length === 0) {
-        return badRequest("No scores were submitted.");
-      }
-
-      const persistedRows: Array<{
-        id: string;
-        matchId: string;
-        playerId: string;
-        holeNumber: number;
-        grossScore: number;
-      }> = [];
-
-      for (const hole of scores) {
-        const holeNumber = Number(hole?.holeNumber);
-        const values = hole?.scores ?? {};
-
-        if (!Number.isInteger(holeNumber) || holeNumber < 1) {
-          return badRequest("Each score row must include a valid hole number.");
-        }
-
-        for (const playerId of playerIds) {
-          const rawValue = values[playerId];
-
-          if (rawValue == null || rawValue === "") {
-            if (action === "publish") {
-              return badRequest("All 18 holes must be filled in before publishing.");
-            }
-
-            continue;
-          }
-
-          const grossScore = Number(rawValue);
-
-          if (!Number.isInteger(grossScore) || grossScore < 1 || grossScore > 20) {
-            return badRequest("Gross scores must be whole numbers between 1 and 20.");
-          }
-
-          persistedRows.push({
-            id: `${match.id}-${playerId}-hole-${holeNumber}`,
-            matchId: match.id,
-            playerId,
-            holeNumber,
-            grossScore
-          });
-        }
-      }
+      const holeTemplate = normalizeKnownCourseHoles(match.playerSelections[0]?.tee.holes ?? []);
+      const persistedRows = validateSubmittedScoreRows({
+        action,
+        playerIds,
+        holeTemplate,
+        scores
+      }).map((row) => ({
+        ...row,
+        id: `${match.id}-${row.playerId}-hole-${row.holeNumber}`,
+        matchId: match.id
+      }));
 
       await db.$transaction(async (tx) => {
         await tx.holeScore.deleteMany({
@@ -598,22 +566,14 @@ export async function POST(
               strokeIndex: hole.strokeIndex
             }))
           }));
-          const holeTemplate = normalizeKnownCourseHoles(match.playerSelections[0]?.tee.holes ?? []);
 
           const fullScorecard = scoreMatch({
             players: inputs,
-            holeScores: holeTemplate.map((hole) => ({
-              holeNumber: hole.holeNumber,
-              scores: Object.fromEntries(
-                playerIds.map((playerId) => {
-                  const saved = persistedRows.find(
-                    (row) => row.playerId === playerId && row.holeNumber === hole.holeNumber
-                  );
-
-                  return [playerId, saved?.grossScore ?? null];
-                })
-              )
-            }))
+            holeScores: buildPublishedHoleScores({
+              playerIds,
+              holeTemplate,
+              persistedRows
+            })
           });
 
           const resolvedWinningTeamId = fullScorecard.winningTeamId ?? playoffWinnerTeamId;

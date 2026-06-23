@@ -5,6 +5,12 @@ import {
   applyPublicScorecardCorrections
 } from "@/lib/server/public-scorecard-corrections";
 
+type TestHoleScore = {
+  holeNumber: number;
+  playerId: string;
+  grossScore: number;
+};
+
 describe("applyPublicScorecardCorrections", () => {
   it("normalizes legacy Bryn Mawr hole handicaps even when a public match is already posted", () => {
     const holes = [
@@ -45,7 +51,7 @@ describe("applyPublicScorecardCorrections", () => {
           tee: { holes }
         }
       ],
-      holeScores: []
+      holeScores: [] as TestHoleScore[]
     });
 
     expect(match.playerSelections[0]?.tee.holes.find((hole) => hole.holeNumber === 12)?.strokeIndex).toBe(6);
@@ -552,7 +558,7 @@ describe("applyPublicScorecardCorrections", () => {
           tee: { holes }
         }
       ],
-      holeScores: []
+      holeScores: [] as TestHoleScore[]
     });
 
     const result = scoreMatch({
