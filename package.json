@@ -20,6 +20,7 @@
     "courses:export:usga:counties": "tsx scripts/export_usga_ncrdb_counties.ts",
     "bracket:preview:stage": "tsx scripts/stage_bracket_preview.ts",
     "dry-run:tournament": "tsx scripts/dry_run_tournament.ts",
+    "observability:check": "node scripts/observability_check.mjs",
     "tournament:reset:state": "tsx scripts/reset_tournament_state.ts",
     "results:backfill-snapshots": "tsx scripts/backfill_official_result_snapshots.ts",
     "deploy:prod": "node scripts/require_github_synced_before_deploy.mjs && npx -y vercel@52.2.0 --prod --yes"
