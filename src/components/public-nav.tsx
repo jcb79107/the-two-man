@@ -32,7 +32,7 @@ interface PublicNavProps {
   seasonIsLive?: boolean;
 }
 
-export function PublicNav({ slug, seasonIsLive = false }: PublicNavProps) {
+export function PublicNav({ slug }: PublicNavProps) {
   const pathname = usePathname();
   const isHomePath = pathname === ROUTES.home || pathname === ROUTES.tournamentHome(slug);
   const links = [
@@ -61,11 +61,6 @@ export function PublicNav({ slug, seasonIsLive = false }: PublicNavProps) {
                 <p className="truncate text-[10px] font-medium uppercase tracking-[0.22em] text-fairway/72 sm:text-xs sm:tracking-[0.24em]">
                   2026 season
                 </p>
-                {seasonIsLive ? (
-                  <span className="rounded-full bg-[#1c4f3a] px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.18em] text-white sm:px-2.5 sm:py-1 sm:text-[10px] sm:tracking-[0.2em]">
-                    Live
-                  </span>
-                ) : null}
               </div>
             </div>
           </Link>
