@@ -3,11 +3,13 @@ import { notFound } from "next/navigation";
 import { clsx } from "clsx";
 import { AllTeamsTable, type AllTeamsRow } from "@/components/all-teams-table";
 import { PodWinnerIcon } from "@/components/pod-winner-icon";
+import { PlayoffScenarioLab } from "@/components/playoff-scenario-lab";
 import { PublicNav } from "@/components/public-nav";
 import { SectionCard } from "@/components/section-card";
 import { StandingsTable } from "@/components/standings-table";
 import { WildcardHatIcon } from "@/components/wildcard-hat-icon";
 import { getPublicTournamentState } from "@/lib/server/public-tournament";
+import type { ScenarioInput } from "@/lib/playoff-scenarios";
 
 export const dynamic = "force-dynamic";
 
@@ -214,6 +216,41 @@ export default async function TournamentStandingsPage({
       desktopLabel: "All teams"
     }
   ] as const;
+  const scenarioInput: ScenarioInput = {
+    pods: state.tournament.pods.map((pod) => ({
+      id: pod.id,
+      name: pod.name
+    })),
+    teams: state.tournament.teams
+      .map((team) => {
+        const podId = team.podMemberships[0]?.podId ?? "";
+        return {
+          id: team.id,
+          name: team.name,
+          podId,
+          podName: podNameById[podId] ?? "Pod"
+        };
+      })
+      .filter((team) => team.podId),
+    standings: state.standings,
+    matches: state.tournament.matches.map((match) => ({
+      id: match.id,
+      podId: match.podId,
+      stage: match.stage,
+      status: match.status,
+      roundLabel: match.roundLabel,
+      homeTeamId: match.homeTeamId,
+      awayTeamId: match.awayTeamId
+    }))
+  };
+  const scenarioTeamIds = [
+    ...new Set([
+      ...state.wildCardProjection.map((entry) => entry.teamId),
+      ...state.wildCardBubble.map((entry) => entry.teamId),
+      ...state.projectedPlayoffField.map((entry) => entry.teamId),
+      ...state.standings.map((entry) => entry.teamId)
+    ])
+  ];
 
   return (
     <>
@@ -464,6 +501,8 @@ export default async function TournamentStandingsPage({
                 </div>
               )}
             </SectionCard>
+
+            <PlayoffScenarioLab input={scenarioInput} initialTeamIds={scenarioTeamIds} />
 
           </>
         ) : (

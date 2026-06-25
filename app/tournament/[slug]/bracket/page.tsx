@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { BracketView } from "@/components/bracket-view";
 import { PublicNav } from "@/components/public-nav";
 import { SectionCard } from "@/components/section-card";
@@ -115,6 +116,21 @@ export default async function TournamentBracketPage({
               </div>
             </div>
           )}
+        </SectionCard>
+        <SectionCard
+          title="Playoff scenarios"
+          action={
+            <Link
+              href={`${ROUTES.tournamentStandings(slug)}?tab=playoff#scenarios`}
+              className="focus-ring rounded-full bg-pine px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-white"
+            >
+              Run scenarios
+            </Link>
+          }
+        >
+          <p className="text-sm leading-6 text-ink/72">
+            Check what a second-match score does to the projected field, wild-card line, and control-your-fate path.
+          </p>
         </SectionCard>
       </main>
     </>
