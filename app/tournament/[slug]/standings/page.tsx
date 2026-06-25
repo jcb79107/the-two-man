@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
+import { clsx } from "clsx";
 import { AllTeamsTable, type AllTeamsRow } from "@/components/all-teams-table";
 import { PodWinnerIcon } from "@/components/pod-winner-icon";
 import { PublicNav } from "@/components/public-nav";
@@ -192,6 +194,26 @@ export default async function TournamentStandingsPage({
         ? "Projected playoff field"
         : null
   }));
+  const standingsTabs = [
+    {
+      key: "pods",
+      href: `/tournament/${slug}/standings`,
+      mobileLabel: "Pods",
+      desktopLabel: "Pod standings"
+    },
+    {
+      key: "playoff",
+      href: `/tournament/${slug}/standings?tab=playoff`,
+      mobileLabel: "Playoff",
+      desktopLabel: "Playoff picture"
+    },
+    {
+      key: "teams",
+      href: `/tournament/${slug}/standings?tab=teams`,
+      mobileLabel: "Teams",
+      desktopLabel: "All teams"
+    }
+  ] as const;
 
   return (
     <>
@@ -203,33 +225,31 @@ export default async function TournamentStandingsPage({
           </p>
 
           <div className="mt-5 grid grid-cols-3 gap-1.5 rounded-[24px] bg-sand/78 p-1.5">
-            <a
-              href={`/tournament/${slug}/standings`}
-              className={`flex min-h-14 items-center justify-center rounded-[19px] px-3 text-center text-[15px] font-semibold leading-tight transition sm:text-base ${
-                currentTab === "pods" ? "bg-pine text-white shadow-[0_8px_18px_rgba(17,32,23,0.18)]" : "text-fairway/82"
-              }`}
-            >
-              <span className="sm:hidden">Pods</span>
-              <span className="hidden sm:inline">Pod standings</span>
-            </a>
-            <a
-              href={`/tournament/${slug}/standings?tab=playoff`}
-              className={`flex min-h-14 items-center justify-center rounded-[19px] px-3 text-center text-[15px] font-semibold leading-tight transition sm:text-base ${
-                currentTab === "playoff" ? "bg-pine text-white shadow-[0_8px_18px_rgba(17,32,23,0.18)]" : "text-fairway/82"
-              }`}
-            >
-              <span className="sm:hidden">Playoff</span>
-              <span className="hidden sm:inline">Playoff picture</span>
-            </a>
-            <a
-              href={`/tournament/${slug}/standings?tab=teams`}
-              className={`flex min-h-14 items-center justify-center rounded-[19px] px-3 text-center text-[15px] font-semibold leading-tight transition sm:text-base ${
-                currentTab === "teams" ? "bg-pine text-white shadow-[0_8px_18px_rgba(17,32,23,0.18)]" : "text-fairway/82"
-              }`}
-            >
-              <span className="sm:hidden">Teams</span>
-              <span className="hidden sm:inline">All teams</span>
-            </a>
+            {standingsTabs.map((tab) => {
+              const active = currentTab === tab.key;
+              const tabClassName = clsx(
+                "focus-ring flex min-h-14 items-center justify-center rounded-[19px] px-3 text-center text-[15px] font-semibold leading-tight transition sm:text-base",
+                active
+                  ? "cursor-default bg-pine text-white shadow-[0_8px_18px_rgba(17,32,23,0.18)]"
+                  : "text-fairway/82 hover:bg-white/70 hover:text-ink"
+              );
+              const tabLabel = (
+                <>
+                  <span className="sm:hidden">{tab.mobileLabel}</span>
+                  <span className="hidden sm:inline">{tab.desktopLabel}</span>
+                </>
+              );
+
+              return active ? (
+                <span key={tab.key} aria-current="page" className={tabClassName}>
+                  {tabLabel}
+                </span>
+              ) : (
+                <Link key={tab.key} href={tab.href} className={tabClassName}>
+                  {tabLabel}
+                </Link>
+              );
+            })}
           </div>
         </SectionCard>
 
