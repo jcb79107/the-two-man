@@ -155,7 +155,7 @@ export default async function TournamentRulesPage({
             href={RULES_JUDGE_URL}
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="Open the rules judge in ChatGPT"
+            aria-label="Open the rules judge"
             className="grid min-h-20 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-[20px] bg-pine px-4 py-4 text-left text-white shadow-[0_14px_28px_rgba(17,32,23,0.18)] transition hover:bg-[#103126]"
           >
             <span className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/18 bg-white/10 text-white">
@@ -167,7 +167,7 @@ export default async function TournamentRulesPage({
               </span>
               <span className="mt-1 block text-base font-semibold leading-tight">Launch live rules help</span>
             </span>
-            <span className="text-xs font-semibold uppercase tracking-[0.18em] text-white/78">ChatGPT</span>
+            <span className="text-xs font-semibold uppercase tracking-[0.18em] text-white/78">Open</span>
           </a>
         </SectionCard>
 

@@ -48,7 +48,7 @@ export function TournamentHomeView({
                 href={RULES_JUDGE_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label="Open the rules judge in ChatGPT"
+                aria-label="Open the rules judge"
                 className="mt-3 flex w-full items-center justify-between rounded-[22px] bg-pine px-4 py-3 text-left text-white shadow-[0_14px_28px_rgba(17,32,23,0.18)] transition hover:bg-[#103126] md:min-h-20"
               >
                 <span className="flex items-center gap-4">
@@ -60,9 +60,7 @@ export function TournamentHomeView({
                     <span className="mt-0.5 block text-xs text-white/70 sm:text-sm">{RULES_JUDGE_LABEL}</span>
                   </span>
                 </span>
-                <span className="text-xs font-semibold uppercase tracking-[0.18em] text-white/78 sm:text-sm">
-                  ChatGPT
-                </span>
+                <span className="text-xs font-semibold uppercase tracking-[0.18em] text-white/78 sm:text-sm">Open</span>
               </a>
             </div>
           </section>

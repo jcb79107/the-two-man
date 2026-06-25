@@ -4,4 +4,4 @@ export const RULES_JUDGE_URL =
 export const RULES_JUDGE_LABEL = "Rules judge";
 
 export const RULES_JUDGE_DESCRIPTION =
-  "Open a live match-play rules official in ChatGPT for fast on-course rulings.";
+  "Open a live match-play rules helper for fast on-course rulings.";

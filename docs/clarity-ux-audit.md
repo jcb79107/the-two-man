@@ -26,7 +26,7 @@ Overall health looked good: 19 sessions, 13 unique users, zero JavaScript-error 
 |---|---|---|---|
 | Standings tabs | Mobile heatmap for `/tournament/the-two-man-2026/standings` showed `Playoff` as the top tap target, plus one dead tap on `Playoff`. | The already-active tab was still rendered as a link, so repeat taps could look like missed navigation. | Active standings tabs now render as inert current-state controls with `aria-current="page"` instead of links to themselves. |
 | Standings leader/status labels | Dead taps included `CURRENT POD LEADER`, and recordings showed taps inside standings/stat cards. | Some status badges and ranking cards look touchable even when they are informational. | Left the cards informational, but reduced the clearest same-page dead tap source by making the active tab non-clickable. Continue watching this hotspot before adding team-detail links. |
-| Rules Judge CTA | Home dead-tap heatmap showed 3 dead taps on `Launch rules judge`, its icon/text, and `OPEN`. | The CTA is an external ChatGPT launch; Clarity may classify the current page as unchanged, and the generic `Open` label did not state the destination. | Rules Judge CTAs now label the destination as `ChatGPT`, include an explicit accessibility label, and use `noopener noreferrer`. |
+| Rules Judge CTA | Home dead-tap heatmap showed 3 dead taps on `Launch rules judge`, its icon/text, and `OPEN`. | The CTA launches an external rules helper; Clarity may classify the current page as unchanged when the external flow opens. | Rules Judge CTAs keep the branded `Open` label, include an explicit accessibility label, and use `noopener noreferrer`. |
 | Quick backs | 7 sessions showed quick backs, mainly among standings, tabs, and bracket. | This mostly matches expected tournament exploration, but it should be watched after tab polish. | No routing architecture change. Retest after more production traffic. |
 
 ## Retest Plan
@@ -38,5 +38,5 @@ Overall health looked good: 19 sessions, 13 unique users, zero JavaScript-error 
    - `/tournament/the-two-man-2026/rules`
 3. Expected improvement:
    - Active standings tab dead taps should drop or disappear.
-   - Rules Judge dead taps may remain if Clarity classifies external launches as dead, but the CTA should be clearer to users.
+   - Rules Judge dead taps may remain if Clarity classifies external launches as dead.
 4. If standings-card taps remain frequent, the next safe product decision is whether team/status cards should open a team/match detail page or be visually flattened as purely informational rows.
