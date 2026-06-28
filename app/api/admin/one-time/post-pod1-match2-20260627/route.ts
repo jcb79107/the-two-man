@@ -39,6 +39,7 @@ const HOLES = [
 
 const PLAYER_INPUT = {
   JB: {
+    fullName: "Jason Baer",
     nameMatchers: ["jason", "baer"],
     handicapIndex: 10.3,
     courseHandicap: 12,
@@ -48,6 +49,7 @@ const PLAYER_INPUT = {
     scores: [4, 5, 5, 5, 5, 7, 6, 3, 5, 5, 4, 4, 7, 4, 4, 3, 5, 6]
   },
   JC: {
+    fullName: "Jack Cadden",
     nameMatchers: ["jack", "cadden"],
     handicapIndex: 14.0,
     courseHandicap: 17,
@@ -57,6 +59,7 @@ const PLAYER_INPUT = {
     scores: [6, 5, 5, 5, 5, 5, 8, 5, 7, 5, 6, 5, 8, 5, 5, 4, 5, 8]
   },
   ND: {
+    fullName: "Noah Deutsch",
     nameMatchers: ["noah", "deutsch"],
     handicapIndex: 13.7,
     courseHandicap: 16,
@@ -66,6 +69,7 @@ const PLAYER_INPUT = {
     scores: [6, 6, 6, 5, 6, 4, 6, 4, 5, 6, 6, 4, 8, 6, 7, 5, 5, 6]
   },
   RA: {
+    fullName: "Ross Agins",
     nameMatchers: ["ross", "agins"],
     handicapIndex: 20.0,
     courseHandicap: 24,
@@ -118,6 +122,7 @@ export async function POST() {
       homeTeam: {
         include: {
           roster: {
+            orderBy: { rosterPosition: "asc" },
             include: { player: true }
           }
         }
@@ -125,6 +130,7 @@ export async function POST() {
       awayTeam: {
         include: {
           roster: {
+            orderBy: { rosterPosition: "asc" },
             include: { player: true }
           }
         }
@@ -138,10 +144,10 @@ export async function POST() {
 
   const homeTeamName = match.homeTeam.name;
   const awayTeamName = match.awayTeam.name;
-  const jb = findRosterPlayer(match.homeTeam.roster, "JB");
-  const jc = findRosterPlayer(match.homeTeam.roster, "JC");
-  const nd = findRosterPlayer(match.awayTeam.roster, "ND");
-  const ra = findRosterPlayer(match.awayTeam.roster, "RA");
+  const jb = findRosterPlayer(match.homeTeam.roster, "JB") ?? match.homeTeam.roster[0]?.player;
+  const jc = findRosterPlayer(match.homeTeam.roster, "JC") ?? match.homeTeam.roster[1]?.player;
+  const nd = findRosterPlayer(match.awayTeam.roster, "ND") ?? match.awayTeam.roster[0]?.player;
+  const ra = findRosterPlayer(match.awayTeam.roster, "RA") ?? match.awayTeam.roster[1]?.player;
 
   if (!jb || !jc || !nd || !ra) {
     return NextResponse.json({ error: "Could not resolve all four Pod 1 Match 2 players." }, { status: 409 });
@@ -154,10 +160,10 @@ export async function POST() {
     RA: ra.id
   };
   const playerNames: Record<PlayerKey, string> = {
-    JB: jb.displayName,
-    JC: jc.displayName,
-    ND: nd.displayName,
-    RA: ra.displayName
+    JB: PLAYER_INPUT.JB.fullName,
+    JC: PLAYER_INPUT.JC.fullName,
+    ND: PLAYER_INPUT.ND.fullName,
+    RA: PLAYER_INPUT.RA.fullName
   };
   const teamIds = {
     JB_JC: match.homeTeam.id,
