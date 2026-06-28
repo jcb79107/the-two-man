@@ -44,6 +44,7 @@ const PLAYER_INPUT = {
     courseHandicap: 12,
     playingHandicap: 0,
     matchStrokeCount: 0,
+    strokeHoles: [],
     scores: [4, 5, 5, 5, 5, 7, 6, 3, 5, 5, 4, 4, 7, 4, 4, 3, 5, 6]
   },
   JC: {
@@ -135,6 +136,8 @@ export async function POST() {
     return NextResponse.json({ error: "Pod 1 Match 2 was not found or is missing teams." }, { status: 404 });
   }
 
+  const homeTeamName = match.homeTeam.name;
+  const awayTeamName = match.awayTeam.name;
   const jb = findRosterPlayer(match.homeTeam.roster, "JB");
   const jc = findRosterPlayer(match.homeTeam.roster, "JC");
   const nd = findRosterPlayer(match.awayTeam.roster, "ND");
@@ -396,7 +399,7 @@ export async function POST() {
       update: {
         occurredAt: new Date(),
         title: "Match completed",
-        body: `${match.homeTeam.name} vs ${match.awayTeam.name} is now official.`,
+        body: `${homeTeamName} vs ${awayTeamName} is now official.`,
         teamIds: [teamIds.JB_JC, teamIds.ND_RA],
         metadata: {
           roundLabel: match.roundLabel
@@ -411,7 +414,7 @@ export async function POST() {
         visibility: "PUBLIC",
         icon: "golf",
         title: "Match completed",
-        body: `${match.homeTeam.name} vs ${match.awayTeam.name} is now official.`,
+        body: `${homeTeamName} vs ${awayTeamName} is now official.`,
         teamIds: [teamIds.JB_JC, teamIds.ND_RA],
         metadata: {
           roundLabel: match.roundLabel
@@ -426,7 +429,7 @@ export async function POST() {
     ok: true,
     matchId: MATCH_ID,
     roundLabel: match.roundLabel,
-    result: `${match.awayTeam.name} def. ${match.homeTeam.name}, ${awayPoints}-${homePoints}`,
+    result: `${awayTeamName} def. ${homeTeamName}, ${awayPoints}-${homePoints}`,
     winningTeamId,
     teamSummaries: snapshot.teamSummaries,
     publicUrl: `/tournament/the-two-man-2026/matches/${match.publicScorecardSlug}`
