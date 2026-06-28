@@ -11,7 +11,7 @@ import {
 
 export const dynamic = "force-dynamic";
 
-const MATCH_ID = "3f6fddaab09d4fc6801dc";
+const MATCH_ID = "a423992b1db24c0cb841d";
 const COURSE_ID = `manual-course-${MATCH_ID}`;
 const TEE_ID = `${COURSE_ID}-tee`;
 const PLAYED_AT = new Date("2026-06-27T17:00:00.000Z");
