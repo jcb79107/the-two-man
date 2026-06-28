@@ -159,6 +159,23 @@ export async function POST() {
     ND: nd.id,
     RA: ra.id
   };
+
+  const uniqueResolvedPlayerIds = new Set(Object.values(playerIds));
+  if (uniqueResolvedPlayerIds.size !== 4) {
+    return NextResponse.json(
+      {
+        error: "Pod 1 Match 2 resolved duplicate roster players.",
+        resolvedPlayers: {
+          JB: { id: jb.id, displayName: jb.displayName },
+          JC: { id: jc.id, displayName: jc.displayName },
+          ND: { id: nd.id, displayName: nd.displayName },
+          RA: { id: ra.id, displayName: ra.displayName }
+        }
+      },
+      { status: 409 }
+    );
+  }
+
   const playerNames: Record<PlayerKey, string> = {
     JB: PLAYER_INPUT.JB.fullName,
     JC: PLAYER_INPUT.JC.fullName,
@@ -342,7 +359,7 @@ export async function POST() {
       data: (Object.keys(PLAYER_INPUT) as PlayerKey[]).map((key) => {
         const input = PLAYER_INPUT[key];
         return {
-          id: `${MATCH_ID}-${playerIds[key]}`,
+          id: `${MATCH_ID}-${key}`,
           matchId: MATCH_ID,
           playerId: playerIds[key],
           teamId: key === "JB" || key === "JC" ? teamIds.JB_JC : teamIds.ND_RA,
@@ -363,7 +380,7 @@ export async function POST() {
     await tx.holeScore.createMany({
       data: (Object.keys(PLAYER_INPUT) as PlayerKey[]).flatMap((key) =>
         HOLES.map((hole, index) => ({
-          id: `${MATCH_ID}-${playerIds[key]}-hole-${hole.holeNumber}`,
+          id: `${MATCH_ID}-${key}-hole-${hole.holeNumber}`,
           matchId: MATCH_ID,
           playerId: playerIds[key],
           holeNumber: hole.holeNumber,
