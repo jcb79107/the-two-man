@@ -103,6 +103,22 @@ export interface ScenarioNeedsSummary {
   scoreAnalyses: ScenarioScoreAnalysis[];
 }
 
+export type PlayoffClinchType = "POD_WINNER" | "WILD_CARD" | "PLAYOFF_BERTH";
+
+export interface PlayoffClinchTeam {
+  teamId: string;
+  teamName: string;
+  podId: string;
+  clinchType: PlayoffClinchType;
+  projectedSeedNumber: number | null;
+}
+
+export interface PlayoffClinchAnalysis {
+  clinchedTeams: PlayoffClinchTeam[];
+  remainingBerths: number;
+  remainingMatchCount: number;
+}
+
 interface ScenarioOutcome {
   matchId: string;
   homeTeamId: string;
@@ -168,6 +184,99 @@ export function getNextScenarioMatch(input: ScenarioInput, selectedTeamId: strin
     opponentTeamId,
     opponentTeamName: opponent?.name ?? "TBD",
     roundLabel: match.roundLabel
+  };
+}
+
+export function analyzePlayoffClinches(input: ScenarioInput): PlayoffClinchAnalysis {
+  const remainingMatches = getRemainingMatches(input);
+  const currentField = projectPlayoffField(input.pods, input.standings);
+  const currentSeedByTeamId = new Map(
+    currentField.projectedPlayoffField.map((seed) => [seed.teamId, seed.seedNumber])
+  );
+
+  if (remainingMatches.length > 2) {
+    const clinchedPodWinners = input.pods.flatMap((pod) => {
+      const podRows = sortStandings(input.standings.filter((row) => row.podId === pod.id));
+      const leader = podRows[0];
+      const podHasRemainingMatch = remainingMatches.some((match) => match.podId === pod.id);
+
+      if (!leader || (podHasRemainingMatch && leader.wins < 2)) {
+        return [];
+      }
+
+      return [{
+        teamId: leader.teamId,
+        teamName: leader.teamName,
+        podId: leader.podId,
+        clinchType: "POD_WINNER" as const,
+        projectedSeedNumber: currentSeedByTeamId.get(leader.teamId) ?? null
+      }];
+    }).sort((left, right) =>
+      (left.projectedSeedNumber ?? Number.POSITIVE_INFINITY) -
+      (right.projectedSeedNumber ?? Number.POSITIVE_INFINITY)
+    );
+
+    return {
+      clinchedTeams: clinchedPodWinners,
+      remainingBerths: Math.max(0, QUALIFIER_COUNT - clinchedPodWinners.length),
+      remainingMatchCount: remainingMatches.length
+    };
+  }
+
+  const outcomeSets = buildPodOutcomeSets(input);
+  const clinchedTeams: PlayoffClinchTeam[] = [];
+
+  for (const team of input.teams) {
+    const ownPodOutcomes = outcomeSets.get(team.podId) ?? [];
+    if (ownPodOutcomes.length === 0) {
+      continue;
+    }
+
+    const otherPodOutcomeSets = [...outcomeSets.entries()].filter(
+      ([podId]) => podId !== team.podId
+    );
+    const qualificationOutcomes = ownPodOutcomes.map((ownOutcome) => ({
+      podWinner: ownOutcome.winnerTeamId === team.id,
+      analysis: analyzeOwnPodOutcome(input, ownOutcome, team.id, otherPodOutcomeSets)
+    }));
+    const clinchedPodWinner = qualificationOutcomes.every((entry) => entry.podWinner);
+    const clinchedPlayoffBerth = qualificationOutcomes.every((entry) => entry.analysis.controls);
+
+    if (!clinchedPlayoffBerth) {
+      continue;
+    }
+
+    const neverPodWinner = qualificationOutcomes.every((entry) => !entry.podWinner);
+    clinchedTeams.push({
+      teamId: team.id,
+      teamName: team.name,
+      podId: team.podId,
+      clinchType: clinchedPodWinner
+        ? "POD_WINNER"
+        : neverPodWinner
+          ? "WILD_CARD"
+          : "PLAYOFF_BERTH",
+      projectedSeedNumber: currentSeedByTeamId.get(team.id) ?? null
+    });
+  }
+
+  clinchedTeams.sort((left, right) => {
+    if (left.projectedSeedNumber == null && right.projectedSeedNumber == null) {
+      return left.teamName.localeCompare(right.teamName);
+    }
+    if (left.projectedSeedNumber == null) {
+      return 1;
+    }
+    if (right.projectedSeedNumber == null) {
+      return -1;
+    }
+    return left.projectedSeedNumber - right.projectedSeedNumber;
+  });
+
+  return {
+    clinchedTeams,
+    remainingBerths: Math.max(0, QUALIFIER_COUNT - clinchedTeams.length),
+    remainingMatchCount: remainingMatches.length
   };
 }
 
@@ -559,7 +668,7 @@ function summarizePodThreat(input: ScenarioInput, outcomes: PodOutcome[], select
   };
 }
 
-function buildPodOutcomeSets(input: ScenarioInput, override: ScenarioOutcome) {
+function buildPodOutcomeSets(input: ScenarioInput, override?: ScenarioOutcome) {
   const byPod = new Map<string, PodOutcome[]>();
   const remainingMatches = getRemainingMatches(input);
 
@@ -576,12 +685,12 @@ function enumeratePodOutcomes(
   input: ScenarioInput,
   podId: string,
   matches: ScenarioMatch[],
-  override: ScenarioOutcome
+  override?: ScenarioOutcome
 ): PodOutcome[] {
   const podRows = sortStandings(input.standings.filter((row) => row.podId === podId));
   const podMatches = matches.filter((match) => match.homeTeamId && match.awayTeamId);
   const outcomeChoices = podMatches.map((match) =>
-    match.id === override.matchId ? [override] : enumerateMatchOutcomes(match)
+    override && match.id === override.matchId ? [override] : enumerateMatchOutcomes(match)
   );
   const rowsBySignature = new Map<string, StandingsRow[]>();
 

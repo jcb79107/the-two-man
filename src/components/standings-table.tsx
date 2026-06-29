@@ -6,6 +6,7 @@ interface StandingsTableProps {
   rows: StandingsRow[];
   markerTeamIds?: string[];
   markerLabel?: string;
+  markerLabels?: Record<string, string>;
   winnerTeamIds?: string[];
   winnerLabel?: string;
 }
@@ -66,6 +67,7 @@ export function StandingsTable({
   rows,
   markerTeamIds = [],
   markerLabel = "WC line",
+  markerLabels = {},
   winnerTeamIds = [],
   winnerLabel = "Pod leader"
 }: StandingsTableProps) {
@@ -78,6 +80,7 @@ export function StandingsTable({
       {rows.map((row, index) => {
         const isPodWinner = winnerIds.has(row.teamId);
         const isWildCard = markedIds.has(row.teamId);
+        const activeMarkerLabel = markerLabels[row.teamId] ?? markerLabel;
 
         return (
           <article
@@ -105,14 +108,14 @@ export function StandingsTable({
                 </span>
                 <div className="flex shrink-0 items-center gap-1">
                   {isPodWinner ? <PodWinnerMarker label={winnerLabel} /> : null}
-                  {isWildCard ? <WildCardMarker label={markerLabel} /> : null}
+                  {isWildCard ? <WildCardMarker label={activeMarkerLabel} /> : null}
                 </div>
               </div>
 
               <div className="min-w-0">
                 <p className="truncate text-base font-semibold leading-tight text-ink">{row.teamName}</p>
                 <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-fairway/68">
-                  {isPodWinner ? winnerLabel : isWildCard ? markerLabel : `${row.matchesPlayed} played`}
+                  {isPodWinner ? winnerLabel : isWildCard ? activeMarkerLabel : `${row.matchesPlayed} played`}
                 </p>
               </div>
 

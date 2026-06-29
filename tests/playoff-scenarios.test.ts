@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  analyzePlayoffClinches,
   analyzeScenarioNeeds,
   analyzeScenarioScore,
   legalHolesWonForPoints,
@@ -119,7 +120,95 @@ function baseInput(): ScenarioInput {
   };
 }
 
+function lateSeasonInput(): ScenarioInput {
+  const latePods = ["a", "b", "c", "d", "e", "f"].map((id, index) => ({
+    id: `pod-${id}`,
+    name: `Pod ${index + 1}`
+  }));
+  const lateTeams = latePods.flatMap((pod) => [1, 2, 3].map((slot) => ({
+    id: `${pod.id}-team-${slot}`,
+    name: `${pod.name} Team ${slot}`,
+    podId: pod.id,
+    podName: pod.name
+  })));
+  const lateStandings = latePods.flatMap((pod, podIndex) => [
+    row({
+      teamId: `${pod.id}-team-1`,
+      teamName: `${pod.name} Team 1`,
+      podId: pod.id,
+      matchesPlayed: 2,
+      wins: 2,
+      losses: 0,
+      matchRecordPoints: 2,
+      holePoints: 24 - podIndex,
+      holesWon: 14 - Math.floor(podIndex / 2),
+      cumulativeNetBetterBall: 144 + podIndex
+    }),
+    row({
+      teamId: `${pod.id}-team-2`,
+      teamName: `${pod.name} Team 2`,
+      podId: pod.id,
+      matchesPlayed: pod.id === "pod-f" ? 1 : 2,
+      wins: pod.id === "pod-f" ? 0 : 1,
+      losses: 1,
+      matchRecordPoints: pod.id === "pod-f" ? 0 : 1,
+      holePoints: pod.id === "pod-a" ? 20 : pod.id === "pod-f" ? 8 : 18 - podIndex,
+      holesWon: pod.id === "pod-a" ? 12 : 7,
+      cumulativeNetBetterBall: pod.id === "pod-f" ? 75 : 150 + podIndex
+    }),
+    row({
+      teamId: `${pod.id}-team-3`,
+      teamName: `${pod.name} Team 3`,
+      podId: pod.id,
+      matchesPlayed: pod.id === "pod-f" ? 1 : 2,
+      wins: 0,
+      losses: pod.id === "pod-f" ? 1 : 2,
+      matchRecordPoints: 0,
+      holePoints: pod.id === "pod-f" ? 8 : 14 - podIndex,
+      holesWon: 5,
+      cumulativeNetBetterBall: pod.id === "pod-f" ? 76 : 158 + podIndex
+    })
+  ]);
+
+  return {
+    pods: latePods,
+    teams: lateTeams,
+    standings: lateStandings,
+    matches: [{
+      id: "last-match",
+      podId: "pod-f",
+      stage: "POD_PLAY",
+      status: "READY",
+      roundLabel: "Pod 6 Match 3",
+      homeTeamId: "pod-f-team-2",
+      awayTeamId: "pod-f-team-3"
+    }]
+  };
+}
+
 describe("playoff scenarios", () => {
+  it("locks six pod winners and one safe wild card with one match remaining", () => {
+    const clinches = analyzePlayoffClinches(lateSeasonInput());
+
+    expect(clinches.remainingMatchCount).toBe(1);
+    expect(clinches.remainingBerths).toBe(1);
+    expect(clinches.clinchedTeams).toHaveLength(7);
+    expect(clinches.clinchedTeams.filter((team) => team.clinchType === "POD_WINNER")).toHaveLength(6);
+    expect(clinches.clinchedTeams).toContainEqual(expect.objectContaining({
+      teamId: "pod-a-team-2",
+      clinchType: "WILD_CARD"
+    }));
+    expect(clinches.clinchedTeams.map((team) => team.teamId)).not.toContain("pod-f-team-2");
+    expect(clinches.clinchedTeams.map((team) => team.teamId)).not.toContain("pod-f-team-3");
+  });
+
+  it("avoids expensive full-season enumeration while preserving obvious pod clinches", () => {
+    const clinches = analyzePlayoffClinches(baseInput());
+
+    expect(clinches.remainingMatchCount).toBe(3);
+    expect(clinches.clinchedTeams.map((team) => team.teamId)).toEqual(["a1", "b1", "c1"]);
+  });
+
   it("finds projected and control thresholds while other one-match teams can still move", () => {
     const needs = analyzeScenarioNeeds(baseInput(), "a2");
 

@@ -8,8 +8,8 @@ import { PublicNav } from "@/components/public-nav";
 import { SectionCard } from "@/components/section-card";
 import { StandingsTable } from "@/components/standings-table";
 import { WildcardHatIcon } from "@/components/wildcard-hat-icon";
+import { analyzePlayoffClinches, type ScenarioInput } from "@/lib/playoff-scenarios";
 import { getPublicTournamentState } from "@/lib/server/public-tournament";
-import type { ScenarioInput } from "@/lib/playoff-scenarios";
 
 export const dynamic = "force-dynamic";
 
@@ -44,7 +44,6 @@ export default async function TournamentStandingsPage({
     totalPodPlayCount > 0 &&
     completedPodPlayCount === totalPodPlayCount &&
     state.computedSeeds.length === Math.min(8, state.tournament.teams.length);
-  const playoffFieldStatus = playoffFieldIsSet ? "Set" : "Projected";
 
   const activePlayoffSeeds = playoffFieldIsSet ? state.computedSeeds : state.projectedPlayoffField;
   const activeWildCards = playoffFieldIsSet ? state.wildCards : state.wildCardProjection;
@@ -55,12 +54,60 @@ export default async function TournamentStandingsPage({
     activeWildCards.map((entry: { teamId: string }, index) => [entry.teamId, index + 1])
   );
   const seededTeamIds = new Set(activePlayoffSeeds.map((entry) => entry.teamId));
-  const podWinnerTeamIds = new Set(
-    state.computedSeeds
-      .filter((entry) => entry.qualifierType === "POD_WINNER")
-      .map((entry) => entry.teamId)
-  );
   const podNameById = Object.fromEntries(state.tournament.pods.map((pod) => [pod.id, pod.name]));
+  const scenarioInput: ScenarioInput = {
+    pods: state.tournament.pods.map((pod) => ({
+      id: pod.id,
+      name: pod.name
+    })),
+    teams: state.tournament.teams
+      .map((team) => {
+        const podId = team.podMemberships[0]?.podId ?? "";
+        return {
+          id: team.id,
+          name: team.name,
+          podId,
+          podName: podNameById[podId] ?? "Pod"
+        };
+      })
+      .filter((team) => team.podId),
+    standings: state.standings,
+    matches: state.tournament.matches.map((match) => ({
+      id: match.id,
+      podId: match.podId,
+      stage: match.stage,
+      status: match.status,
+      roundLabel: match.roundLabel,
+      homeTeamId: match.homeTeamId,
+      awayTeamId: match.awayTeamId
+    }))
+  };
+  const playoffClinches = analyzePlayoffClinches(scenarioInput);
+  const clinchedTeamById = new Map(
+    playoffClinches.clinchedTeams.map((team) => [team.teamId, team])
+  );
+  const clinchedTeamIds = new Set(playoffClinches.clinchedTeams.map((team) => team.teamId));
+  const clinchedPodWinnerTeamIds = new Set(
+    playoffClinches.clinchedTeams
+      .filter((team) => team.clinchType === "POD_WINNER")
+      .map((team) => team.teamId)
+  );
+  const clinchedWildCardTeamIds = new Set(
+    playoffClinches.clinchedTeams
+      .filter((team) => team.clinchType === "WILD_CARD")
+      .map((team) => team.teamId)
+  );
+  const playoffFieldStatus = playoffFieldIsSet
+    ? "Set"
+    : playoffClinches.clinchedTeams.length > 0
+      ? `${playoffClinches.clinchedTeams.length}/8 clinched`
+      : "Projected";
+  const wildCardMarkerLabels = Object.fromEntries(
+    [...wildCardTeamIds].map((teamId) => [
+      teamId,
+      clinchedWildCardTeamIds.has(teamId) ? "Clinched wildcard" : "Projected wild card"
+    ])
+  );
   const podRankByTeamId = Object.fromEntries(
     state.podStandings.flatMap(({ rows }) => rows.map((row, index) => [row.teamId, index + 1]))
   );
@@ -84,6 +131,7 @@ export default async function TournamentStandingsPage({
     const pod = state.tournament.pods.find((candidate) => candidate.id === entry.podId);
     const isPodWinner = entry.qualifierType === "POD_WINNER";
     const wildCardPosition = wildCardPositionByTeamId.get(entry.teamId);
+    const clinch = clinchedTeamById.get(entry.teamId);
 
     return {
       id: entry.teamId,
@@ -96,9 +144,15 @@ export default async function TournamentStandingsPage({
         ? isPodWinner
           ? "Pod winner"
           : "Wild card"
-        : isPodWinner
-          ? "Projected pod winner"
-          : "Projected wild card",
+        : clinch?.clinchType === "POD_WINNER"
+          ? "Clinched pod winner"
+          : clinch?.clinchType === "WILD_CARD"
+            ? "Clinched wild card"
+            : clinch?.clinchType === "PLAYOFF_BERTH"
+              ? "Clinched playoff berth"
+              : isPodWinner
+                ? "Projected pod winner"
+                : "Projected wild card",
       typeTone: isPodWinner ? "winner" : "wildcard",
       wins: standing?.wins ?? 0,
       losses: standing?.losses ?? 0,
@@ -177,24 +231,26 @@ export default async function TournamentStandingsPage({
     holePoints: row.holePoints,
     holesWon: row.holesWon,
     totalNetBetterBall: row.cumulativeNetBetterBall,
-    markerCode: playoffFieldIsSet
-      ? podWinnerTeamIds.has(row.teamId)
-        ? "Y"
-        : seededTeamIds.has(row.teamId)
-          ? "X"
-          : "E"
-      : seededTeamIds.has(row.teamId)
-        ? "PB"
-        : null,
-    markerLabel: playoffFieldIsSet
-      ? podWinnerTeamIds.has(row.teamId)
-        ? "Clinched pod"
-        : seededTeamIds.has(row.teamId)
+    markerCode: clinchedPodWinnerTeamIds.has(row.teamId)
+      ? "Y"
+      : clinchedTeamIds.has(row.teamId)
+        ? "X"
+        : playoffFieldIsSet
+          ? "E"
+          : seededTeamIds.has(row.teamId)
+            ? "PB"
+            : null,
+    markerLabel: clinchedPodWinnerTeamIds.has(row.teamId)
+      ? "Clinched pod"
+      : clinchedTeamIds.has(row.teamId)
+        ? clinchedWildCardTeamIds.has(row.teamId)
           ? "Clinched wildcard"
-          : "Eliminated from playoff"
-      : seededTeamIds.has(row.teamId)
-        ? "Projected playoff field"
-        : null
+          : "Clinched playoff berth"
+        : playoffFieldIsSet
+          ? "Eliminated from playoff"
+          : seededTeamIds.has(row.teamId)
+            ? "Projected playoff field"
+            : null
   }));
   const standingsTabs = [
     {
@@ -216,33 +272,6 @@ export default async function TournamentStandingsPage({
       desktopLabel: "All teams"
     }
   ] as const;
-  const scenarioInput: ScenarioInput = {
-    pods: state.tournament.pods.map((pod) => ({
-      id: pod.id,
-      name: pod.name
-    })),
-    teams: state.tournament.teams
-      .map((team) => {
-        const podId = team.podMemberships[0]?.podId ?? "";
-        return {
-          id: team.id,
-          name: team.name,
-          podId,
-          podName: podNameById[podId] ?? "Pod"
-        };
-      })
-      .filter((team) => team.podId),
-    standings: state.standings,
-    matches: state.tournament.matches.map((match) => ({
-      id: match.id,
-      podId: match.podId,
-      stage: match.stage,
-      status: match.status,
-      roundLabel: match.roundLabel,
-      homeTeamId: match.homeTeamId,
-      awayTeamId: match.awayTeamId
-    }))
-  };
   const scenarioTeamIds = [
     ...new Set([
       ...state.wildCardProjection.map((entry) => entry.teamId),
@@ -302,8 +331,15 @@ export default async function TournamentStandingsPage({
                         .filter((row) => wildCardTeamIds.has(row.teamId))
                         .map((row) => row.teamId)}
                       markerLabel={playoffFieldIsSet ? "Clinched wildcard" : "Projected wild card"}
+                      markerLabels={wildCardMarkerLabels}
                       winnerTeamIds={rows[0] ? [rows[0].teamId] : []}
-                      winnerLabel={playoffFieldIsSet ? "Pod winner" : "Current pod leader"}
+                      winnerLabel={
+                        rows[0] && clinchedPodWinnerTeamIds.has(rows[0].teamId)
+                          ? "Clinched pod winner"
+                          : playoffFieldIsSet
+                            ? "Pod winner"
+                            : "Current pod leader"
+                      }
                     />
                   </SectionCard>
                 ))}
@@ -371,6 +407,30 @@ export default async function TournamentStandingsPage({
             >
               {hasPostedPodPlayResults ? (
                 <>
+                  {!playoffFieldIsSet && playoffClinches.clinchedTeams.length > 0 ? (
+                    <div className="mb-4 rounded-[20px] border border-[#b9d7c8] bg-[#edf7f1] px-4 py-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-base font-semibold text-[#174f38]">
+                            {playoffClinches.clinchedTeams.length} playoff spots are locked
+                          </p>
+                          <p className="mt-1 text-sm leading-5 text-ink/68">
+                            {clinchedPodWinnerTeamIds.size} pod winners
+                            {clinchedWildCardTeamIds.size > 0
+                              ? ` and ${clinchedWildCardTeamIds.size} wild card${clinchedWildCardTeamIds.size === 1 ? "" : "s"}`
+                              : ""}
+                            {playoffClinches.remainingBerths === 1
+                              ? " are in. The final pod-play match will settle the last wild card."
+                              : ` are in. ${playoffClinches.remainingBerths} berths remain.`}
+                          </p>
+                        </div>
+                        <span className="inline-flex shrink-0 rounded-full bg-pine px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-white">
+                          Clinched
+                        </span>
+                      </div>
+                    </div>
+                  ) : null}
+
                   <div className="overflow-hidden rounded-2xl border border-mist bg-white">
                     <div className="divide-y divide-mist/80">
                       {playoffPictureRows.map((entry) => (
