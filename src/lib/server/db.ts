@@ -1,10 +1,13 @@
 import { PrismaClient } from "@prisma/client";
+import { assertProductionDatabaseEnv } from "@/lib/server/production-db-guardrail";
 
 declare global {
   var __fairwayPrisma__: PrismaClient | undefined;
 }
 
 function resolveDatabaseUrl() {
+  assertProductionDatabaseEnv(process.env, { logger: console });
+
   const url =
     process.env.DATABASE_URL ??
     process.env.POSTGRES_PRISMA_URL ??
