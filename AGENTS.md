@@ -11,6 +11,20 @@ Canonical repo:
 
 These rules apply to Codex, OpenClaw, Claude, Telegram-driven agents, and any other automated coding path.
 
+## Shared AI Agent Rules
+
+- Prefer the smallest correct change that fully solves the task.
+- State material assumptions; for low-risk local details, proceed and note them.
+- Read the relevant files before editing.
+- Do not refactor, reformat, rename, or improve unrelated code.
+- Match the existing style and project patterns.
+- Remove only dead code introduced by your own change.
+- For bugs, reproduce the issue first when practical, then fix it.
+- Verify with the narrowest meaningful check: test, typecheck, lint, build, or
+  manual check.
+- If broader cleanup is useful but unrelated, mention it separately instead of
+  doing it.
+
 - Start every task from the canonical repo path above. Do not use the old `fairway-match` path for this project.
 - Before editing, run `git fetch origin main`, confirm the current branch is `main`, and confirm the working tree is clean.
 - If local `main` is behind `origin/main`, run `git pull --ff-only origin main` before editing.
