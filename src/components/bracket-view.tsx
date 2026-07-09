@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import type { CSSProperties } from "react";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import type { DecoratedBracketRound } from "@/lib/server/bracket";
 import { formatDateLabel } from "@/lib/server/formatting";
 
@@ -14,15 +13,6 @@ interface BracketViewProps {
     }
   >;
 }
-
-const CARD_WIDTH = 264;
-const CARD_HEIGHT = 156;
-const COLUMN_GAP = 78;
-const BOARD_PADDING_X = 28;
-const BOARD_PADDING_TOP = 84;
-const FIRST_ROUND_GAP = 28;
-const CONNECTOR_STROKE = "#b8923b";
-const CONNECTOR_WIDTH = 3;
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
@@ -81,99 +71,19 @@ function findInitialRoundIndex(rounds: BracketViewProps["rounds"], initialRound?
 }
 
 export function BracketView({ rounds, initialRound }: BracketViewProps) {
-  const boardRef = useRef<HTMLDivElement | null>(null);
   const [activeRoundIndex, setActiveRoundIndex] = useState(() =>
     findInitialRoundIndex(rounds, initialRound)
   );
   const activeRound = rounds[activeRoundIndex] ?? rounds[0];
   const activeRoundAdvancedCount = activeRound?.matches.filter((match) => match.winnerTeamId != null).length ?? 0;
 
-  const layouts = rounds.map((round, roundIndex) => {
-    let tops: number[];
-
-    if (roundIndex === 0) {
-      tops = round.matches.map((_, matchIndex) => BOARD_PADDING_TOP + matchIndex * (CARD_HEIGHT + FIRST_ROUND_GAP));
-    } else {
-      const previousCenters = rounds[roundIndex - 1]
-        ? layoutsSafe(rounds, roundIndex - 1).centers
-        : [];
-
-      tops = round.matches.map((_, matchIndex) => {
-        const firstCenter = previousCenters[matchIndex * 2] ?? BOARD_PADDING_TOP + CARD_HEIGHT / 2;
-        const secondCenter = previousCenters[matchIndex * 2 + 1] ?? firstCenter;
-        return (firstCenter + secondCenter) / 2 - CARD_HEIGHT / 2;
-      });
-    }
-
-    const centers = tops.map((top) => top + CARD_HEIGHT / 2);
-
-    return {
-      roundId: round.id,
-      left: BOARD_PADDING_X + roundIndex * (CARD_WIDTH + COLUMN_GAP),
-      tops,
-      centers
-    };
-  });
-
-  const boardHeight =
-    Math.max(
-      ...layouts.flatMap((layout) => layout.tops.map((top) => top + CARD_HEIGHT)),
-      BOARD_PADDING_TOP + CARD_HEIGHT
-    ) + 36;
-  const boardWidth =
-    BOARD_PADDING_X * 2 + rounds.length * CARD_WIDTH + Math.max(0, rounds.length - 1) * COLUMN_GAP;
-
-  const connectors = rounds.slice(0, -1).flatMap((_, roundIndex) => {
-    const currentLayout = layouts[roundIndex];
-    const nextLayout = layouts[roundIndex + 1];
-    const currentRight = currentLayout.left + CARD_WIDTH;
-    const nextLeft = nextLayout.left;
-    const connectorX = currentRight + (nextLeft - currentRight) / 2;
-
-    return nextLayout.centers.map((nextCenter, matchIndex) => {
-      const topSource = currentLayout.centers[matchIndex * 2] ?? nextCenter;
-      const bottomSource = currentLayout.centers[matchIndex * 2 + 1] ?? topSource;
-
-      return {
-        id: `connector-${roundIndex}-${matchIndex}`,
-        left: currentRight,
-        connectorX,
-        nextLeft,
-        topSource,
-        bottomSource,
-        nextCenter
-      };
-    });
-  });
-
   function jumpToRound(index: number) {
     setActiveRoundIndex(index);
-
-    const track = boardRef.current;
-    if (!track) {
-      return;
-    }
-
-    const nextLeft = BOARD_PADDING_X + index * (CARD_WIDTH + COLUMN_GAP) - 16;
-    track.scrollTo({
-      left: nextLeft,
-      behavior: "smooth"
-    });
-  }
-
-  function handleBoardScroll(event: React.UIEvent<HTMLDivElement>) {
-    const scrollLeft = event.currentTarget.scrollLeft;
-    const roundWidth = CARD_WIDTH + COLUMN_GAP;
-    const inferredIndex = clamp(Math.round((scrollLeft + 32) / roundWidth), 0, Math.max(0, rounds.length - 1));
-
-    if (inferredIndex !== activeRoundIndex) {
-      setActiveRoundIndex(inferredIndex);
-    }
   }
 
   return (
     <div className="text-ink">
-      <div className="md:hidden">
+      <div>
         <div
           className={
             rounds.length <= 3
@@ -257,134 +167,24 @@ export function BracketView({ rounds, initialRound }: BracketViewProps) {
           </section>
         ) : null}
       </div>
-
-      <div className="hidden rounded-[30px] border border-[#d7c28d] bg-[linear-gradient(180deg,#fbf7ed_0%,#f4ead1_100%)] p-4 shadow-[0_24px_56px_rgba(76,58,26,0.12)] sm:p-5 md:block">
-        <div className="flex items-center justify-between gap-3">
-        <div className="flex gap-2 overflow-x-auto pb-1">
-          {rounds.map((round, roundIndex) => (
-            <button
-              key={round.id}
-              type="button"
-              onClick={() => jumpToRound(roundIndex)}
-              className={`whitespace-nowrap rounded-full px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] transition ${
-                roundIndex === activeRoundIndex
-                  ? "bg-pine text-white shadow-[0_10px_24px_rgba(18,76,58,0.18)]"
-                  : "border border-[#d7c28d] bg-white text-ink/68"
-              }`}
-            >
-              {round.label}
-            </button>
-          ))}
-        </div>
-        <span className="shrink-0 text-[11px] font-semibold uppercase tracking-[0.18em] text-fairway/54">
-          Swipe bracket
-        </span>
-        </div>
-
-        <div
-          ref={boardRef}
-          onScroll={handleBoardScroll}
-          className="mt-4 overflow-x-auto rounded-[24px] border border-[#e4d6b5] bg-[linear-gradient(180deg,#f9f3e7_0%,#f4ead7_100%)] p-3 pb-2 snap-x snap-mandatory [scrollbar-color:#44524b_transparent] [scrollbar-width:thin]"
-        >
-          <div
-            className="relative"
-            style={{
-              width: boardWidth,
-              minHeight: boardHeight
-            }}
-          >
-            {rounds.map((round, roundIndex) => {
-              const layout = layouts[roundIndex];
-
-              return (
-                <section
-                  key={round.id}
-                  className="absolute top-0 snap-start"
-                  style={{
-                    left: layout.left,
-                    width: CARD_WIDTH
-                  }}
-                >
-                  <div className="mb-4 text-center">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-fairway/58">
-                      {round.stage}
-                    </p>
-                    <h2 className="mt-1.5 text-[1.5rem] font-semibold text-ink">{round.label}</h2>
-                    <p className="mt-0.5 text-sm text-ink/58">
-                      {round.matches.length} matchup{round.matches.length === 1 ? "" : "s"}
-                    </p>
-                  </div>
-
-                  {round.matches.map((match, matchIndex) => (
-                    <BracketMatchCard
-                      key={match.id}
-                      match={match}
-                      desktopPosition={{
-                        top: layout.tops[matchIndex],
-                        width: CARD_WIDTH,
-                        minHeight: CARD_HEIGHT
-                      }}
-                    />
-                  ))}
-                </section>
-              );
-            })}
-
-            {connectors.map((connector) => (
-              <svg
-                key={connector.id}
-                className="pointer-events-none absolute inset-0 overflow-visible"
-                width={boardWidth}
-                height={boardHeight}
-                viewBox={`0 0 ${boardWidth} ${boardHeight}`}
-                fill="none"
-                aria-hidden="true"
-              >
-                <path
-                  d={`M ${connector.left} ${connector.topSource} H ${connector.connectorX} V ${connector.nextCenter} H ${connector.nextLeft}`}
-                  stroke={CONNECTOR_STROKE}
-                  strokeWidth={CONNECTOR_WIDTH}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  opacity="0.95"
-                />
-                <path
-                  d={`M ${connector.left} ${connector.bottomSource} H ${connector.connectorX} V ${connector.nextCenter} H ${connector.nextLeft}`}
-                  stroke="#d8c28d"
-                  strokeWidth={CONNECTOR_WIDTH}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  opacity="0.55"
-                />
-              </svg>
-            ))}
-          </div>
-        </div>
-      </div>
     </div>
   );
 }
 
 function BracketMatchCard({
   match,
-  matchNumber,
-  desktopPosition
+  matchNumber
 }: {
   match: BracketViewProps["rounds"][number]["matches"][number];
   matchNumber?: number;
-  desktopPosition?: CSSProperties;
 }) {
   const homeWinner = match.winnerTeamId != null && match.winnerTeamId === match.homeTeamId;
   const awayWinner = match.winnerTeamId != null && match.winnerTeamId === match.awayTeamId;
-  const isPositioned = Boolean(desktopPosition);
 
   return (
     <Link
       href={match.href}
-      className={`block rounded-[16px] border border-[#d8cab0] bg-white p-3 shadow-[0_8px_20px_rgba(76,58,26,0.08)] transition hover:-translate-y-0.5 hover:border-[#bca36a] hover:shadow-[0_12px_26px_rgba(76,58,26,0.12)] ${
-        isPositioned ? "absolute" : ""
-      }`}
-      style={desktopPosition}
+      className="block rounded-[16px] border border-[#d8cab0] bg-white p-3 shadow-[0_8px_20px_rgba(76,58,26,0.08)] transition hover:-translate-y-0.5 hover:border-[#bca36a] hover:shadow-[0_12px_26px_rgba(76,58,26,0.12)]"
     >
       <div className="flex items-start justify-between gap-3">
         <div>
@@ -392,11 +192,11 @@ function BracketMatchCard({
             {matchNumber ? `Match ${matchNumber} - ` : ""}
             {formatDateLabel(match.scheduledAt)}
           </p>
-          <h3 className="mt-1 text-[1.08rem] font-semibold leading-tight text-ink md:text-[1.3rem]">
+          <h3 className="mt-1 text-[1.08rem] font-semibold leading-tight text-ink">
             {match.label}
           </h3>
         </div>
-        <span className={`rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] md:px-3 md:text-[11px] ${statusTone(match.status)}`}>
+        <span className={`rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] ${statusTone(match.status)}`}>
           {statusLabel(match.status)}
         </span>
       </div>
@@ -472,33 +272,4 @@ function TeamRow({
       </span>
     </div>
   );
-}
-
-function layoutsSafe(
-  rounds: BracketViewProps["rounds"],
-  roundIndex: number
-): { tops: number[]; centers: number[] } {
-  const tops =
-    roundIndex === 0
-      ? rounds[0].matches.map((_, matchIndex) => BOARD_PADDING_TOP + matchIndex * (CARD_HEIGHT + FIRST_ROUND_GAP))
-      : [];
-
-  if (roundIndex === 0) {
-    return {
-      tops,
-      centers: tops.map((top) => top + CARD_HEIGHT / 2)
-    };
-  }
-
-  const previous = layoutsSafe(rounds, roundIndex - 1);
-  const nextTops = rounds[roundIndex].matches.map((_, matchIndex) => {
-    const firstCenter = previous.centers[matchIndex * 2] ?? BOARD_PADDING_TOP + CARD_HEIGHT / 2;
-    const secondCenter = previous.centers[matchIndex * 2 + 1] ?? firstCenter;
-    return (firstCenter + secondCenter) / 2 - CARD_HEIGHT / 2;
-  });
-
-  return {
-    tops: nextTops,
-    centers: nextTops.map((top) => top + CARD_HEIGHT / 2)
-  };
 }
