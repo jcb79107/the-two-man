@@ -8,10 +8,13 @@ export function validateSubmittedScoreRows(input: {
   playerIds: string[];
   holeTemplate: Array<{ holeNumber: number }>;
   action: "saveDraft" | "publish";
+  stage?: "POD_PLAY" | "QUARTERFINAL" | "SEMIFINAL" | "CHAMPIONSHIP";
 }) {
   const allowedHoleNumbers = new Set(input.holeTemplate.map((hole) => hole.holeNumber));
   const allowedPlayerIds = new Set(input.playerIds);
   const seenHoleNumbers = new Set<number>();
+  const completedHoleNumbers = new Set<number>();
+  const isPlayoffPublish = input.action === "publish" && input.stage && input.stage !== "POD_PLAY";
   const persistedRows: Array<{
     id: string;
     matchId: string;
@@ -53,7 +56,7 @@ export function validateSubmittedScoreRows(input: {
       const rawValue = values[playerId];
 
       if (rawValue == null || rawValue === "") {
-        if (input.action === "publish") {
+        if (input.action === "publish" && !isPlayoffPublish) {
           throw new Error("All 18 holes must be filled in for every player before publishing.");
         }
 
@@ -74,9 +77,37 @@ export function validateSubmittedScoreRows(input: {
         grossScore
       });
     }
+
+    const completedScoresForHole = input.playerIds.filter((playerId) => {
+      const rawValue = values[playerId];
+      return rawValue != null && rawValue !== "";
+    }).length;
+
+    if (isPlayoffPublish && completedScoresForHole > 0 && completedScoresForHole < input.playerIds.length) {
+      throw new Error("Every completed playoff hole needs all four gross scores before publishing.");
+    }
+
+    if (completedScoresForHole === input.playerIds.length) {
+      completedHoleNumbers.add(holeNumber);
+    }
   }
 
-  if (input.action === "publish") {
+  if (input.action === "publish" && isPlayoffPublish) {
+    const orderedCompletedHoles = [...completedHoleNumbers].sort((left, right) => left - right);
+    const expectedHoleNumbers = input.holeTemplate.map((hole) => hole.holeNumber);
+
+    if (orderedCompletedHoles.length === 0) {
+      throw new Error("Enter at least one completed playoff hole before publishing.");
+    }
+
+    const hasSkippedHole = orderedCompletedHoles.some(
+      (holeNumber, index) => holeNumber !== expectedHoleNumbers[index]
+    );
+
+    if (hasSkippedHole) {
+      throw new Error("Playoff scorecards must be completed in hole order before publishing.");
+    }
+  } else if (input.action === "publish") {
     const missingHoleNumbers = input.holeTemplate
       .map((hole) => hole.holeNumber)
       .filter((holeNumber) => !seenHoleNumbers.has(holeNumber));
@@ -93,8 +124,26 @@ export function buildPublishedHoleScores(input: {
   playerIds: string[];
   holeTemplate: Array<{ holeNumber: number }>;
   persistedRows: Array<{ playerId: string; holeNumber: number; grossScore: number }>;
+  stage?: "POD_PLAY" | "QUARTERFINAL" | "SEMIFINAL" | "CHAMPIONSHIP";
 }) {
-  return input.holeTemplate.map((hole) => ({
+  const completedHoleNumbers = new Set(
+    input.holeTemplate
+      .map((hole) => hole.holeNumber)
+      .filter(
+        (holeNumber) =>
+          input.playerIds.every((playerId) =>
+            input.persistedRows.some(
+              (row) => row.playerId === playerId && row.holeNumber === holeNumber
+            )
+          )
+      )
+  );
+  const holeTemplate =
+    input.stage && input.stage !== "POD_PLAY"
+      ? input.holeTemplate.filter((hole) => completedHoleNumbers.has(hole.holeNumber))
+      : input.holeTemplate;
+
+  return holeTemplate.map((hole) => ({
     holeNumber: hole.holeNumber,
     scores: Object.fromEntries(
       input.playerIds.map((playerId) => {

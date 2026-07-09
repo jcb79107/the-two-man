@@ -34,6 +34,7 @@ function buildPublicSlug(label: string, matchId: string) {
 function buildResultSummary(match: {
   id: string;
   status: string;
+  stage: string;
   winningTeamId: string | null;
   publicScorecardSlug: string;
   officialResultSnapshot?: unknown;

@@ -2,6 +2,7 @@ import { nanoid } from "nanoid";
 import { NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { buildMatchPlayerSnapshots, scoreMatch } from "@/lib/scoring/engine";
+import { getMatchPlayDecision } from "@/lib/scoring/match-play";
 import type { MatchPlayerInput } from "@/lib/scoring/types";
 import { isAdminAuthenticated } from "@/lib/server/admin-auth";
 import { syncTournamentBracketTx } from "@/lib/server/bracket-sync";
@@ -529,7 +530,8 @@ export async function POST(
         action,
         playerIds,
         holeTemplate,
-        scores
+        scores,
+        stage: match.stage
       }).map((row) => ({
         ...row,
         id: `${match.id}-${row.playerId}-hole-${row.holeNumber}`,
@@ -567,24 +569,37 @@ export async function POST(
             }))
           }));
 
+          const publishedHoleScores = buildPublishedHoleScores({
+            playerIds,
+            holeTemplate,
+            persistedRows,
+            stage: match.stage
+          });
           const fullScorecard = scoreMatch({
             players: inputs,
-            holeScores: buildPublishedHoleScores({
-              playerIds,
-              holeTemplate,
-              persistedRows
-            })
+            holeScores: publishedHoleScores
           });
-
-          const resolvedWinningTeamId = fullScorecard.winningTeamId ?? playoffWinnerTeamId;
+          const matchPlayDecision = getMatchPlayDecision({
+            teamSummaries: fullScorecard.teamSummaries,
+            playedHoleCount: publishedHoleScores.length,
+            totalHoleCount: holeTemplate.length,
+            winningTeamId: playoffWinnerTeamId
+          });
+          const resolvedWinningTeamId =
+            match.stage === "POD_PLAY"
+              ? fullScorecard.winningTeamId
+              : matchPlayDecision.winningTeamId;
 
           if (
             match.stage !== "POD_PLAY" &&
-            (!resolvedWinningTeamId ||
+            (!matchPlayDecision.isComplete ||
+              !resolvedWinningTeamId ||
               ![homeTeam.id, awayTeam.id].includes(resolvedWinningTeamId))
           ) {
             throw new Error(
-              "Playoff matches cannot finish tied. Use the tiebreaker and then choose the winner before publishing."
+              matchPlayDecision.needsTiebreaker
+                ? "Playoff matches cannot finish tied. Use the tiebreaker and then choose the winner before publishing."
+                : "Playoff matches can only be published once the match is closed out or all 18 holes are complete."
             );
           }
 

@@ -1,6 +1,7 @@
 import "server-only";
 
 import type { TeamMatchSummary } from "@/lib/scoring/types";
+import { formatMatchPlayResultLabel } from "@/lib/scoring/match-play";
 import { applyPublicScorecardCorrections } from "@/lib/server/public-scorecard-corrections";
 import { decorateBracketRounds } from "@/lib/server/bracket";
 import { db } from "@/lib/server/db";
@@ -102,10 +103,22 @@ function decoratePlayoffSeeds(
 function buildResultLabel(
   teamSummaries: TeamMatchSummary[],
   teamNames: Record<string, string>,
-  winningTeamId?: string | null
+  winningTeamId?: string | null,
+  matchStage?: string,
+  playedHoleCount?: number | null
 ) {
   if (teamSummaries.length !== 2) {
     return null;
+  }
+
+  if (matchStage && matchStage !== "POD_PLAY") {
+    return formatMatchPlayResultLabel({
+      teamSummaries,
+      teamNames,
+      winningTeamId,
+      playedHoleCount: playedHoleCount ?? 18,
+      totalHoleCount: 18
+    });
   }
 
   const [first, second] = teamSummaries;
@@ -153,6 +166,7 @@ function buildTeamSummariesFromMatch(match: {
   id: string;
   publicScorecardSlug: string;
   status: string;
+  stage: string;
   winningTeamId: string | null;
   homeTeamId: string | null;
   awayTeamId: string | null;
@@ -577,7 +591,9 @@ export async function getPublicTournamentState(slug: string) {
       resultLabel: buildResultLabel(
         summariesByMatchId.get(match.id)?.teamSummaries ?? [],
         teamNames,
-        match.winningTeamId
+        match.winningTeamId,
+        match.stage,
+        summariesByMatchId.get(match.id)?.holes.length ?? null
       )
     })
   );
@@ -899,7 +915,9 @@ export async function getPublicMatchState(slug: string, matchId: string) {
       resultLabel: buildResultLabel(
         officialScorecard?.teamSummaries ?? computed?.teamSummaries ?? [],
         tournamentState.teamNames,
-        correctedMatch.winningTeamId
+        correctedMatch.winningTeamId,
+        correctedMatch.stage,
+        (officialScorecard ?? computed)?.holes.length ?? null
       )
     }),
     playedOn,

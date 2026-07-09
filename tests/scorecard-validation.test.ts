@@ -37,6 +37,7 @@ describe("scorecard submission validation", () => {
     expect(() =>
       validateSubmittedScoreRows({
         action: "publish",
+        stage: "POD_PLAY",
         playerIds,
         holeTemplate,
         scores: holeTemplate.slice(0, 17).map((hole) => ({
@@ -45,6 +46,44 @@ describe("scorecard submission validation", () => {
         }))
       })
     ).toThrow("All 18 holes must be submitted before publishing.");
+  });
+
+  it("allows playoff publish payloads to stop after completed holes", () => {
+    const persistedRows = validateSubmittedScoreRows({
+      action: "publish",
+      stage: "QUARTERFINAL",
+      playerIds,
+      holeTemplate,
+      scores: holeTemplate.slice(0, 15).map((hole) => ({
+        holeNumber: hole.holeNumber,
+        scores: { p1: "4", p2: "5", p3: "5", p4: "6" }
+      }))
+    });
+
+    const published = buildPublishedHoleScores({
+      playerIds,
+      holeTemplate,
+      persistedRows,
+      stage: "QUARTERFINAL"
+    });
+
+    expect(published).toHaveLength(15);
+    expect(published.at(-1)?.holeNumber).toBe(15);
+  });
+
+  it("rejects playoff publish payloads with skipped holes", () => {
+    expect(() =>
+      validateSubmittedScoreRows({
+        action: "publish",
+        stage: "SEMIFINAL",
+        playerIds,
+        holeTemplate,
+        scores: [
+          { holeNumber: 1, scores: { p1: "4", p2: "5", p3: "4", p4: "5" } },
+          { holeNumber: 3, scores: { p1: "4", p2: "5", p3: "4", p4: "5" } }
+        ]
+      })
+    ).toThrow("Playoff scorecards must be completed in hole order before publishing.");
   });
 
   it("builds published hole scores aligned to the template", () => {

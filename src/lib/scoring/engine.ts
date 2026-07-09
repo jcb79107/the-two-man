@@ -90,6 +90,7 @@ function buildPlayerSnapshot(
 
 function validateScoringInput(input: MatchScoringInput): void {
   const teamIds = [...new Set(input.players.map((player) => player.teamId))];
+  const scoredHoleNumbers = new Set(input.holeScores.map((hole) => hole.holeNumber));
 
   if (teamIds.length !== 2) {
     throw new Error("Match scoring requires exactly two teams.");
@@ -99,8 +100,17 @@ function validateScoringInput(input: MatchScoringInput): void {
     throw new Error("Match scoring requires exactly four player entries.");
   }
 
-  if (input.players.some((player) => player.holes.length !== input.holeScores.length)) {
-    throw new Error("Each player tee must define the same number of holes as the scorecard.");
+  if (input.holeScores.length === 0) {
+    throw new Error("Match scoring requires at least one scored hole.");
+  }
+
+  if (
+    input.players.some((player) => {
+      const playerHoleNumbers = new Set(player.holes.map((hole) => hole.holeNumber));
+      return [...scoredHoleNumbers].some((holeNumber) => !playerHoleNumbers.has(holeNumber));
+    })
+  ) {
+    throw new Error("Each player tee must define every scored hole.");
   }
 }
 

@@ -142,6 +142,12 @@ export interface PrivateMatchView {
           winningTeamId: string | null;
           playerNetScores: Record<string, number | null>;
         }>;
+        holeMeta?: Array<{
+          holeNumber: number;
+          par: number;
+          strokeIndex: number;
+          yardage: number | null;
+        }>;
       }
     | null;
 }
@@ -364,7 +370,8 @@ export async function getPrivateMatchRecordByToken(token: string): Promise<Priva
         ? {
             winningTeamId: scorecard.winningTeamId,
             teamSummaries: scorecard.teamSummaries,
-            holes: scorecard.holes
+            holes: scorecard.holes,
+            holeMeta: "holeMeta" in scorecard ? scorecard.holeMeta : undefined
           }
         : null
     };

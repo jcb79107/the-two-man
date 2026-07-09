@@ -14,6 +14,7 @@ function buildMatch() {
   return {
     id: "snapshot-match",
     publicScorecardSlug: "snapshot-match",
+    stage: "POD_PLAY",
     status: "FINAL",
     winningTeamId: "team-a",
     homeTeamId: "team-a",
@@ -123,6 +124,39 @@ describe("official result snapshots", () => {
     expect(frozen?.teamSummaries.find((summary) => summary.teamId === "team-b")).toMatchObject({
       totalPoints: 1.5,
       resultCode: "LOSS"
+    });
+  });
+
+  it("freezes a playoff result once match play is closed out before 18", () => {
+    const fullHoles = Array.from({ length: 18 }, (_, index) => ({
+      holeNumber: index + 1,
+      par: 4,
+      strokeIndex: index + 1
+    }));
+    const baseMatch = buildMatch();
+    const match = {
+      ...baseMatch,
+      stage: "QUARTERFINAL",
+      winningTeamId: "team-a",
+      playerSelections: baseMatch.playerSelections.map((selection) => ({
+        ...selection,
+        tee: { holes: fullHoles }
+      })),
+      holeScores: fullHoles.slice(0, 15).flatMap((hole) => [
+        { holeNumber: hole.holeNumber, playerId: "a1", grossScore: 4 },
+        { holeNumber: hole.holeNumber, playerId: "a2", grossScore: 5 },
+        { holeNumber: hole.holeNumber, playerId: "b1", grossScore: hole.holeNumber <= 4 ? 4 : 5 },
+        { holeNumber: hole.holeNumber, playerId: "b2", grossScore: 6 }
+      ])
+    };
+    const snapshot = computeOfficialResultSnapshotForMatch(match);
+
+    expect(snapshot?.winningTeamId).toBe("team-a");
+    expect(snapshot?.holes).toHaveLength(15);
+    expect(snapshot?.holeMeta).toHaveLength(15);
+    expect(snapshot?.teamSummaries.find((summary) => summary.teamId === "team-a")).toMatchObject({
+      holesWon: 11,
+      resultCode: "WIN"
     });
   });
 });

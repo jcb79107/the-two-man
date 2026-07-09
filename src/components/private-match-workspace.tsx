@@ -3,6 +3,7 @@
 import { Fragment, useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { ROUTES } from "@/lib/api/routes";
+import { getMatchPlayDecision } from "@/lib/scoring/match-play";
 import { MatchScorecardSummary, type MatchScorecardSummaryTeam } from "@/components/match-scorecard-summary";
 import { PublicMatchScorecard } from "@/components/public-match-scorecard";
 import { RulesJudgeIcon } from "@/components/rules-judge-icon";
@@ -325,14 +326,11 @@ export function PrivateMatchWorkspace({
     data.players.every((player) => hole.scores[player.playerId] !== "")
   ).length;
   const isScorecardComplete = scoreRows.length > 0 && completedHoleCount === scoreRows.length;
-  const scoreProgressLabel =
-    scoreRows.length > 0 ? `${completedHoleCount}/${scoreRows.length} holes filled` : "No holes yet";
+  const isPlayoffMatch = data.match.stage !== "POD_PLAY";
   const resolvedWinningTeamId = data.match.winningTeamId ?? data.scorecard?.winningTeamId ?? null;
   const winningSummary = data.scorecard?.teamSummaries.find(
     (summary) => summary.teamId === resolvedWinningTeamId || summary.resultCode === "WIN"
   );
-  const requiresPlayoffWinnerSelection =
-    data.match.stage !== "POD_PLAY" && data.scorecard != null && data.scorecard.winningTeamId == null;
   const allPlayersEndorsed = data.players.every((player) => playerEndorsements[player.playerId]);
   const missingHoleTees = (selectedCourse?.tees ?? []).filter(
     (tee) => setupPlayers.some((player) => player.teeId === tee.id) && tee.holes.length !== 18
@@ -378,6 +376,87 @@ export function PrivateMatchWorkspace({
   const baseHoleMetaByNumber = new Map(
     (holesByPlayerId.get(data.players[0]?.playerId ?? "") ?? []).map((hole) => [hole.holeNumber, hole])
   );
+  const completedScoreRows = scoreRows.filter((hole) =>
+    data.players.every((player) => parseEnteredScore(hole.scores[player.playerId]) != null)
+  );
+  const localPlayoffSummaries = teamGroups.map((team) => ({
+    teamId: team.teamId,
+    totalPoints: 0,
+    holesWon: 0,
+    betterBallGrossTotal: 0,
+    betterBallNetTotal: 0,
+    resultCode: "TIE" as const
+  }));
+
+  for (const hole of completedScoreRows) {
+    const netByTeam = teamGroups.map((team) => {
+      const playerNets = team.players
+        .map((player) => {
+          const gross = parseEnteredScore(hole.scores[player.playerId]);
+          const strokes = previewByPlayerId.get(player.playerId)?.strokesByHole[hole.holeNumber] ?? 0;
+
+          return gross == null ? null : gross - strokes;
+        })
+        .filter((value): value is number => value != null);
+
+      return {
+        teamId: team.teamId,
+        net: playerNets.length > 0 ? Math.min(...playerNets) : null
+      };
+    });
+    const [first, second] = netByTeam;
+
+    if (!first || !second || first.net == null || second.net == null) {
+      continue;
+    }
+
+    const firstSummary = localPlayoffSummaries.find((summary) => summary.teamId === first.teamId);
+    const secondSummary = localPlayoffSummaries.find((summary) => summary.teamId === second.teamId);
+
+    if (firstSummary) {
+      firstSummary.betterBallNetTotal += first.net;
+    }
+
+    if (secondSummary) {
+      secondSummary.betterBallNetTotal += second.net;
+    }
+
+    if (first.net < second.net) {
+      if (firstSummary) {
+        firstSummary.totalPoints += 1;
+        firstSummary.holesWon += 1;
+      }
+    } else if (second.net < first.net) {
+      if (secondSummary) {
+        secondSummary.totalPoints += 1;
+        secondSummary.holesWon += 1;
+      }
+    } else {
+      if (firstSummary) {
+        firstSummary.totalPoints += 0.5;
+      }
+      if (secondSummary) {
+        secondSummary.totalPoints += 0.5;
+      }
+    }
+  }
+
+  const localPlayoffDecision = getMatchPlayDecision({
+    teamSummaries: localPlayoffSummaries,
+    playedHoleCount: completedScoreRows.length,
+    totalHoleCount: scoreRows.length || 18,
+    winningTeamId: playoffWinnerTeamId || null
+  });
+  const requiresPlayoffWinnerSelection = isPlayoffMatch && localPlayoffDecision.needsTiebreaker;
+  const isScorecardPublishable =
+    isScorecardComplete ||
+    (isPlayoffMatch && (localPlayoffDecision.isComplete || localPlayoffDecision.needsTiebreaker));
+  const scoreProgressLabel =
+    scoreRows.length > 0
+      ? isPlayoffMatch && localPlayoffDecision.leaderTeamId && !localPlayoffDecision.isComplete
+        ? `${completedHoleCount}/${scoreRows.length} holes filled • ${localPlayoffDecision.lead} up`
+        : `${completedHoleCount}/${scoreRows.length} holes filled`
+      : "No holes yet";
   const handicapStrokeSummaries =
     data.setupPreview?.players.map((player) => ({
       ...player,
@@ -628,9 +707,12 @@ export function PrivateMatchWorkspace({
           const scoredHolesByNumber = new Map(
             data.scorecard.holes.map((hole) => [hole.holeNumber, hole])
           );
-          const allHoleMeta = Array.from(baseHoleMetaByNumber.values()).sort(
-            (left, right) => left.holeNumber - right.holeNumber
-          );
+          const allHoleMeta =
+            data.scorecard?.holeMeta && data.scorecard.holeMeta.length > 0
+              ? data.scorecard.holeMeta
+              : Array.from(baseHoleMetaByNumber.values()).sort(
+                  (left, right) => left.holeNumber - right.holeNumber
+                );
           const courseLocation = selectedCourse
             ? [selectedCourse.city, selectedCourse.state].filter(Boolean).join(", ") || "Course TBD"
             : "Course TBD";
@@ -2253,7 +2335,7 @@ export function PrivateMatchWorkspace({
             </div>
           </div>
 
-          {!isScorecardReadOnly && (canAdminOverridePostedCard || isScorecardComplete) ? (
+          {!isScorecardReadOnly && (canAdminOverridePostedCard || isScorecardPublishable) ? (
             <div className="mt-8">
               <div className="flex flex-col gap-3 rounded-[24px] border border-white/70 bg-[rgba(255,252,247,0.96)] p-4 pb-[calc(env(safe-area-inset-bottom)+1rem)] shadow-[0_18px_40px_rgba(17,32,23,0.14)] backdrop-blur sm:flex-row sm:items-center sm:justify-between sm:pb-4">
                 {canAdminOverridePostedCard ? (

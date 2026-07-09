@@ -210,6 +210,35 @@ describe("match scoring", () => {
     expect(teamB?.resultCode).toBe("LOSS");
   });
 
+  it("can score a playoff scorecard that ends before all template holes are played", () => {
+    const fullHoles = Array.from({ length: 18 }, (_, index) => ({
+      holeNumber: index + 1,
+      par: 4,
+      strokeIndex: index + 1
+    }));
+    const result = scoreMatch({
+      players: buildThreeHoleInput().players.map((player) => ({
+        ...player,
+        holes: fullHoles
+      })),
+      holeScores: fullHoles.slice(0, 15).map((hole) => ({
+        holeNumber: hole.holeNumber,
+        scores: {
+          a1: 4,
+          a2: 5,
+          b1: 5,
+          b2: 6
+        }
+      }))
+    });
+
+    expect(result.holes).toHaveLength(15);
+    expect(result.teamSummaries.find((summary) => summary.teamId === "team-a")).toMatchObject({
+      holesWon: 15,
+      resultCode: "WIN"
+    });
+  });
+
   it("caps stroke allocation to one per hole across an 18-hole round", () => {
     const fullHoles = Array.from({ length: 18 }, (_, index) => ({
       holeNumber: index + 1,

@@ -1,5 +1,6 @@
 import type { Prisma } from "@prisma/client";
 import { scoreForfeit, scoreMatch } from "@/lib/scoring/engine";
+import { getMatchPlayDecision } from "@/lib/scoring/match-play";
 import type {
   PlayerHandicapSnapshot,
   TeamMatchSummary
@@ -58,6 +59,7 @@ type MatchHole = {
 type MatchForOfficialResult = {
   id: string;
   publicScorecardSlug: string;
+  stage: string;
   status: string;
   winningTeamId: string | null;
   homeTeamId: string | null;
@@ -259,13 +261,29 @@ export function computeOfficialResultSnapshotForMatch(
     }
   }
 
-  const hasCompleteScores = Array.from(scoresByHole.values()).every((scores) =>
-    correctedMatch.playerSelections.every((selection) => typeof scores[selection.playerId] === "number")
-  );
+  const scoredHoleNumbers = holesTemplate
+    .map((hole) => hole.holeNumber)
+    .filter((holeNumber) => {
+      const scores = scoresByHole.get(holeNumber);
 
-  if (!hasCompleteScores) {
+      return (
+        scores != null &&
+        correctedMatch.playerSelections.every((selection) => typeof scores[selection.playerId] === "number")
+      );
+    });
+  const hasCompleteScores = scoredHoleNumbers.length === holesTemplate.length;
+  const isPlayoffMatch = correctedMatch.stage !== "POD_PLAY";
+
+  if (!hasCompleteScores && !isPlayoffMatch) {
     return null;
   }
+
+  if (isPlayoffMatch && scoredHoleNumbers.length === 0) {
+    return null;
+  }
+
+  const scoredHoleNumberSet = new Set(isPlayoffMatch ? scoredHoleNumbers : holesTemplate.map((hole) => hole.holeNumber));
+  const scoredHolesTemplate = holesTemplate.filter((hole) => scoredHoleNumberSet.has(hole.holeNumber));
 
   const scored = scoreMatch({
     players: correctedMatch.playerSelections.map((selection) => ({
@@ -284,12 +302,23 @@ export function computeOfficialResultSnapshotForMatch(
         strokeIndex: hole.strokeIndex
       }))
     })),
-    holeScores: holesTemplate.map((hole) => ({
+    holeScores: scoredHolesTemplate.map((hole) => ({
       holeNumber: hole.holeNumber,
       scores: scoresByHole.get(hole.holeNumber) ?? {}
     }))
   });
-  const holeMeta = holesTemplate.map((hole) => ({
+  const matchPlayDecision = getMatchPlayDecision({
+    teamSummaries: scored.teamSummaries,
+    playedHoleCount: scoredHolesTemplate.length,
+    totalHoleCount: holesTemplate.length,
+    winningTeamId: correctedMatch.winningTeamId
+  });
+
+  if (isPlayoffMatch && !matchPlayDecision.isComplete) {
+    return null;
+  }
+
+  const holeMeta = scoredHolesTemplate.map((hole) => ({
     holeNumber: hole.holeNumber,
     par: hole.par,
     strokeIndex: hole.strokeIndex,
@@ -315,6 +344,7 @@ export function computeOfficialResultSnapshotForMatch(
     )
   };
   const officialWinningTeamId =
+    (isPlayoffMatch ? matchPlayDecision.winningTeamId : null) ??
     correctedMatch.winningTeamId ??
     officialScorecard.teamSummaries.find((summary) => summary.resultCode === "WIN")?.teamId ??
     null;
