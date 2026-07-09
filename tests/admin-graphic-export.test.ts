@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import { Resvg } from "@resvg/resvg-js";
 
 const routePath = path.join(process.cwd(), "app", "api", "admin", "graphics", "[id]", "route.ts");
+const generatorPath = path.join(process.cwd(), "src", "components", "admin-instagram-graphic-generator.tsx");
 const fontPath = path.join(process.cwd(), "public", "two-man-export-font.ttf");
 
 describe("admin graphic PNG export", () => {
@@ -21,6 +22,17 @@ describe("admin graphic PNG export", () => {
     expect(routeSource).toContain("loadSystemFonts: false");
     expect(routeSource).toContain("X-Two-Man-Graphic-Renderer");
     expect(routeSource).not.toContain('import("sharp")');
+  });
+
+  it("keeps the thin text variant wired through preview and export", () => {
+    const routeSource = readFileSync(routePath, "utf8");
+    const generatorSource = readFileSync(generatorPath, "utf8");
+
+    expect(routeSource).toContain('const THIN_TEXT_VARIANT_PARAM = "thin-text"');
+    expect(routeSource).toContain("X-Two-Man-Graphic-Variant");
+    expect(generatorSource).toContain("Thin text");
+    expect(generatorSource).toContain("variant");
+    expect(generatorSource).toContain("GRAPHIC_TEXT_WEIGHTS");
   });
 
   it("renders real PNG text using the bundled export font", () => {

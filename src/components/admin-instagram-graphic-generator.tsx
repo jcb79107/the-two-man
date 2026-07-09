@@ -19,11 +19,25 @@ const AWAY_WIN = "#e7def5";
 const HOME_STROKE = "#17533d";
 const AWAY_STROKE = "#6a4d90";
 const LOGO_SRC = "/two-man-main-logo.png";
+const THIN_TEXT_VARIANT_PARAM = "thin-text";
+const FONT_STACK = "Avenir Next, Helvetica Neue, Arial, sans-serif";
 
 type RecapHole = AdminGraphicRecap["holes"][number];
 type SegmentKey = "front" | "back";
 type TeamSide = "home" | "away";
 type ScoreShape = "none" | "circle" | "double-circle" | "square" | "double-square";
+type GraphicTextVariant = "standard" | "thin";
+type GraphicTextWeightKey =
+  | "title"
+  | "subtitle"
+  | "sectionLabel"
+  | "tableHeader"
+  | "tableText"
+  | "yardage"
+  | "score"
+  | "statName"
+  | "statLabel"
+  | "statValue";
 type ScorecardColumn =
   | {
       kind: "hole";
@@ -40,6 +54,37 @@ type ScorecardColumn =
       homeNet: number;
       awayNet: number;
     };
+
+const GRAPHIC_TEXT_WEIGHTS: Record<GraphicTextVariant, Record<GraphicTextWeightKey, number>> = {
+  standard: {
+    title: 700,
+    subtitle: 600,
+    sectionLabel: 700,
+    tableHeader: 700,
+    tableText: 650,
+    yardage: 600,
+    score: 650,
+    statName: 700,
+    statLabel: 650,
+    statValue: 700
+  },
+  thin: {
+    title: 500,
+    subtitle: 400,
+    sectionLabel: 500,
+    tableHeader: 500,
+    tableText: 400,
+    yardage: 400,
+    score: 500,
+    statName: 500,
+    statLabel: 400,
+    statValue: 500
+  }
+};
+
+function canvasFont(variant: GraphicTextVariant, key: GraphicTextWeightKey, size: number) {
+  return `${GRAPHIC_TEXT_WEIGHTS[variant][key]} ${size}px ${FONT_STACK}`;
+}
 
 function formatPoints(value: number) {
   return Number.isInteger(value) ? String(value) : value.toFixed(1);
@@ -179,8 +224,10 @@ function matchInfoLine(recap: AdminGraphicRecap) {
   return [formatShortDate(recap.playedOn), recap.courseName, recap.courseMeta].filter(Boolean).join(" / ");
 }
 
-function downloadFilename(recap: AdminGraphicRecap) {
-  return `two-man-scorecard-recap-${cleanFilePart(recap.homeTeam.name)}-${cleanFilePart(recap.awayTeam.name)}.png`;
+function downloadFilename(recap: AdminGraphicRecap, textVariant: GraphicTextVariant) {
+  const variantSuffix = textVariant === "thin" ? "-thin-text" : "";
+
+  return `two-man-scorecard-recap-${cleanFilePart(recap.homeTeam.name)}-${cleanFilePart(recap.awayTeam.name)}${variantSuffix}.png`;
 }
 
 function cleanFilePart(value: string) {
@@ -386,8 +433,13 @@ function measureCanvasText(context: CanvasRenderingContext2D, text: string, font
   return width;
 }
 
-function statsCardWidthForCanvas(context: CanvasRenderingContext2D, teamName: string, winner: boolean) {
-  const nameWidth = measureCanvasText(context, teamName, "700 20px Avenir Next, Helvetica Neue, Arial, sans-serif");
+function statsCardWidthForCanvas(
+  context: CanvasRenderingContext2D,
+  teamName: string,
+  winner: boolean,
+  textVariant: GraphicTextVariant
+) {
+  const nameWidth = measureCanvasText(context, teamName, canvasFont(textVariant, "statName", 20));
   const headerWidth = nameWidth + (winner ? 84 : 54);
 
   return Math.ceil(clampNumber(Math.max(headerWidth, 292), 292, 360));
@@ -396,7 +448,8 @@ function statsCardWidthForCanvas(context: CanvasRenderingContext2D, teamName: st
 function drawGraphic(
   context: CanvasRenderingContext2D,
   recap: AdminGraphicRecap,
-  logoImage: CanvasImageSource | null = null
+  logoImage: CanvasImageSource | null = null,
+  textVariant: GraphicTextVariant = "standard"
 ) {
   const width = 1080;
   const height = 1080;
@@ -423,7 +476,7 @@ function drawGraphic(
     width / 2,
     112,
     840,
-    "700 35px Avenir Next, Helvetica Neue, Arial, sans-serif"
+    canvasFont(textVariant, "title", 35)
   );
   drawGridText(
     context,
@@ -431,7 +484,7 @@ function drawGraphic(
     width / 2,
     149,
     840,
-    "600 21px Avenir Next, Helvetica Neue, Arial, sans-serif",
+    canvasFont(textVariant, "subtitle", 21),
     "rgba(16,32,23,0.78)"
   );
 
@@ -446,7 +499,7 @@ function drawGraphic(
     const rowFills = [CARD, CARD, CARD, PAR_ROW, CARD, CARD];
     let y = tableY;
 
-    drawGridText(context, label, tableX, tableY - 12, 180, "700 17px Avenir Next, Helvetica Neue, Arial, sans-serif", GOLD, "left");
+    drawGridText(context, label, tableX, tableY - 12, 180, canvasFont(textVariant, "sectionLabel", 17), GOLD, "left");
 
     for (let rowIndex = 0; rowIndex < rowHeights.length; rowIndex += 1) {
       context.fillStyle = rowFills[rowIndex] ?? CARD;
@@ -479,12 +532,12 @@ function drawGraphic(
     }
 
     const labels = [
-      { label: "Hole", y: tableY + 39, font: "700 22px Avenir Next, Helvetica Neue, Arial, sans-serif" },
-      { label: "HCP", y: tableY + 84, font: "650 18px Avenir Next, Helvetica Neue, Arial, sans-serif" },
-      { label: "Yards", y: tableY + 130, font: "650 17px Avenir Next, Helvetica Neue, Arial, sans-serif" },
-      { label: "Par", y: tableY + 174, font: "650 17px Avenir Next, Helvetica Neue, Arial, sans-serif" },
-      { label: recap.homeTeam.name, y: tableY + 230, font: "650 17px Avenir Next, Helvetica Neue, Arial, sans-serif" },
-      { label: recap.awayTeam.name, y: tableY + 294, font: "650 17px Avenir Next, Helvetica Neue, Arial, sans-serif" }
+      { label: "Hole", y: tableY + 39, font: canvasFont(textVariant, "tableHeader", 22) },
+      { label: "HCP", y: tableY + 84, font: canvasFont(textVariant, "tableText", 18) },
+      { label: "Yards", y: tableY + 130, font: canvasFont(textVariant, "tableText", 17) },
+      { label: "Par", y: tableY + 174, font: canvasFont(textVariant, "tableText", 17) },
+      { label: recap.homeTeam.name, y: tableY + 230, font: canvasFont(textVariant, "tableText", 17) },
+      { label: recap.awayTeam.name, y: tableY + 294, font: canvasFont(textVariant, "tableText", 17) }
     ];
 
     for (const item of labels) {
@@ -499,10 +552,10 @@ function drawGraphic(
         const winner = holeWinnerSide(hole, recap);
 
         fillRoundRect(context, centerX - 18, tableY + 11, 36, 36, 18, "#ded9c7");
-        drawGridText(context, String(hole.holeNumber), centerX, tableY + 37, 34, "650 19px Avenir Next, Helvetica Neue, Arial, sans-serif");
-        drawGridText(context, String(hole.strokeIndex || "-"), centerX, tableY + 84, 38, "650 17px Avenir Next, Helvetica Neue, Arial, sans-serif");
-        drawGridText(context, String(hole.yardage ?? "-"), centerX, tableY + 130, 58, "600 16px Avenir Next, Helvetica Neue, Arial, sans-serif");
-        drawGridText(context, String(hole.par || "-"), centerX, tableY + 174, 38, "650 17px Avenir Next, Helvetica Neue, Arial, sans-serif");
+        drawGridText(context, String(hole.holeNumber), centerX, tableY + 37, 34, canvasFont(textVariant, "score", 19));
+        drawGridText(context, String(hole.strokeIndex || "-"), centerX, tableY + 84, 38, canvasFont(textVariant, "tableText", 17));
+        drawGridText(context, String(hole.yardage ?? "-"), centerX, tableY + 130, 58, canvasFont(textVariant, "yardage", 16));
+        drawGridText(context, String(hole.par || "-"), centerX, tableY + 174, 38, canvasFont(textVariant, "tableText", 17));
 
         const homeY = tableY + 230;
         const awayY = tableY + 294;
@@ -513,18 +566,18 @@ function drawGraphic(
         }
         drawScoreMark(context, centerX, homeY - 7, 30, scoreShape(hole.homeNet, hole.par));
         drawScoreMark(context, centerX, awayY - 7, 30, scoreShape(hole.awayNet, hole.par));
-        drawGridText(context, String(hole.homeNet ?? "-"), centerX, homeY, 38, "650 20px Avenir Next, Helvetica Neue, Arial, sans-serif");
-        drawGridText(context, String(hole.awayNet ?? "-"), centerX, awayY, 38, "650 20px Avenir Next, Helvetica Neue, Arial, sans-serif");
+        drawGridText(context, String(hole.homeNet ?? "-"), centerX, homeY, 38, canvasFont(textVariant, "score", 20));
+        drawGridText(context, String(hole.awayNet ?? "-"), centerX, awayY, 38, canvasFont(textVariant, "score", 20));
 
         return;
       }
 
-      drawGridText(context, column.label, centerX, tableY + 36, colWidth - 6, "650 15px Avenir Next, Helvetica Neue, Arial, sans-serif");
-      drawGridText(context, "", centerX, tableY + 84, colWidth - 6, "650 17px Avenir Next, Helvetica Neue, Arial, sans-serif");
-      drawGridText(context, String(column.yardage ?? "-"), centerX, tableY + 130, colWidth - 6, "600 14px Avenir Next, Helvetica Neue, Arial, sans-serif");
-      drawGridText(context, String(column.par), centerX, tableY + 174, colWidth - 6, "650 17px Avenir Next, Helvetica Neue, Arial, sans-serif");
-      drawGridText(context, String(column.homeNet), centerX, tableY + 230, colWidth - 6, "650 20px Avenir Next, Helvetica Neue, Arial, sans-serif");
-      drawGridText(context, String(column.awayNet), centerX, tableY + 294, colWidth - 6, "650 20px Avenir Next, Helvetica Neue, Arial, sans-serif");
+      drawGridText(context, column.label, centerX, tableY + 36, colWidth - 6, canvasFont(textVariant, "tableText", 15));
+      drawGridText(context, "", centerX, tableY + 84, colWidth - 6, canvasFont(textVariant, "tableText", 17));
+      drawGridText(context, String(column.yardage ?? "-"), centerX, tableY + 130, colWidth - 6, canvasFont(textVariant, "yardage", 14));
+      drawGridText(context, String(column.par), centerX, tableY + 174, colWidth - 6, canvasFont(textVariant, "tableText", 17));
+      drawGridText(context, String(column.homeNet), centerX, tableY + 230, colWidth - 6, canvasFont(textVariant, "score", 20));
+      drawGridText(context, String(column.awayNet), centerX, tableY + 294, colWidth - 6, canvasFont(textVariant, "score", 20));
     });
   }
 
@@ -537,7 +590,7 @@ function drawGraphic(
     { side: "home" as const, team: recap.homeTeam, fill: HOME_ROW, stroke: HOME_STROKE },
     { side: "away" as const, team: recap.awayTeam, fill: AWAY_ROW, stroke: AWAY_STROKE }
   ].map(({ side, team, fill, stroke }) => {
-    return { side, team, fill, stroke, width: statsCardWidthForCanvas(context, team.name, winnerSide === side) };
+    return { side, team, fill, stroke, width: statsCardWidthForCanvas(context, team.name, winnerSide === side, textVariant) };
   });
   const statsTotalWidth = statsItems.reduce((total, item) => total + item.width, 0) + statsGap;
   let statsX = (width - statsTotalWidth) / 2;
@@ -556,15 +609,31 @@ function drawGraphic(
       drawTrophyIcon(context, x + 23, statsY + 10, 28, stroke);
     }
 
-    drawGridText(context, team.name, nameX, statsY + 30, nameWidth, "700 20px Avenir Next, Helvetica Neue, Arial, sans-serif", INK, "left");
-    drawGridText(context, "POINTS WON", x + 24, statsY + 57, 116, "650 11px Avenir Next, Helvetica Neue, Arial, sans-serif", stroke, "left");
-    drawGridText(context, formatPoints(team.totalPoints), x + 24, statsY + 80, 92, "700 26px Avenir Next, Helvetica Neue, Arial, sans-serif", INK, "left");
-    drawGridText(context, "HOLES WON", holesX, statsY + 57, 116, "650 11px Avenir Next, Helvetica Neue, Arial, sans-serif", stroke, "left");
-    drawGridText(context, String(team.holesWon), holesX, statsY + 80, 56, "700 26px Avenir Next, Helvetica Neue, Arial, sans-serif", INK, "left");
+    drawGridText(context, team.name, nameX, statsY + 30, nameWidth, canvasFont(textVariant, "statName", 20), INK, "left");
+    drawGridText(context, "POINTS WON", x + 24, statsY + 57, 116, canvasFont(textVariant, "statLabel", 11), stroke, "left");
+    drawGridText(context, formatPoints(team.totalPoints), x + 24, statsY + 80, 92, canvasFont(textVariant, "statValue", 26), INK, "left");
+    drawGridText(context, "HOLES WON", holesX, statsY + 57, 116, canvasFont(textVariant, "statLabel", 11), stroke, "left");
+    drawGridText(context, String(team.holesWon), holesX, statsY + 80, 56, canvasFont(textVariant, "statValue", 26), INK, "left");
 
     statsX += cardWidth + statsGap;
   });
 
+}
+
+function graphicPngHref(id: string, textVariant: GraphicTextVariant, disposition?: "inline") {
+  const params = new URLSearchParams();
+
+  if (textVariant === "thin") {
+    params.set("variant", THIN_TEXT_VARIANT_PARAM);
+  }
+
+  if (disposition) {
+    params.set("disposition", disposition);
+  }
+
+  const query = params.toString();
+
+  return `/api/admin/graphics/${encodeURIComponent(id)}${query ? `?${query}` : ""}`;
 }
 
 function ScoreValue({
@@ -806,6 +875,7 @@ function ScorecardGraphicPreview({ recap }: { recap: AdminGraphicRecap }) {
 
 export function AdminInstagramGraphicGenerator({ recaps }: AdminInstagramGraphicGeneratorProps) {
   const [selectedId, setSelectedId] = useState(recaps[0]?.id ?? "");
+  const [textVariant, setTextVariant] = useState<GraphicTextVariant>("standard");
   const [previewUrl, setPreviewUrl] = useState("");
   const selectedRecap = recaps.find((recap) => recap.id === selectedId) ?? recaps[0] ?? null;
 
@@ -834,7 +904,7 @@ export function AdminInstagramGraphicGenerator({ recaps }: AdminInstagramGraphic
           return;
         }
 
-        drawGraphic(context, selectedRecap, logoImage);
+        drawGraphic(context, selectedRecap, logoImage, textVariant);
         setPreviewUrl(canvas.toDataURL("image/png"));
       })();
     });
@@ -843,7 +913,7 @@ export function AdminInstagramGraphicGenerator({ recaps }: AdminInstagramGraphic
       active = false;
       window.cancelAnimationFrame(frame);
     };
-  }, [selectedRecap]);
+  }, [selectedRecap, textVariant]);
 
   if (!selectedRecap) {
     return (
@@ -853,8 +923,8 @@ export function AdminInstagramGraphicGenerator({ recaps }: AdminInstagramGraphic
     );
   }
 
-  const graphicPngHref = `/api/admin/graphics/${encodeURIComponent(selectedRecap.id)}`;
-  const openGraphicPngHref = `${graphicPngHref}?disposition=inline`;
+  const downloadGraphicPngHref = graphicPngHref(selectedRecap.id, textVariant);
+  const openGraphicPngHref = graphicPngHref(selectedRecap.id, textVariant, "inline");
 
   return (
     <div className="grid gap-4">
@@ -873,6 +943,27 @@ export function AdminInstagramGraphicGenerator({ recaps }: AdminInstagramGraphic
         </select>
       </label>
 
+      <div className="grid gap-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-fairway/72">
+        Version
+        <div className="grid grid-cols-2 rounded-full border border-mist bg-white p-1 text-sm font-semibold normal-case tracking-normal">
+          {[
+            { key: "standard" as const, label: "Standard" },
+            { key: "thin" as const, label: "Thin text" }
+          ].map((item) => (
+            <button
+              key={item.key}
+              type="button"
+              onClick={() => setTextVariant(item.key)}
+              className={`rounded-full px-4 py-2 transition ${
+                textVariant === item.key ? "bg-pine text-white shadow-sm" : "text-ink/68 hover:bg-sand"
+              }`}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {previewUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
@@ -886,8 +977,8 @@ export function AdminInstagramGraphicGenerator({ recaps }: AdminInstagramGraphic
 
       <div className="flex flex-wrap items-center gap-2">
         <a
-          href={graphicPngHref}
-          download={downloadFilename(selectedRecap)}
+          href={downloadGraphicPngHref}
+          download={downloadFilename(selectedRecap, textVariant)}
           className="rounded-full bg-pine px-4 py-2.5 text-sm font-semibold text-white"
         >
           Download PNG
@@ -901,7 +992,7 @@ export function AdminInstagramGraphicGenerator({ recaps }: AdminInstagramGraphic
           Open PNG
         </a>
         <p className="text-xs leading-5 text-ink/58">
-          Downloads the server-rendered 1080 x 1080 scorecard recap. Use Open PNG if your browser blocks downloads.
+          Downloads the selected server-rendered 1080 x 1080 scorecard recap. Use Open PNG if your browser blocks downloads.
         </p>
       </div>
     </div>

@@ -20,11 +20,24 @@ const AWAY_WIN = "#e7def5";
 const HOME_STROKE = "#17533d";
 const AWAY_STROKE = "#6a4d90";
 const EXPORT_FONT_FAMILY = "TwoManExport";
+const THIN_TEXT_VARIANT_PARAM = "thin-text";
 
 type RecapHole = AdminGraphicRecap["holes"][number];
 type SegmentKey = "front" | "back";
 type TeamSide = "home" | "away";
 type ScoreShape = "none" | "circle" | "double-circle" | "square" | "double-square";
+type GraphicTextVariant = "standard" | "thin";
+type GraphicTextWeightKey =
+  | "title"
+  | "subtitle"
+  | "sectionLabel"
+  | "tableHeader"
+  | "tableText"
+  | "yardage"
+  | "score"
+  | "statName"
+  | "statLabel"
+  | "statValue";
 type ScorecardColumn =
   | {
       kind: "hole";
@@ -41,6 +54,45 @@ type ScorecardColumn =
       homeNet: number;
       awayNet: number;
     };
+
+const GRAPHIC_TEXT_WEIGHTS: Record<GraphicTextVariant, Record<GraphicTextWeightKey, number>> = {
+  standard: {
+    title: 700,
+    subtitle: 600,
+    sectionLabel: 700,
+    tableHeader: 700,
+    tableText: 650,
+    yardage: 600,
+    score: 650,
+    statName: 700,
+    statLabel: 650,
+    statValue: 700
+  },
+  thin: {
+    title: 500,
+    subtitle: 400,
+    sectionLabel: 500,
+    tableHeader: 500,
+    tableText: 400,
+    yardage: 400,
+    score: 500,
+    statName: 500,
+    statLabel: 400,
+    statValue: 500
+  }
+};
+
+function graphicTextWeight(variant: GraphicTextVariant, key: GraphicTextWeightKey) {
+  return GRAPHIC_TEXT_WEIGHTS[variant][key];
+}
+
+function graphicTextVariantFromUrl(request: Request): GraphicTextVariant {
+  return new URL(request.url).searchParams.get("variant") === THIN_TEXT_VARIANT_PARAM ? "thin" : "standard";
+}
+
+function textErodeFill(textVariant: GraphicTextVariant, backgroundFill: string) {
+  return textVariant === "thin" ? backgroundFill : undefined;
+}
 
 function escapeSvg(value: string) {
   return value
@@ -199,8 +251,10 @@ function matchInfoLine(recap: AdminGraphicRecap) {
   return [formatShortDate(recap.playedOn), recap.courseName, recap.courseMeta].filter(Boolean).join(" / ");
 }
 
-function downloadFilename(recap: AdminGraphicRecap) {
-  return `two-man-scorecard-recap-${cleanFilePart(recap.homeTeam.name)}-${cleanFilePart(recap.awayTeam.name)}.png`;
+function downloadFilename(recap: AdminGraphicRecap, textVariant: GraphicTextVariant) {
+  const variantSuffix = textVariant === "thin" ? "-thin-text" : "";
+
+  return `two-man-scorecard-recap-${cleanFilePart(recap.homeTeam.name)}-${cleanFilePart(recap.awayTeam.name)}${variantSuffix}.png`;
 }
 
 function rect(
@@ -241,9 +295,28 @@ function text(
     size: number;
     weight?: number;
     letterSpacing?: number;
+    erodeFill?: string;
   }
 ) {
-  return `<text x="${x}" y="${y}" text-anchor="${options.anchor ?? "middle"}" fill="${options.color ?? INK}" font-size="${options.size}" font-weight="${options.weight ?? 650}" letter-spacing="${options.letterSpacing ?? 0}" font-family="${EXPORT_FONT_FAMILY}">${escapeSvg(value)}</text>`;
+  const escapedValue = escapeSvg(value);
+  const commonAttrs = [
+    `x="${x}"`,
+    `y="${y}"`,
+    `text-anchor="${options.anchor ?? "middle"}"`,
+    `font-size="${options.size}"`,
+    `font-weight="${options.weight ?? 650}"`,
+    `letter-spacing="${options.letterSpacing ?? 0}"`,
+    `font-family="${EXPORT_FONT_FAMILY}"`
+  ].join(" ");
+  const filledText = `<text ${commonAttrs} fill="${options.color ?? INK}">${escapedValue}</text>`;
+
+  if (!options.erodeFill) {
+    return filledText;
+  }
+
+  const erodeWidth = Math.min(0.9, Math.max(0.45, options.size * 0.035));
+
+  return `<g>${filledText}<text ${commonAttrs} fill="none" stroke="${options.erodeFill}" stroke-width="${erodeWidth.toFixed(2)}" stroke-linecap="round" stroke-linejoin="round">${escapedValue}</text></g>`;
 }
 
 function line(x1: number, y1: number, x2: number, y2: number, stroke = GOLD, strokeWidth = 2) {
@@ -305,7 +378,7 @@ async function logoDataUri() {
   }
 }
 
-async function renderGraphicSvg(recap: AdminGraphicRecap) {
+async function renderGraphicSvg(recap: AdminGraphicRecap, textVariant: GraphicTextVariant) {
   const logo = await logoDataUri();
   const dateCourseLine = matchInfoLine(recap);
   const winnerSide = matchWinnerSide(recap);
@@ -318,8 +391,21 @@ async function renderGraphicSvg(recap: AdminGraphicRecap) {
     elements.push(`<image href="${logo}" x="900" y="72" width="72" height="72" opacity="0.9" />`);
   }
 
-  elements.push(text(`${recap.homeTeam.name} vs ${recap.awayTeam.name}`, 540, 112, { size: 35, weight: 700 }));
-  elements.push(text(dateCourseLine || recap.courseName || "Official match recap", 540, 149, { color: "rgba(16,32,23,0.78)", size: 21, weight: 600 }));
+  elements.push(
+    text(`${recap.homeTeam.name} vs ${recap.awayTeam.name}`, 540, 112, {
+      erodeFill: textErodeFill(textVariant, CARD),
+      size: 35,
+      weight: graphicTextWeight(textVariant, "title")
+    })
+  );
+  elements.push(
+    text(dateCourseLine || recap.courseName || "Official match recap", 540, 149, {
+      color: "rgba(16,32,23,0.78)",
+      erodeFill: textErodeFill(textVariant, CARD),
+      size: 21,
+      weight: graphicTextWeight(textVariant, "subtitle")
+    })
+  );
 
   function drawSegment(segment: SegmentKey, tableY: number, label: string) {
     const columns = buildScorecardColumns(recap, segment);
@@ -332,7 +418,16 @@ async function renderGraphicSvg(recap: AdminGraphicRecap) {
     const rowFills = [CARD, CARD, CARD, PAR_ROW, CARD, CARD];
     let y = tableY;
 
-    elements.push(text(label, tableX, tableY - 12, { anchor: "start", color: GOLD, letterSpacing: 4, size: 17 }));
+    elements.push(
+      text(label, tableX, tableY - 12, {
+        anchor: "start",
+        color: GOLD,
+        erodeFill: textErodeFill(textVariant, CARD),
+        letterSpacing: 4,
+        size: 17,
+        weight: graphicTextWeight(textVariant, "sectionLabel")
+      })
+    );
 
     rowHeights.forEach((rowHeight, rowIndex) => {
       elements.push(rect(tableX, y, tableWidth, rowHeight, { fill: rowFills[rowIndex] ?? CARD }));
@@ -354,14 +449,21 @@ async function renderGraphicSvg(recap: AdminGraphicRecap) {
     }
 
     [
-      { label: "Hole", y: tableY + 39, size: 22 },
-      { label: "HCP", y: tableY + 84, size: 18 },
-      { label: "Yards", y: tableY + 130, size: 17 },
-      { label: "Par", y: tableY + 174, size: 17 },
-      { label: clipText(recap.homeTeam.name, 18), y: tableY + 230, size: 17 },
-      { label: clipText(recap.awayTeam.name, 18), y: tableY + 294, size: 17 }
+      { backgroundFill: CARD, label: "Hole", y: tableY + 39, size: 22, weight: graphicTextWeight(textVariant, "tableHeader") },
+      { backgroundFill: CARD, label: "HCP", y: tableY + 84, size: 18, weight: graphicTextWeight(textVariant, "tableText") },
+      { backgroundFill: CARD, label: "Yards", y: tableY + 130, size: 17, weight: graphicTextWeight(textVariant, "tableText") },
+      { backgroundFill: PAR_ROW, label: "Par", y: tableY + 174, size: 17, weight: graphicTextWeight(textVariant, "tableText") },
+      { backgroundFill: CARD, label: clipText(recap.homeTeam.name, 18), y: tableY + 230, size: 17, weight: graphicTextWeight(textVariant, "tableText") },
+      { backgroundFill: CARD, label: clipText(recap.awayTeam.name, 18), y: tableY + 294, size: 17, weight: graphicTextWeight(textVariant, "tableText") }
     ].forEach((item) => {
-      elements.push(text(item.label, tableX + 18, item.y, { anchor: "start", size: item.size }));
+      elements.push(
+        text(item.label, tableX + 18, item.y, {
+          anchor: "start",
+          erodeFill: textErodeFill(textVariant, item.backgroundFill),
+          size: item.size,
+          weight: item.weight
+        })
+      );
     });
 
     columns.forEach((column, index) => {
@@ -375,10 +477,10 @@ async function renderGraphicSvg(recap: AdminGraphicRecap) {
         const awayY = tableY + 294;
 
         elements.push(rect(centerX - 18, tableY + 11, 36, 36, { fill: "#ded9c7", rx: 18 }));
-        elements.push(text(String(hole.holeNumber), centerX, tableY + 37, { size: 19 }));
-        elements.push(text(String(hole.strokeIndex || "-"), centerX, tableY + 84, { size: 17 }));
-        elements.push(text(String(hole.yardage ?? "-"), centerX, tableY + 130, { size: 16 }));
-        elements.push(text(String(hole.par || "-"), centerX, tableY + 174, { size: 17 }));
+        elements.push(text(String(hole.holeNumber), centerX, tableY + 37, { erodeFill: textErodeFill(textVariant, "#ded9c7"), size: 19, weight: graphicTextWeight(textVariant, "score") }));
+        elements.push(text(String(hole.strokeIndex || "-"), centerX, tableY + 84, { erodeFill: textErodeFill(textVariant, CARD), size: 17, weight: graphicTextWeight(textVariant, "tableText") }));
+        elements.push(text(String(hole.yardage ?? "-"), centerX, tableY + 130, { erodeFill: textErodeFill(textVariant, CARD), size: 16, weight: graphicTextWeight(textVariant, "yardage") }));
+        elements.push(text(String(hole.par || "-"), centerX, tableY + 174, { erodeFill: textErodeFill(textVariant, PAR_ROW), size: 17, weight: graphicTextWeight(textVariant, "tableText") }));
 
         if (winner === "home") {
           elements.push(winningScoreCell(cellX, tableY + 190, colWidth, rowHeights[4], "home"));
@@ -388,16 +490,28 @@ async function renderGraphicSvg(recap: AdminGraphicRecap) {
 
         elements.push(scoreMark(centerX, homeY - 7, 30, scoreShape(hole.homeNet, hole.par)));
         elements.push(scoreMark(centerX, awayY - 7, 30, scoreShape(hole.awayNet, hole.par)));
-        elements.push(text(String(hole.homeNet ?? "-"), centerX, homeY, { size: 20 }));
-        elements.push(text(String(hole.awayNet ?? "-"), centerX, awayY, { size: 20 }));
+        elements.push(
+          text(String(hole.homeNet ?? "-"), centerX, homeY, {
+            erodeFill: textErodeFill(textVariant, winner === "home" ? HOME_WIN : CARD),
+            size: 20,
+            weight: graphicTextWeight(textVariant, "score")
+          })
+        );
+        elements.push(
+          text(String(hole.awayNet ?? "-"), centerX, awayY, {
+            erodeFill: textErodeFill(textVariant, winner === "away" ? AWAY_WIN : CARD),
+            size: 20,
+            weight: graphicTextWeight(textVariant, "score")
+          })
+        );
         return;
       }
 
-      elements.push(text(column.label, centerX, tableY + 36, { size: 15 }));
-      elements.push(text(String(column.yardage ?? "-"), centerX, tableY + 130, { size: 14 }));
-      elements.push(text(String(column.par), centerX, tableY + 174, { size: 17 }));
-      elements.push(text(String(column.homeNet), centerX, tableY + 230, { size: 20 }));
-      elements.push(text(String(column.awayNet), centerX, tableY + 294, { size: 20 }));
+      elements.push(text(column.label, centerX, tableY + 36, { erodeFill: textErodeFill(textVariant, CARD), size: 15, weight: graphicTextWeight(textVariant, "tableText") }));
+      elements.push(text(String(column.yardage ?? "-"), centerX, tableY + 130, { erodeFill: textErodeFill(textVariant, CARD), size: 14, weight: graphicTextWeight(textVariant, "yardage") }));
+      elements.push(text(String(column.par), centerX, tableY + 174, { erodeFill: textErodeFill(textVariant, PAR_ROW), size: 17, weight: graphicTextWeight(textVariant, "tableText") }));
+      elements.push(text(String(column.homeNet), centerX, tableY + 230, { erodeFill: textErodeFill(textVariant, CARD), size: 20, weight: graphicTextWeight(textVariant, "score") }));
+      elements.push(text(String(column.awayNet), centerX, tableY + 294, { erodeFill: textErodeFill(textVariant, CARD), size: 20, weight: graphicTextWeight(textVariant, "score") }));
     });
   }
 
@@ -430,11 +544,11 @@ async function renderGraphicSvg(recap: AdminGraphicRecap) {
       elements.push(trophyIcon(x + 23, 918, 28, stroke));
     }
 
-    elements.push(text(clipText(team.name, 24), nameX, 938, { anchor: "start", size: 20, weight: 700 }));
-    elements.push(text("POINTS WON", x + 24, 965, { anchor: "start", color: stroke, size: 11, weight: 650, letterSpacing: 2 }));
-    elements.push(text(formatPoints(team.totalPoints), x + 24, 988, { anchor: "start", size: 26, weight: 700 }));
-    elements.push(text("HOLES WON", holesX, 965, { anchor: "start", color: stroke, size: 11, weight: 650, letterSpacing: 2 }));
-    elements.push(text(String(team.holesWon), holesX, 988, { anchor: "start", size: 26, weight: 700 }));
+    elements.push(text(clipText(team.name, 24), nameX, 938, { anchor: "start", erodeFill: textErodeFill(textVariant, fill), size: 20, weight: graphicTextWeight(textVariant, "statName") }));
+    elements.push(text("POINTS WON", x + 24, 965, { anchor: "start", color: stroke, erodeFill: textErodeFill(textVariant, fill), size: 11, weight: graphicTextWeight(textVariant, "statLabel"), letterSpacing: 2 }));
+    elements.push(text(formatPoints(team.totalPoints), x + 24, 988, { anchor: "start", erodeFill: textErodeFill(textVariant, fill), size: 26, weight: graphicTextWeight(textVariant, "statValue") }));
+    elements.push(text("HOLES WON", holesX, 965, { anchor: "start", color: stroke, erodeFill: textErodeFill(textVariant, fill), size: 11, weight: graphicTextWeight(textVariant, "statLabel"), letterSpacing: 2 }));
+    elements.push(text(String(team.holesWon), holesX, 988, { anchor: "start", erodeFill: textErodeFill(textVariant, fill), size: 26, weight: graphicTextWeight(textVariant, "statValue") }));
 
     statsX += width + statsGap;
   });
@@ -453,12 +567,13 @@ export async function GET(
   const { id } = await context.params;
   const recaps = await getAdminGraphicRecaps();
   const recap = recaps.find((candidate) => candidate.id === decodeURIComponent(id));
+  const textVariant = graphicTextVariantFromUrl(request);
 
   if (!recap) {
     return NextResponse.json({ error: "Graphic recap not found" }, { status: 404 });
   }
 
-  const svg = await renderGraphicSvg(recap);
+  const svg = await renderGraphicSvg(recap, textVariant);
   const { Resvg } = await import("@resvg/resvg-js");
   const fontPath = path.join(process.cwd(), "public", "two-man-export-font.ttf");
   await readFile(fontPath);
@@ -475,9 +590,10 @@ export async function GET(
   return new NextResponse(new Uint8Array(png), {
     headers: {
       "Cache-Control": "no-store",
-      "Content-Disposition": `${disposition}; filename="${downloadFilename(recap)}"`,
+      "Content-Disposition": `${disposition}; filename="${downloadFilename(recap, textVariant)}"`,
       "Content-Type": "image/png",
-      "X-Two-Man-Graphic-Renderer": "resvg-bundled-font-v1"
+      "X-Two-Man-Graphic-Renderer": "resvg-bundled-font-v1",
+      "X-Two-Man-Graphic-Variant": textVariant === "thin" ? THIN_TEXT_VARIANT_PARAM : "standard"
     }
   });
 }
