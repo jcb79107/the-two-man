@@ -45,6 +45,60 @@ function decimalToNumber(value: unknown): number | null {
   return Number(value);
 }
 
+function getBracketSeeds(input: {
+  qualifierCount: number;
+  computedSeeds: QualifiedTeamSeed[];
+  projectedPlayoffField: QualifiedTeamSeed[];
+  teams: Array<{
+    id: string;
+    name: string;
+    seedNumber: number | null;
+    podMemberships: Array<{ podId: string }>;
+  }>;
+}): QualifiedTeamSeed[] {
+  if (input.computedSeeds.length === input.qualifierCount) {
+    return input.computedSeeds;
+  }
+
+  if (input.projectedPlayoffField.length === input.qualifierCount) {
+    return input.projectedPlayoffField;
+  }
+
+  return input.teams
+    .filter((team) => team.seedNumber != null)
+    .sort((left, right) => (left.seedNumber ?? 999) - (right.seedNumber ?? 999))
+    .slice(0, input.qualifierCount)
+    .map((team, index) => ({
+      seedNumber: team.seedNumber ?? index + 1,
+      qualifierType: index < 6 ? "POD_WINNER" : "WILD_CARD",
+      teamId: team.id,
+      teamName: team.name,
+      podId: team.podMemberships[0]?.podId ?? ""
+    }));
+}
+
+function decoratePlayoffSeeds(
+  seeds: QualifiedTeamSeed[],
+  standings: StandingsRow[],
+  pods: Array<{ id: string; name: string }>
+) {
+  return seeds.map((seed) => {
+    const standing = standings.find((row) => row.teamId === seed.teamId);
+    const pod = pods.find((candidate) => candidate.id === seed.podId);
+
+    return {
+      ...seed,
+      podName: pod?.name ?? "Wildcard",
+      wins: standing?.wins ?? 0,
+      losses: standing?.losses ?? 0,
+      ties: standing?.ties ?? 0,
+      holePoints: standing?.holePoints ?? 0,
+      holesWon: standing?.holesWon ?? 0,
+      totalNetBetterBall: standing?.cumulativeNetBetterBall ?? null
+    };
+  });
+}
+
 function buildResultLabel(
   teamSummaries: TeamMatchSummary[],
   teamNames: Record<string, string>,
@@ -629,6 +683,13 @@ export async function getPublicBracketState(slug: string) {
   const bracketRecord = state.tournament.brackets[0];
 
   if (!bracketRecord) {
+    const playoffSeeds = getBracketSeeds({
+      qualifierCount: Math.min(8, state.tournament.teams.length),
+      computedSeeds: state.computedSeeds,
+      projectedPlayoffField: state.projectedPlayoffField,
+      teams: state.tournament.teams
+    });
+
     return {
       tournamentName: state.tournament.name,
       tournamentStartDate: state.tournament.startDate.toISOString(),
@@ -639,7 +700,7 @@ export async function getPublicBracketState(slug: string) {
           .sort((left, right) => right.getTime() - left.getTime())[0]
           ?.toISOString() ?? null,
       bracket: null,
-      seeds: [],
+      seeds: playoffSeeds,
       podLeaders: state.podStandings.map(({ pod, rows }) => {
         const leader = rows[0];
         return {
@@ -670,7 +731,7 @@ export async function getPublicBracketState(slug: string) {
           totalNetBetterBall: standing?.cumulativeNetBetterBall ?? null
         };
       }),
-      playoffField: [],
+      playoffField: decoratePlayoffSeeds(playoffSeeds, state.standings, state.tournament.pods),
       rounds: []
     };
   }
@@ -692,36 +753,14 @@ export async function getPublicBracketState(slug: string) {
     }))
   };
 
-  const seeds: QualifiedTeamSeed[] =
-    state.computedSeeds.length === bracket.qualifierCount
-      ? state.computedSeeds
-      : state.tournament.teams
-          .filter((team) => team.seedNumber != null)
-          .sort((left, right) => (left.seedNumber ?? 999) - (right.seedNumber ?? 999))
-          .slice(0, bracket.qualifierCount)
-          .map((team, index) => ({
-            seedNumber: team.seedNumber ?? index + 1,
-            qualifierType: index < 6 ? "POD_WINNER" : "WILD_CARD",
-            teamId: team.id,
-            teamName: team.name,
-            podId: team.podMemberships[0]?.podId ?? ""
-          }));
-
-  const playoffField = seeds.map((seed) => {
-    const standing = state.standings.find((row) => row.teamId === seed.teamId);
-    const pod = state.tournament.pods.find((candidate) => candidate.id === seed.podId);
-
-    return {
-      ...seed,
-      podName: pod?.name ?? "Wildcard",
-      wins: standing?.wins ?? 0,
-      losses: standing?.losses ?? 0,
-      ties: standing?.ties ?? 0,
-      holePoints: standing?.holePoints ?? 0,
-      holesWon: standing?.holesWon ?? 0,
-      totalNetBetterBall: standing?.cumulativeNetBetterBall ?? null
-    };
+  const seeds: QualifiedTeamSeed[] = getBracketSeeds({
+    qualifierCount: bracket.qualifierCount,
+    computedSeeds: state.computedSeeds,
+    projectedPlayoffField: state.projectedPlayoffField,
+    teams: state.tournament.teams
   });
+
+  const playoffField = decoratePlayoffSeeds(seeds, state.standings, state.tournament.pods);
 
   const podLeaders = state.podStandings.map(({ pod, rows }) => {
     const leader = rows[0];
