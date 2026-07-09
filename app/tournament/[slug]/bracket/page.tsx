@@ -11,8 +11,8 @@ export const dynamic = "force-dynamic";
 const quarterfinalSeedPairs = [
   [1, 8],
   [4, 5],
-  [3, 6],
-  [2, 7]
+  [2, 7],
+  [3, 6]
 ] as const;
 
 export default async function TournamentBracketPage({
