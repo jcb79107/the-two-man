@@ -21,12 +21,14 @@ const AWAY_STROKE = "#6a4d90";
 const LOGO_SRC = "/two-man-main-logo.png";
 const THIN_TEXT_VARIANT_PARAM = "thin-text";
 const FONT_STACK = "Avenir Next, Helvetica Neue, Arial, sans-serif";
+const DISPLAY_FONT_STACK = "Georgia, Times New Roman, serif";
 
 type RecapHole = AdminGraphicRecap["holes"][number];
 type SegmentKey = "front" | "back";
 type TeamSide = "home" | "away";
 type ScoreShape = "none" | "circle" | "double-circle" | "square" | "double-square";
 type GraphicTextVariant = "standard" | "thin";
+type GraphicMode = "scorecard" | "playoff";
 type GraphicTextWeightKey =
   | "title"
   | "subtitle"
@@ -84,6 +86,10 @@ const GRAPHIC_TEXT_WEIGHTS: Record<GraphicTextVariant, Record<GraphicTextWeightK
 
 function canvasFont(variant: GraphicTextVariant, key: GraphicTextWeightKey, size: number) {
   return `${GRAPHIC_TEXT_WEIGHTS[variant][key]} ${size}px ${FONT_STACK}`;
+}
+
+function canvasDisplayFont(weight: number, size: number) {
+  return `${weight} ${size}px ${DISPLAY_FONT_STACK}`;
 }
 
 function formatPoints(value: number) {
@@ -220,14 +226,110 @@ function formatShortDate(value: string | null) {
   }).format(parsed);
 }
 
+function formatFullDate(value: string | null) {
+  if (!value) {
+    return "DATE TBD";
+  }
+
+  const isoDate = value.match(/^(\d{4})-(\d{2})-(\d{2})/);
+
+  if (isoDate) {
+    const date = new Date(Date.UTC(Number(isoDate[1]), Number(isoDate[2]) - 1, Number(isoDate[3])));
+
+    return new Intl.DateTimeFormat("en-US", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+      timeZone: "UTC"
+    }).format(date);
+  }
+
+  const parsed = new Date(value);
+
+  if (Number.isNaN(parsed.getTime())) {
+    return value.toUpperCase();
+  }
+
+  return new Intl.DateTimeFormat("en-US", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC"
+  }).format(parsed);
+}
+
 function matchInfoLine(recap: AdminGraphicRecap) {
   return [formatShortDate(recap.playedOn), recap.courseName, recap.courseMeta].filter(Boolean).join(" / ");
 }
 
-function downloadFilename(recap: AdminGraphicRecap, textVariant: GraphicTextVariant) {
-  const variantSuffix = textVariant === "thin" ? "-thin-text" : "";
+function isPlayoffRecap(recap: AdminGraphicRecap) {
+  return recap.stage !== "POD_PLAY";
+}
 
-  return `two-man-scorecard-recap-${cleanFilePart(recap.homeTeam.name)}-${cleanFilePart(recap.awayTeam.name)}${variantSuffix}.png`;
+function winningTeam(recap: AdminGraphicRecap) {
+  if (recap.winningTeamId === recap.homeTeam.id) {
+    return recap.homeTeam;
+  }
+
+  if (recap.winningTeamId === recap.awayTeam.id) {
+    return recap.awayTeam;
+  }
+
+  return matchWinnerSide(recap) === "home" ? recap.homeTeam : recap.awayTeam;
+}
+
+function playoffResultPhrase(recap: AdminGraphicRecap) {
+  const winner = winningTeam(recap);
+  const label = recap.resultLabel ?? `${winner.name} wins`;
+  const escapedWinner = winner.name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const phrase = label
+    .replace(new RegExp(`^${escapedWinner}\\s+wins\\s*`, "i"), "")
+    .replace(/^wins\s*/i, "")
+    .trim();
+
+  return phrase || "ADVANCES";
+}
+
+function playoffResultHeadline(recap: AdminGraphicRecap) {
+  const phrase = playoffResultPhrase(recap).toUpperCase();
+
+  if (phrase === "BY FORFEIT") {
+    return "WIN BY FORFEIT";
+  }
+
+  if (phrase === "ADVANCES") {
+    return "ADVANCE";
+  }
+
+  return `WIN ${phrase}`;
+}
+
+function stageLabel(stage: string) {
+  return stage.replaceAll("_", " ");
+}
+
+function teamDisplayLines(name: string) {
+  const normalized = name.toUpperCase().replace(/\s*&\s*/g, " & ").trim();
+  const parts = normalized.split(" & ");
+
+  if (parts.length === 2) {
+    return [`${parts[0]} &`, parts[1]];
+  }
+
+  const words = normalized.split(/\s+/).filter(Boolean);
+  if (words.length > 2) {
+    const midpoint = Math.ceil(words.length / 2);
+    return [words.slice(0, midpoint).join(" "), words.slice(midpoint).join(" ")];
+  }
+
+  return [normalized];
+}
+
+function downloadFilename(recap: AdminGraphicRecap, textVariant: GraphicTextVariant, graphicMode: GraphicMode) {
+  const variantSuffix = textVariant === "thin" ? "-thin-text" : "";
+  const modePrefix = graphicMode === "playoff" ? "playoff" : "scorecard";
+
+  return `two-man-${modePrefix}-recap-${cleanFilePart(recap.homeTeam.name)}-${cleanFilePart(recap.awayTeam.name)}${variantSuffix}.png`;
 }
 
 function cleanFilePart(value: string) {
@@ -388,6 +490,94 @@ function drawTrophyIcon(
   context.restore();
 }
 
+function drawLocationPinIcon(
+  context: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  size: number,
+  fill: string
+) {
+  const scale = size / 42;
+
+  context.save();
+  context.translate(x, y);
+  context.scale(scale, scale);
+  context.fillStyle = fill;
+  context.beginPath();
+  context.moveTo(21, 40);
+  context.bezierCurveTo(16, 32, 8, 24, 8, 16);
+  context.bezierCurveTo(8, 7, 14, 2, 21, 2);
+  context.bezierCurveTo(28, 2, 34, 7, 34, 16);
+  context.bezierCurveTo(34, 24, 26, 32, 21, 40);
+  context.closePath();
+  context.fill();
+  context.fillStyle = CARD;
+  context.beginPath();
+  context.arc(21, 16, 6, 0, Math.PI * 2);
+  context.fill();
+  context.restore();
+}
+
+function drawCalendarIcon(
+  context: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  size: number,
+  stroke: string
+) {
+  const scale = size / 42;
+
+  context.save();
+  context.translate(x, y);
+  context.scale(scale, scale);
+  context.strokeStyle = stroke;
+  context.fillStyle = "transparent";
+  context.lineWidth = 4;
+  context.lineCap = "round";
+  context.lineJoin = "round";
+  context.strokeRect(7, 9, 28, 28);
+  context.beginPath();
+  context.moveTo(7, 17);
+  context.lineTo(35, 17);
+  context.moveTo(14, 5);
+  context.lineTo(14, 12);
+  context.moveTo(28, 5);
+  context.lineTo(28, 12);
+  context.stroke();
+  context.fillStyle = stroke;
+  for (const row of [0, 1, 2]) {
+    for (const col of [0, 1, 2]) {
+      context.fillRect(13 + col * 7, 22 + row * 5, 3, 3);
+    }
+  }
+  context.restore();
+}
+
+function drawGoldRays(
+  context: CanvasRenderingContext2D,
+  centerX: number,
+  centerY: number,
+  direction: "left" | "right"
+) {
+  const sign = direction === "left" ? -1 : 1;
+
+  context.save();
+  context.strokeStyle = "#a77b28";
+  context.lineWidth = 5;
+  context.lineCap = "round";
+  [
+    { y: -34, x1: 38, x2: 100 },
+    { y: 0, x1: 28, x2: 92 },
+    { y: 34, x1: 38, x2: 100 }
+  ].forEach((ray) => {
+    context.beginPath();
+    context.moveTo(centerX + sign * ray.x1, centerY + ray.y);
+    context.lineTo(centerX + sign * ray.x2, centerY + ray.y * 1.45);
+    context.stroke();
+  });
+  context.restore();
+}
+
 function drawWinningScoreCell(
   context: CanvasRenderingContext2D,
   x: number,
@@ -421,6 +611,40 @@ function drawGridText(
   context.fillText(text, x, y, maxWidth);
 }
 
+function drawFittedText(
+  context: CanvasRenderingContext2D,
+  text: string,
+  x: number,
+  y: number,
+  maxWidth: number,
+  options: {
+    color?: string;
+    maxSize: number;
+    minSize: number;
+    weight?: number;
+    align?: CanvasTextAlign;
+    family?: string;
+  }
+) {
+  const family = options.family ?? FONT_STACK;
+  let size = options.maxSize;
+
+  while (size > options.minSize && measureCanvasText(context, text, `${options.weight ?? 700} ${size}px ${family}`) > maxWidth) {
+    size -= 2;
+  }
+
+  drawGridText(
+    context,
+    text,
+    x,
+    y,
+    maxWidth,
+    `${options.weight ?? 700} ${size}px ${family}`,
+    options.color ?? INK,
+    options.align ?? "center"
+  );
+}
+
 function clampNumber(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
 }
@@ -445,7 +669,145 @@ function statsCardWidthForCanvas(
   return Math.ceil(clampNumber(Math.max(headerWidth, 292), 292, 360));
 }
 
-function drawGraphic(
+function drawPlayoffGraphic(
+  context: CanvasRenderingContext2D,
+  recap: AdminGraphicRecap,
+  logoImage: CanvasImageSource | null = null,
+  textVariant: GraphicTextVariant = "standard"
+) {
+  const width = 1080;
+  const height = 1080;
+  const winner = winningTeam(recap);
+  const winnerName = winner.name.toUpperCase();
+  const resultHeadline = playoffResultHeadline(recap);
+  const homeLines = teamDisplayLines(recap.homeTeam.name);
+  const awayLines = teamDisplayLines(recap.awayTeam.name);
+  const courseName = recap.courseName || "COURSE TBD";
+  const courseMeta = recap.courseMeta ?? "";
+  const dateLabel = formatFullDate(recap.playedOn).toUpperCase();
+  const roundLabel = stageLabel(recap.stage);
+
+  context.clearRect(0, 0, width, height);
+  context.fillStyle = "#063322";
+  context.fillRect(0, 0, width, height);
+
+  context.fillStyle = PAPER;
+  context.fillRect(26, 26, 1028, 1028);
+  context.strokeStyle = GOLD;
+  context.lineWidth = 4;
+  context.strokeRect(31, 31, 1018, 1018);
+
+  if (logoImage) {
+    context.save();
+    context.globalAlpha = 0.95;
+    context.drawImage(logoImage, 377, 52, 326, 246);
+    context.restore();
+  }
+
+  context.strokeStyle = "#a77b28";
+  context.lineWidth = 2;
+  context.beginPath();
+  context.moveTo(360, 368);
+  context.lineTo(400, 368);
+  context.moveTo(680, 368);
+  context.lineTo(720, 368);
+  context.stroke();
+  drawGridText(context, "MATCH RECAP", 540, 380, 280, canvasFont(textVariant, "sectionLabel", 35), "#a77b28");
+
+  const teamLineY = 492;
+  homeLines.slice(0, 2).forEach((line, index) => {
+    drawFittedText(context, line, 285, teamLineY + index * 76, 330, {
+      family: DISPLAY_FONT_STACK,
+      maxSize: 62,
+      minSize: 38,
+      weight: 800
+    });
+  });
+  awayLines.slice(0, 2).forEach((line, index) => {
+    drawFittedText(context, line, 795, teamLineY + index * 76, 330, {
+      family: DISPLAY_FONT_STACK,
+      maxSize: 62,
+      minSize: 38,
+      weight: 800
+    });
+  });
+
+  context.strokeStyle = "#a77b28";
+  context.lineWidth = 2;
+  context.beginPath();
+  context.moveTo(540, 424);
+  context.lineTo(540, 452);
+  context.stroke();
+  context.beginPath();
+  context.arc(540, 515, 50, 0, Math.PI * 2);
+  context.stroke();
+  drawGridText(context, "VS", 540, 533, 62, canvasDisplayFont(800, 38), "#a77b28");
+
+  context.strokeStyle = "#a77b28";
+  context.lineWidth = 2;
+  context.beginPath();
+  context.moveTo(92, 636);
+  context.lineTo(988, 636);
+  context.stroke();
+
+  drawFittedText(context, winnerName, 540, 704, 680, {
+    color: INK,
+    maxSize: 38,
+    minSize: 26,
+    weight: GRAPHIC_TEXT_WEIGHTS[textVariant].sectionLabel
+  });
+  drawGoldRays(context, 230, 786, "left");
+  drawGoldRays(context, 850, 786, "right");
+  drawFittedText(context, resultHeadline, 540, 832, 660, {
+    color: INK,
+    family: DISPLAY_FONT_STACK,
+    maxSize: 96,
+    minSize: 54,
+    weight: 900
+  });
+
+  context.beginPath();
+  context.moveTo(92, 888);
+  context.lineTo(988, 888);
+  context.stroke();
+  context.beginPath();
+  context.moveTo(392, 918);
+  context.lineTo(392, 1010);
+  context.moveTo(688, 918);
+  context.lineTo(688, 1010);
+  context.stroke();
+
+  drawLocationPinIcon(context, 217, 916, 48, INK);
+  drawCalendarIcon(context, 519, 915, 48, INK);
+  drawTrophyIcon(context, 818, 918, 46, INK);
+
+  drawFittedText(context, courseName.toUpperCase(), 240, 985, 260, {
+    color: INK,
+    maxSize: 20,
+    minSize: 14,
+    weight: 800
+  });
+  drawFittedText(context, courseMeta.toUpperCase(), 240, 1016, 260, {
+    color: INK,
+    maxSize: 18,
+    minSize: 13,
+    weight: 500
+  });
+  drawFittedText(context, dateLabel, 540, 1000, 250, {
+    color: INK,
+    maxSize: 22,
+    minSize: 15,
+    weight: 800
+  });
+  drawFittedText(context, roundLabel, 840, 1000, 250, {
+    color: INK,
+    maxSize: 22,
+    minSize: 15,
+    weight: 800
+  });
+}
+
+function drawScorecardGraphic(
   context: CanvasRenderingContext2D,
   recap: AdminGraphicRecap,
   logoImage: CanvasImageSource | null = null,
@@ -620,8 +982,25 @@ function drawGraphic(
 
 }
 
-function graphicPngHref(id: string, textVariant: GraphicTextVariant, disposition?: "inline") {
+function drawGraphic(
+  context: CanvasRenderingContext2D,
+  recap: AdminGraphicRecap,
+  logoImage: CanvasImageSource | null = null,
+  textVariant: GraphicTextVariant = "standard",
+  graphicMode: GraphicMode = "scorecard"
+) {
+  if (graphicMode === "playoff") {
+    drawPlayoffGraphic(context, recap, logoImage, textVariant);
+    return;
+  }
+
+  drawScorecardGraphic(context, recap, logoImage, textVariant);
+}
+
+function graphicPngHref(id: string, textVariant: GraphicTextVariant, graphicMode: GraphicMode, disposition?: "inline") {
   const params = new URLSearchParams();
+
+  params.set("mode", graphicMode);
 
   if (textVariant === "thin") {
     params.set("variant", THIN_TEXT_VARIANT_PARAM);
@@ -873,11 +1252,64 @@ function ScorecardGraphicPreview({ recap }: { recap: AdminGraphicRecap }) {
   );
 }
 
+function PlayoffGraphicPreview({ recap }: { recap: AdminGraphicRecap }) {
+  const winner = winningTeam(recap);
+  const homeLines = teamDisplayLines(recap.homeTeam.name);
+  const awayLines = teamDisplayLines(recap.awayTeam.name);
+
+  return (
+    <div className="mx-auto aspect-square w-full max-w-[620px] overflow-hidden bg-[#063322] p-[2.4%] shadow-[0_18px_48px_rgba(17,32,23,0.12)]">
+      <div className="flex h-full flex-col border border-[#a77b28] bg-[#f7f0df] px-[6.2%] py-[3.2%] text-center text-[#102017]">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={LOGO_SRC} alt="" className="mx-auto h-[24%] w-[38%] object-contain" />
+        <div className="mt-2 flex items-center justify-center gap-4 text-[1.25rem] font-bold uppercase tracking-[0.22em] text-[#a77b28]">
+          <span className="h-px w-9 bg-[#a77b28]" />
+          <span>Match Recap</span>
+          <span className="h-px w-9 bg-[#a77b28]" />
+        </div>
+        <div className="mt-[7%] grid grid-cols-[1fr_auto_1fr] items-center gap-5">
+          <div className="font-serif text-[2.1rem] font-black uppercase leading-[0.92]">
+            {homeLines.slice(0, 2).map((line) => (
+              <span key={line} className="block">
+                {line}
+              </span>
+            ))}
+          </div>
+          <div className="grid h-16 w-16 place-items-center rounded-full border border-[#a77b28] font-serif text-2xl font-black text-[#a77b28]">
+            VS
+          </div>
+          <div className="font-serif text-[2.1rem] font-black uppercase leading-[0.92]">
+            {awayLines.slice(0, 2).map((line) => (
+              <span key={line} className="block">
+                {line}
+              </span>
+            ))}
+          </div>
+        </div>
+        <div className="mt-[6%] h-px bg-[#a77b28]" />
+        <p className="mt-[4%] truncate text-[1.55rem] font-black uppercase tracking-[0.08em]">{winner.name}</p>
+        <p className="mt-3 font-serif text-[4.6rem] font-black uppercase leading-none">{playoffResultHeadline(recap)}</p>
+        <div className="mt-auto h-px bg-[#a77b28]" />
+        <div className="grid grid-cols-3 divide-x divide-[#a77b28] pt-5 text-[0.74rem] font-black uppercase tracking-[0.06em]">
+          <div className="px-2">
+            <p className="truncate">{recap.courseName}</p>
+            <p className="mt-1 font-medium">{recap.courseMeta ?? ""}</p>
+          </div>
+          <p className="px-2">{formatFullDate(recap.playedOn)}</p>
+          <p className="px-2">{stageLabel(recap.stage)}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function AdminInstagramGraphicGenerator({ recaps }: AdminInstagramGraphicGeneratorProps) {
   const [selectedId, setSelectedId] = useState(recaps[0]?.id ?? "");
   const [textVariant, setTextVariant] = useState<GraphicTextVariant>("standard");
+  const [graphicMode, setGraphicMode] = useState<GraphicMode>(recaps[0] && isPlayoffRecap(recaps[0]) ? "playoff" : "scorecard");
   const [previewUrl, setPreviewUrl] = useState("");
   const selectedRecap = recaps.find((recap) => recap.id === selectedId) ?? recaps[0] ?? null;
+  const selectedIsPlayoff = selectedRecap ? isPlayoffRecap(selectedRecap) : false;
 
   useEffect(() => {
     let active = true;
@@ -904,7 +1336,7 @@ export function AdminInstagramGraphicGenerator({ recaps }: AdminInstagramGraphic
           return;
         }
 
-        drawGraphic(context, selectedRecap, logoImage, textVariant);
+        drawGraphic(context, selectedRecap, logoImage, textVariant, graphicMode);
         setPreviewUrl(canvas.toDataURL("image/png"));
       })();
     });
@@ -913,7 +1345,7 @@ export function AdminInstagramGraphicGenerator({ recaps }: AdminInstagramGraphic
       active = false;
       window.cancelAnimationFrame(frame);
     };
-  }, [selectedRecap, textVariant]);
+  }, [selectedRecap, textVariant, graphicMode]);
 
   if (!selectedRecap) {
     return (
@@ -923,8 +1355,9 @@ export function AdminInstagramGraphicGenerator({ recaps }: AdminInstagramGraphic
     );
   }
 
-  const downloadGraphicPngHref = graphicPngHref(selectedRecap.id, textVariant);
-  const openGraphicPngHref = graphicPngHref(selectedRecap.id, textVariant, "inline");
+  const downloadGraphicPngHref = graphicPngHref(selectedRecap.id, textVariant, graphicMode);
+  const openGraphicPngHref = graphicPngHref(selectedRecap.id, textVariant, graphicMode, "inline");
+  const graphicModeLabel = graphicMode === "playoff" ? "playoff match recap" : "scorecard recap";
 
   return (
     <div className="grid gap-4">
@@ -932,7 +1365,13 @@ export function AdminInstagramGraphicGenerator({ recaps }: AdminInstagramGraphic
         Match
         <select
           value={selectedRecap.id}
-          onChange={(event) => setSelectedId(event.target.value)}
+          onChange={(event) => {
+            const nextId = event.target.value;
+            const nextRecap = recaps.find((recap) => recap.id === nextId);
+
+            setSelectedId(nextId);
+            setGraphicMode(nextRecap && isPlayoffRecap(nextRecap) ? "playoff" : "scorecard");
+          }}
           className="rounded-2xl border border-mist bg-white px-4 py-3 text-base font-semibold normal-case tracking-normal text-ink"
         >
           {recaps.map((recap) => (
@@ -942,6 +1381,28 @@ export function AdminInstagramGraphicGenerator({ recaps }: AdminInstagramGraphic
           ))}
         </select>
       </label>
+
+      <div className="grid gap-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-fairway/72">
+        Mode
+        <div className="grid grid-cols-2 rounded-full border border-mist bg-white p-1 text-sm font-semibold normal-case tracking-normal">
+          {[
+            { key: "scorecard" as const, label: "Scorecard", disabled: selectedIsPlayoff },
+            { key: "playoff" as const, label: "Playoff", disabled: !selectedIsPlayoff }
+          ].map((item) => (
+            <button
+              key={item.key}
+              type="button"
+              disabled={item.disabled}
+              onClick={() => setGraphicMode(item.key)}
+              className={`rounded-full px-4 py-2 transition disabled:cursor-not-allowed disabled:opacity-45 ${
+                graphicMode === item.key ? "bg-pine text-white shadow-sm" : "text-ink/68 hover:bg-sand"
+              }`}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+      </div>
 
       <div className="grid gap-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-fairway/72">
         Version
@@ -968,9 +1429,11 @@ export function AdminInstagramGraphicGenerator({ recaps }: AdminInstagramGraphic
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={previewUrl}
-          alt="Instagram scorecard graphic preview"
+          alt="Instagram graphic preview"
           className="mx-auto aspect-square w-full max-w-[620px] rounded-[30px] shadow-[0_18px_48px_rgba(17,32,23,0.12)]"
         />
+      ) : graphicMode === "playoff" ? (
+        <PlayoffGraphicPreview recap={selectedRecap} />
       ) : (
         <ScorecardGraphicPreview recap={selectedRecap} />
       )}
@@ -978,7 +1441,7 @@ export function AdminInstagramGraphicGenerator({ recaps }: AdminInstagramGraphic
       <div className="flex flex-wrap items-center gap-2">
         <a
           href={downloadGraphicPngHref}
-          download={downloadFilename(selectedRecap, textVariant)}
+          download={downloadFilename(selectedRecap, textVariant, graphicMode)}
           className="rounded-full bg-pine px-4 py-2.5 text-sm font-semibold text-white"
         >
           Download PNG
@@ -992,7 +1455,7 @@ export function AdminInstagramGraphicGenerator({ recaps }: AdminInstagramGraphic
           Open PNG
         </a>
         <p className="text-xs leading-5 text-ink/58">
-          Downloads the selected server-rendered 1080 x 1080 scorecard recap. Use Open PNG if your browser blocks downloads.
+          Downloads the selected server-rendered 1080 x 1080 {graphicModeLabel}. Use Open PNG if your browser blocks downloads.
         </p>
       </div>
     </div>

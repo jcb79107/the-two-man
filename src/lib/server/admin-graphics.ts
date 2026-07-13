@@ -6,8 +6,10 @@ import {
   demoMatches,
   demoTeams
 } from "@/lib/demo/mock-data";
+import { formatMatchPlayResultLabel } from "@/lib/scoring/match-play";
 import { db } from "@/lib/server/db";
 import { getOfficialResultSnapshotForMatch } from "@/lib/server/official-result-snapshot";
+import type { OfficialResultSnapshot } from "@/lib/server/official-result-snapshot";
 
 export interface AdminGraphicRecapHole {
   holeNumber: number;
@@ -28,10 +30,13 @@ export interface AdminGraphicRecap {
   roundLabel: string;
   stage: string;
   status: string;
+  resultLabel: string | null;
   playedOn: string | null;
   courseName: string;
   courseMeta: string | null;
   podName: string | null;
+  homeSeedNumber: number | null;
+  awaySeedNumber: number | null;
   homeTeam: {
     id: string;
     name: string;
@@ -102,6 +107,31 @@ function formatPlayedOn(value: Date | null) {
   return value ? value.toISOString().slice(0, 10) : null;
 }
 
+function buildResultLabel(input: {
+  stage: string;
+  winningTeamId: string | null;
+  snapshot: OfficialResultSnapshot;
+  teamNames: Record<string, string>;
+}) {
+  if (input.stage === "POD_PLAY") {
+    return null;
+  }
+
+  const forfeitWinner = input.snapshot.teamSummaries.find((summary) => summary.resultCode === "FORFEIT_WIN");
+
+  if (forfeitWinner) {
+    return `${input.teamNames[forfeitWinner.teamId] ?? "Team"} wins by forfeit`;
+  }
+
+  return formatMatchPlayResultLabel({
+    teamSummaries: input.snapshot.teamSummaries,
+    teamNames: input.teamNames,
+    playedHoleCount: input.snapshot.holes.length,
+    totalHoleCount: 18,
+    winningTeamId: input.winningTeamId
+  });
+}
+
 function buildDevelopmentDemoRecaps(): AdminGraphicRecap[] {
   if (process.env.NODE_ENV === "production") {
     return [];
@@ -132,10 +162,13 @@ function buildDevelopmentDemoRecaps(): AdminGraphicRecap[] {
       roundLabel: match.roundLabel,
       stage: match.stage,
       status: match.status,
+      resultLabel: null,
       playedOn: match.scheduledAt.slice(0, 10),
       courseName: course?.name ?? "Demo Country Club",
       courseMeta: [course?.city, course?.state].filter(Boolean).join(", ") || null,
       podName: "Pod A",
+      homeSeedNumber: null,
+      awaySeedNumber: null,
       homeTeam: {
         id: homeTeam.id,
         name: homeTeam.name,
@@ -302,10 +335,21 @@ export async function getAdminGraphicRecaps(): Promise<AdminGraphicRecap[]> {
         roundLabel: match.roundLabel,
         stage: match.stage,
         status: match.status,
+        resultLabel: buildResultLabel({
+          stage: match.stage,
+          winningTeamId: officialSnapshot.winningTeamId,
+          snapshot: officialSnapshot,
+          teamNames: {
+            [homeTeamId]: match.homeTeam.name,
+            [awayTeamId]: match.awayTeam.name
+          }
+        }),
         playedOn: formatPlayedOn(match.finalizedAt ?? match.submittedAt ?? match.scheduledAt),
         courseName: match.course?.name ?? "Course pending",
         courseMeta: formatCourseMeta(match.course),
         podName: match.pod?.name ?? null,
+        homeSeedNumber: match.homeSeedNumber,
+        awaySeedNumber: match.awaySeedNumber,
         homeTeam: {
           id: homeTeamId,
           name: match.homeTeam.name,

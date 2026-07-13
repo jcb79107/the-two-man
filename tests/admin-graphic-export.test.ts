@@ -35,6 +35,16 @@ describe("admin graphic PNG export", () => {
     expect(generatorSource).toContain("GRAPHIC_TEXT_WEIGHTS");
   });
 
+  it("keeps playoff graphic mode wired through preview and export", () => {
+    const routeSource = readFileSync(routePath, "utf8");
+    const generatorSource = readFileSync(generatorPath, "utf8");
+
+    expect(routeSource).toContain("X-Two-Man-Graphic-Mode");
+    expect(routeSource).toContain("renderPlayoffGraphicSvg");
+    expect(generatorSource).toContain("Playoff");
+    expect(generatorSource).toContain("drawPlayoffGraphic");
+  });
+
   it("renders real PNG text using the bundled export font", () => {
     expect(existsSync(fontPath)).toBe(true);
 
