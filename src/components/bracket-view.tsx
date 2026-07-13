@@ -1,17 +1,12 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
 import type { DecoratedBracketRound } from "@/lib/server/bracket";
 import { formatDateLabel } from "@/lib/server/formatting";
 
 interface BracketViewProps {
   initialRound?: string;
-  rounds: Array<
-    Omit<DecoratedBracketRound, "matches"> & {
-      matches: Array<DecoratedBracketRound["matches"][number] & { href: string }>;
-    }
-  >;
+  rounds: DecoratedBracketRound[];
 }
 
 function clamp(value: number, min: number, max: number) {
@@ -31,7 +26,11 @@ function statusTone(status: string) {
 }
 
 function statusLabel(status: string) {
-  return status.replace(/_/g, " ");
+  if (status === "FINAL" || status === "FORFEIT") {
+    return "Final";
+  }
+
+  return "Pre-match";
 }
 
 function mobileRoundLabel(label: string) {
@@ -52,6 +51,19 @@ function mobileRoundLabel(label: string) {
 
 function normalizeRoundKey(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, "");
+}
+
+function roundWindowLabel(stage: string) {
+  switch (stage) {
+    case "QUARTERFINAL":
+      return "July window";
+    case "SEMIFINAL":
+      return "August window";
+    case "CHAMPIONSHIP":
+      return "September final";
+    default:
+      return "Playoff window";
+  }
 }
 
 function findInitialRoundIndex(rounds: BracketViewProps["rounds"], initialRound?: string) {
@@ -180,17 +192,17 @@ function BracketMatchCard({
 }) {
   const homeWinner = match.winnerTeamId != null && match.winnerTeamId === match.homeTeamId;
   const awayWinner = match.winnerTeamId != null && match.winnerTeamId === match.awayTeamId;
+  const matchIsFinal = match.winnerTeamId != null && (match.status === "FINAL" || match.status === "FORFEIT");
+  const hasMatchup = Boolean(match.homeTeamId && match.awayTeamId);
+  const coursePickLabel = getCoursePickLabel(match);
 
   return (
-    <Link
-      href={match.href}
-      className="block rounded-[16px] border border-[#d8cab0] bg-white p-3 shadow-[0_8px_20px_rgba(76,58,26,0.08)] transition hover:-translate-y-0.5 hover:border-[#bca36a] hover:shadow-[0_12px_26px_rgba(76,58,26,0.12)]"
-    >
+    <article className="rounded-[16px] border border-[#d8cab0] bg-white p-3 shadow-[0_8px_20px_rgba(76,58,26,0.08)]">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-fairway/48">
             {matchNumber ? `Match ${matchNumber} - ` : ""}
-            {formatDateLabel(match.scheduledAt)}
+            {match.scheduledAt ? formatDateLabel(match.scheduledAt) : roundWindowLabel(match.stage)}
           </p>
           <h3 className="mt-1 text-[1.08rem] font-semibold leading-tight text-ink">
             {match.label}
@@ -223,15 +235,41 @@ function BracketMatchCard({
 
       <div className="mt-3 flex items-center justify-between gap-3 border-t border-[#e4d7ba] pt-3">
         <div>
-          <p className="text-[10px] uppercase tracking-[0.18em] text-fairway/54">Result</p>
+          <p className="text-[10px] uppercase tracking-[0.18em] text-fairway/54">
+            {matchIsFinal ? "Result" : hasMatchup ? "Pre-match" : "Next up"}
+          </p>
           <p className="mt-1 text-sm font-medium leading-snug text-ink/82">
-            {match.resultLabel ?? "Awaiting result"}
+            {matchIsFinal
+              ? match.resultLabel ?? "Result posted"
+              : hasMatchup
+                ? coursePickLabel
+                  ? `${coursePickLabel} has course pick`
+                  : "Higher seed has course pick"
+                : "Waiting on the previous result"}
           </p>
         </div>
-        <span className="shrink-0 text-sm font-semibold text-pine">Open card</span>
+        <span className="shrink-0 rounded-full bg-sand px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-fairway/70">
+          {matchIsFinal ? "Advanced" : hasMatchup ? "Set" : "TBD"}
+        </span>
       </div>
-    </Link>
+    </article>
   );
+}
+
+function getCoursePickLabel(match: BracketViewProps["rounds"][number]["matches"][number]) {
+  if (!match.homeSeedNumber && !match.awaySeedNumber) {
+    return null;
+  }
+
+  if (match.homeSeedNumber && (!match.awaySeedNumber || match.homeSeedNumber < match.awaySeedNumber)) {
+    return `#${match.homeSeedNumber} ${match.homeTeamName}`;
+  }
+
+  if (match.awaySeedNumber) {
+    return `#${match.awaySeedNumber} ${match.awayTeamName}`;
+  }
+
+  return null;
 }
 
 function TeamRow({

@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
+import { formatMatchPlayResultLabel } from "@/lib/scoring/match-play";
 import {
+  buildManualMatchPlaySnapshot,
   computeOfficialResultSnapshotForMatch,
   getOfficialResultSnapshotForMatch
 } from "@/lib/server/official-result-snapshot";
@@ -158,5 +160,33 @@ describe("official result snapshots", () => {
       holesWon: 11,
       resultCode: "WIN"
     });
+  });
+
+  it("builds a manual playoff result snapshot without hole-by-hole scores", () => {
+    const snapshot = buildManualMatchPlaySnapshot({
+      homeTeamId: "team-a",
+      awayTeamId: "team-b",
+      winningTeamId: "team-b",
+      lead: 4,
+      holesRemaining: 3,
+      playedHoleCount: 15,
+      generatedAt: new Date("2026-07-15T12:00:00.000Z")
+    });
+
+    expect(snapshot?.players).toEqual([]);
+    expect(snapshot?.holes).toHaveLength(15);
+    expect(snapshot?.winningTeamId).toBe("team-b");
+    expect(
+      formatMatchPlayResultLabel({
+        teamSummaries: snapshot?.teamSummaries ?? [],
+        teamNames: {
+          "team-a": "Alpha",
+          "team-b": "Bravo"
+        },
+        playedHoleCount: snapshot?.holes.length ?? 0,
+        totalHoleCount: 18,
+        winningTeamId: snapshot?.winningTeamId
+      })
+    ).toBe("Bravo wins 4&3");
   });
 });

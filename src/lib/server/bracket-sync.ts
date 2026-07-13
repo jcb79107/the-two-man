@@ -145,17 +145,6 @@ async function ensureBracketShellMatches(
       roundLabel: "Quarterfinal 2",
       stage: "QUARTERFINAL" as const,
       bracketRoundId: quarterfinalRoundId,
-      homeSeedNumber: 4,
-      awaySeedNumber: 5,
-      homeSeedLabel: "Seed 4",
-      awaySeedLabel: "Seed 5",
-      advancesToLabel: "Semifinal 1",
-      advancesToSlot: "AWAY" as const
-    },
-    {
-      roundLabel: "Quarterfinal 3",
-      stage: "QUARTERFINAL" as const,
-      bracketRoundId: quarterfinalRoundId,
       homeSeedNumber: 2,
       awaySeedNumber: 7,
       homeSeedLabel: "Seed 2",
@@ -164,7 +153,7 @@ async function ensureBracketShellMatches(
       advancesToSlot: "HOME" as const
     },
     {
-      roundLabel: "Quarterfinal 4",
+      roundLabel: "Quarterfinal 3",
       stage: "QUARTERFINAL" as const,
       bracketRoundId: quarterfinalRoundId,
       homeSeedNumber: 3,
@@ -175,13 +164,24 @@ async function ensureBracketShellMatches(
       advancesToSlot: "AWAY" as const
     },
     {
+      roundLabel: "Quarterfinal 4",
+      stage: "QUARTERFINAL" as const,
+      bracketRoundId: quarterfinalRoundId,
+      homeSeedNumber: 4,
+      awaySeedNumber: 5,
+      homeSeedLabel: "Seed 4",
+      awaySeedLabel: "Seed 5",
+      advancesToLabel: "Semifinal 1",
+      advancesToSlot: "AWAY" as const
+    },
+    {
       roundLabel: "Semifinal 1",
       stage: "SEMIFINAL" as const,
       bracketRoundId: semifinalRoundId,
       homeSeedNumber: null,
       awaySeedNumber: null,
       homeSeedLabel: "Winner of Quarterfinal 1",
-      awaySeedLabel: "Winner of Quarterfinal 2",
+      awaySeedLabel: "Winner of Quarterfinal 4",
       advancesToLabel: "Championship",
       advancesToSlot: "HOME" as const
     },
@@ -191,8 +191,8 @@ async function ensureBracketShellMatches(
       bracketRoundId: semifinalRoundId,
       homeSeedNumber: null,
       awaySeedNumber: null,
-      homeSeedLabel: "Winner of Quarterfinal 3",
-      awaySeedLabel: "Winner of Quarterfinal 4",
+      homeSeedLabel: "Winner of Quarterfinal 2",
+      awaySeedLabel: "Winner of Quarterfinal 3",
       advancesToLabel: "Championship",
       advancesToSlot: "AWAY" as const
     },
@@ -462,7 +462,10 @@ async function syncMatchSlot(
       finalizedAt: shouldReset ? null : currentMatch.finalizedAt,
       reopenedAt: shouldReset ? null : currentMatch.reopenedAt,
       courseId: shouldReset ? null : currentMatch.courseId,
-      scheduledAt: shouldReset ? null : currentMatch.scheduledAt
+      scheduledAt: shouldReset ? null : currentMatch.scheduledAt,
+      officialResultSnapshot: shouldReset ? Prisma.DbNull : undefined,
+      officialResultSnapshotVersion: shouldReset ? null : undefined,
+      officialResultSnapshotAt: shouldReset ? null : undefined
     }
   });
 }
@@ -681,20 +684,6 @@ export async function syncTournamentBracketTx(tx: SyncClient, tournamentId: stri
       stage: "QUARTERFINAL",
       bracketId: bracket.id,
       bracketRoundId: roundIdByStage.get("QUARTERFINAL") ?? qf2.bracketRoundId ?? "",
-      homeTeamId: seedSlot(4).teamId,
-      awayTeamId: seedSlot(5).teamId,
-      homeSeedNumber: 4,
-      awaySeedNumber: 5,
-      homeSeedLabel: seedSlot(4).label,
-      awaySeedLabel: seedSlot(5).label,
-      advancesToMatchId: sf1.id,
-      advancesToSlot: "AWAY"
-    },
-    {
-      roundLabel: "Quarterfinal 3",
-      stage: "QUARTERFINAL",
-      bracketId: bracket.id,
-      bracketRoundId: roundIdByStage.get("QUARTERFINAL") ?? qf3.bracketRoundId ?? "",
       homeTeamId: seedSlot(2).teamId,
       awayTeamId: seedSlot(7).teamId,
       homeSeedNumber: 2,
@@ -705,10 +694,10 @@ export async function syncTournamentBracketTx(tx: SyncClient, tournamentId: stri
       advancesToSlot: "HOME"
     },
     {
-      roundLabel: "Quarterfinal 4",
+      roundLabel: "Quarterfinal 3",
       stage: "QUARTERFINAL",
       bracketId: bracket.id,
-      bracketRoundId: roundIdByStage.get("QUARTERFINAL") ?? qf4.bracketRoundId ?? "",
+      bracketRoundId: roundIdByStage.get("QUARTERFINAL") ?? qf3.bracketRoundId ?? "",
       homeTeamId: seedSlot(3).teamId,
       awayTeamId: seedSlot(6).teamId,
       homeSeedNumber: 3,
@@ -716,6 +705,20 @@ export async function syncTournamentBracketTx(tx: SyncClient, tournamentId: stri
       homeSeedLabel: seedSlot(3).label,
       awaySeedLabel: seedSlot(6).label,
       advancesToMatchId: sf2.id,
+      advancesToSlot: "AWAY"
+    },
+    {
+      roundLabel: "Quarterfinal 4",
+      stage: "QUARTERFINAL",
+      bracketId: bracket.id,
+      bracketRoundId: roundIdByStage.get("QUARTERFINAL") ?? qf4.bracketRoundId ?? "",
+      homeTeamId: seedSlot(4).teamId,
+      awayTeamId: seedSlot(5).teamId,
+      homeSeedNumber: 4,
+      awaySeedNumber: 5,
+      homeSeedLabel: seedSlot(4).label,
+      awaySeedLabel: seedSlot(5).label,
+      advancesToMatchId: sf1.id,
       advancesToSlot: "AWAY"
     }
   ];
@@ -729,21 +732,21 @@ export async function syncTournamentBracketTx(tx: SyncClient, tournamentId: stri
     teamNames
   });
   const sf1Away = deriveAdvancingSlot({
+    currentMatch: qf4,
+    expectedMatch: qfExpectationByLabel.get("Quarterfinal 4")!,
+    fallbackLabel: "Winner of Quarterfinal 4",
+    teamNames
+  });
+  const sf2Home = deriveAdvancingSlot({
     currentMatch: qf2,
     expectedMatch: qfExpectationByLabel.get("Quarterfinal 2")!,
     fallbackLabel: "Winner of Quarterfinal 2",
     teamNames
   });
-  const sf2Home = deriveAdvancingSlot({
+  const sf2Away = deriveAdvancingSlot({
     currentMatch: qf3,
     expectedMatch: qfExpectationByLabel.get("Quarterfinal 3")!,
     fallbackLabel: "Winner of Quarterfinal 3",
-    teamNames
-  });
-  const sf2Away = deriveAdvancingSlot({
-    currentMatch: qf4,
-    expectedMatch: qfExpectationByLabel.get("Quarterfinal 4")!,
-    fallbackLabel: "Winner of Quarterfinal 4",
     teamNames
   });
 

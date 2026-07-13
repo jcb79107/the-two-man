@@ -2,16 +2,15 @@ import { notFound } from "next/navigation";
 import { BracketView } from "@/components/bracket-view";
 import { PublicNav } from "@/components/public-nav";
 import { SectionCard } from "@/components/section-card";
-import { ROUTES } from "@/lib/api/routes";
 import { getPublicBracketState } from "@/lib/server/public-tournament";
 
 export const dynamic = "force-dynamic";
 
 const quarterfinalSeedPairs = [
   [1, 8],
-  [4, 5],
   [2, 7],
-  [3, 6]
+  [3, 6],
+  [4, 5]
 ] as const;
 
 export default async function TournamentBracketPage({
@@ -42,13 +41,7 @@ export default async function TournamentBracketPage({
           {state.rounds.length > 0 ? (
             <BracketView
               initialRound={query.round}
-              rounds={state.rounds.map((round) => ({
-                ...round,
-                matches: round.matches.map((match) => ({
-                  ...match,
-                  href: ROUTES.publicMatch(slug, match.id)
-                }))
-              }))}
+              rounds={state.rounds}
             />
           ) : (
             <div className="rounded-[24px] border border-mist bg-white px-4 py-4">

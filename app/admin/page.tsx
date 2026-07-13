@@ -36,16 +36,51 @@ function formatStageLabel(stage: string) {
   return stage === "POD_PLAY" ? "Pod Play" : stage.replaceAll("_", " ");
 }
 
+function isPlayoffStage(stage: string) {
+  return stage !== "POD_PLAY";
+}
+
+function bracketRoundParam(stage: string) {
+  switch (stage) {
+    case "SEMIFINAL":
+      return "semifinals";
+    case "CHAMPIONSHIP":
+      return "championship";
+    case "QUARTERFINAL":
+    default:
+      return "quarterfinals";
+  }
+}
+
 function buildMatchInviteMessage(match: {
   roundLabel: string;
+  stage: string;
   podName: string | null;
   homeTeamName: string | null;
   awayTeamName: string | null;
   playedOn: string | null;
-}, privateUrl: string) {
+}, primaryUrl: string) {
   const matchup = `${match.homeTeamName ?? "TBD"} vs ${match.awayTeamName ?? "TBD"}`;
   const introLine = match.podName ? `${match.roundLabel} • ${match.podName}` : match.roundLabel;
-  const detailLine = match.playedOn ? `Scheduled: ${match.playedOn}` : "Please use the private scorecard link below to set up and post the round.";
+  const detailLine = match.playedOn
+    ? `Scheduled: ${match.playedOn}`
+    : isPlayoffStage(match.stage)
+      ? "Coordinate the match date and course. Higher seed has course selection."
+      : "Please use the private scorecard link below to set up and post the round.";
+
+  if (isPlayoffStage(match.stage)) {
+    return [
+      `The Two Man`,
+      "",
+      introLine,
+      matchup,
+      detailLine,
+      "",
+      `Bracket: ${primaryUrl}`,
+      "",
+      "After the match, send the commissioner the winner and match-play score, for example 1 up or 4&3."
+    ].join("\n");
+  }
 
   return [
     `The Two Man`,
@@ -54,7 +89,7 @@ function buildMatchInviteMessage(match: {
     matchup,
     detailLine,
     "",
-    `Private scorecard: ${privateUrl}`,
+    `Private scorecard: ${primaryUrl}`,
     "",
     "One player in your group should open the link, enter current handicap indexes, and post the official card after the match."
   ].join("\n");
@@ -62,6 +97,7 @@ function buildMatchInviteMessage(match: {
 
 function buildEmailInviteHref(match: {
   roundLabel: string;
+  stage: string;
   podName: string | null;
   homeTeamName: string | null;
   awayTeamName: string | null;
@@ -179,7 +215,16 @@ function scorecardPriority(status: string) {
   }
 }
 
-function buildAdminScorecardPath(row: { privateToken: string; setupComplete: boolean }) {
+function buildAdminScorecardPath(row: {
+  privateToken: string;
+  setupComplete: boolean;
+  isPlayoffMatch?: boolean;
+  matchup?: string;
+}) {
+  if (row.isPlayoffMatch) {
+    return `/admin?section=scorecards&q=${encodeURIComponent(row.matchup ?? "Playoff")}`;
+  }
+
   return row.setupComplete ? ROUTES.adminMatchScorecard(row.privateToken) : ROUTES.adminMatchSetup(row.privateToken);
 }
 
@@ -341,7 +386,8 @@ export default async function AdminPage({
       match.podName,
       match.stage,
       match.status,
-      match.overrideNote
+      match.overrideNote,
+      match.resultLabel
     )
   );
   const searchPlaceholder =
@@ -436,7 +482,9 @@ export default async function AdminPage({
   const pagedActivityItems = activityItems.slice(0, activityVisibleCount);
   const hasMoreActivity = activityVisibleCount < activityItems.length;
   const matchOpsRows = filteredMatchLinks.map((match) => {
-    const privateUrl = `${appUrl}${ROUTES.privateMatch(match.privateToken)}`;
+    const bracketUrl = `${appUrl}${ROUTES.tournamentBracket(data.tournament?.slug ?? "fairway-match-2026")}?round=${bracketRoundParam(match.stage)}`;
+    const privateScorecardUrl = `${appUrl}${ROUTES.privateMatch(match.privateToken)}`;
+    const privateUrl = match.isPlayoffMatch ? bracketUrl : privateScorecardUrl;
     const inviteMessage = buildMatchInviteMessage(match, privateUrl);
     const emailInviteHref = buildEmailInviteHref(match, privateUrl);
     const recipientEmails = match.recipients
@@ -450,6 +498,7 @@ export default async function AdminPage({
 
     return {
       id: match.id,
+      stageCode: match.stage,
       statusCode: match.status,
       stageLabel: formatStageLabel(match.stage),
       statusLabel: match.status.replaceAll("_", " "),
@@ -457,6 +506,14 @@ export default async function AdminPage({
       matchup: `${match.homeTeamName ?? "TBD"} vs ${match.awayTeamName ?? "TBD"}`,
       meta: `${match.roundLabel} • ${match.podName ?? "Playoff"}`,
       timestamp: displayTimestamp,
+      homeTeamId: match.homeTeamId,
+      homeTeamName: match.homeTeamName,
+      homeSeedNumber: match.homeSeedNumber,
+      awayTeamId: match.awayTeamId,
+      awayTeamName: match.awayTeamName,
+      awaySeedNumber: match.awaySeedNumber,
+      winningTeamId: match.winningTeamId,
+      resultLabel: match.resultLabel,
       privateToken: match.privateToken,
       privateUrl,
       inviteMessage,
@@ -466,10 +523,13 @@ export default async function AdminPage({
       scoreEntryCount: match.scoreEntryCount,
       publicUrl:
         match.status === "FINAL" || match.status === "FORFEIT"
-          ? `${appUrl}${ROUTES.publicMatch(data.tournament?.slug ?? "fairway-match-2026", match.publicScorecardSlug)}`
+          ? match.isPlayoffMatch
+            ? bracketUrl
+            : `${appUrl}${ROUTES.publicMatch(data.tournament?.slug ?? "fairway-match-2026", match.publicScorecardSlug)}`
           : null,
       hasAssignedTeams,
-      missingRecipientNames
+      missingRecipientNames,
+      isPlayoffMatch: match.isPlayoffMatch
     };
   });
   const priorityScorecards = matchOpsRows

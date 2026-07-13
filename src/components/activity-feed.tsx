@@ -24,6 +24,23 @@ function getBracketShortcutRound(type: ActivityFeedEvent["type"]): BracketShortc
   }
 }
 
+function getMatchBracketShortcutRound(event: ActivityFeedEvent): BracketShortcutRound | null {
+  if (event.type !== "MATCH_COMPLETED") {
+    return null;
+  }
+
+  switch (event.metadata?.stage) {
+    case "QUARTERFINAL":
+      return "quarterfinals";
+    case "SEMIFINAL":
+      return "semifinals";
+    case "CHAMPIONSHIP":
+      return "championship";
+    default:
+      return null;
+  }
+}
+
 function getFeedEventLabel(type: ActivityFeedEvent["type"]) {
   switch (type) {
     case "MATCH_COMPLETED":
@@ -154,7 +171,7 @@ export function ActivityFeed({ events, linkForMatch, linkForBracket }: ActivityF
 
   const renderEvent = (event: ActivityFeedEvent, index: number, isLast: boolean) => {
     const styles = getFeedEventStyles(event.type);
-    const bracketShortcutRound = getBracketShortcutRound(event.type);
+    const bracketShortcutRound = getMatchBracketShortcutRound(event) ?? getBracketShortcutRound(event.type);
     const bracketHref =
       bracketShortcutRound && linkForBracket ? linkForBracket(bracketShortcutRound) : null;
 
@@ -188,7 +205,14 @@ export function ActivityFeed({ events, linkForMatch, linkForBracket }: ActivityF
             </div>
           </div>
           <p className="mt-1.5 text-sm leading-6 text-ink/70">{event.body}</p>
-          {event.matchId && event.type === "MATCH_COMPLETED" ? (
+          {event.matchId && event.type === "MATCH_COMPLETED" && bracketHref && bracketShortcutRound ? (
+            <Link
+              href={bracketHref}
+              className={`mt-3 inline-flex rounded-full border px-3 py-1.5 text-xs font-semibold transition ${styles.ctaClassName}`}
+            >
+              {getBracketCtaLabel(bracketShortcutRound)}
+            </Link>
+          ) : event.matchId && event.type === "MATCH_COMPLETED" ? (
             <Link
               href={linkForMatch(event.matchId)}
               className={`mt-3 inline-flex rounded-full border px-3 py-1.5 text-xs font-semibold transition ${styles.ctaClassName}`}

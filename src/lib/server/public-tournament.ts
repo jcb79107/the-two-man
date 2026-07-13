@@ -1,7 +1,11 @@
 import "server-only";
 
 import type { TeamMatchSummary } from "@/lib/scoring/types";
-import { formatMatchPlayResultLabel } from "@/lib/scoring/match-play";
+import {
+  formatMatchPlayResultLabel,
+  formatMatchPlayScore,
+  getMatchPlayDecision
+} from "@/lib/scoring/match-play";
 import { applyPublicScorecardCorrections } from "@/lib/server/public-scorecard-corrections";
 import { decorateBracketRounds } from "@/lib/server/bracket";
 import { db } from "@/lib/server/db";
@@ -112,6 +116,12 @@ function buildResultLabel(
   }
 
   if (matchStage && matchStage !== "POD_PLAY") {
+    const forfeitWinner = teamSummaries.find((summary) => summary.resultCode === "FORFEIT_WIN");
+
+    if (forfeitWinner) {
+      return `${teamNames[forfeitWinner.teamId] ?? "Team"} wins by forfeit`;
+    }
+
     return formatMatchPlayResultLabel({
       teamSummaries,
       teamNames,
@@ -306,8 +316,25 @@ function buildComputedFeed(input: {
         orderedSummaries.find((summary) => summary.teamId !== winner?.teamId) ?? orderedSummaries[1];
       const winnerTeamName = winner ? input.teamNames[winner.teamId] ?? "Winning team" : homeTeamName;
       const loserTeamName = loser ? input.teamNames[loser.teamId] ?? "Opponent" : awayTeamName;
+      const isForfeit = Boolean(winner?.resultCode === "FORFEIT_WIN" || loser?.resultCode === "FORFEIT_LOSS");
+      const playoffDecision = match.stage !== "POD_PLAY" && computed
+        ? getMatchPlayDecision({
+            teamSummaries: computed.teamSummaries,
+            playedHoleCount: computed.holes.length,
+            totalHoleCount: 18,
+            winningTeamId: match.winningTeamId
+          })
+        : null;
       const scoreLine =
-        winner && loser ? `${winner.totalPoints}-${loser.totalPoints}` : `${homeTeamName} vs ${awayTeamName}`;
+        isForfeit
+          ? "forfeit"
+          : playoffDecision?.winningTeamId
+          ? formatMatchPlayScore({
+              lead: playoffDecision.lead,
+              holesRemaining: playoffDecision.holesRemaining,
+              isTiebreaker: playoffDecision.leaderTeamId == null
+            })
+          : winner && loser ? `${winner.totalPoints}-${loser.totalPoints}` : `${homeTeamName} vs ${awayTeamName}`;
       const courseLabel = match.course?.name ? ` at ${match.course.name}` : "";
       const isTie =
         !match.winningTeamId &&

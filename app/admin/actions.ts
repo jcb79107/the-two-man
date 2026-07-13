@@ -15,6 +15,7 @@ import {
 import { db } from "@/lib/server/db";
 import { createMatchInvitation } from "@/lib/server/invitations";
 import {
+  buildManualMatchPlaySnapshot,
   computeOfficialResultSnapshotForMatch,
   OFFICIAL_RESULT_SNAPSHOT_VERSION,
   officialResultSnapshotToJson
@@ -26,6 +27,7 @@ import {
   parsePlayerForm,
   parsePlayerUpdateForm,
   parseMatchForfeitForm,
+  parsePlayoffResultForm,
   parseMatchReopenForm,
   parsePodAssignmentForm,
   parsePodForm,
@@ -671,6 +673,120 @@ export async function forfeitMatchAction(formData: FormData) {
     successMessage = `${match.homeTeam?.name ?? "Team"} vs ${match.awayTeam?.name ?? "team"} marked as a forfeit.`;
   } catch (error) {
     adminRedirect("error", error instanceof Error ? error.message : "Failed to record the forfeit.");
+  }
+
+  adminRedirect("success", successMessage);
+}
+
+export async function recordPlayoffResultAction(formData: FormData) {
+  let successMessage = "Playoff result recorded.";
+
+  try {
+    await requireAdminSession();
+    const parsed = parsePlayoffResultForm(formData);
+    const match = await db.match.findUnique({
+      where: {
+        id: parsed.matchId
+      },
+      include: {
+        tournament: {
+          select: {
+            slug: true
+          }
+        },
+        homeTeam: true,
+        awayTeam: true
+      }
+    });
+
+    if (!match) {
+      throw new Error("Match not found.");
+    }
+
+    if (match.stage === "POD_PLAY") {
+      throw new Error("Use the scorecard flow for pod-play matches.");
+    }
+
+    if (!match.homeTeamId || !match.awayTeamId || !match.homeTeam || !match.awayTeam) {
+      throw new Error("This playoff matchup is not set yet.");
+    }
+
+    if (
+      parsed.winnerTeamId !== match.homeTeamId &&
+      parsed.winnerTeamId !== match.awayTeamId
+    ) {
+      throw new Error("Playoff winner must be one of the teams in this match.");
+    }
+
+    const officialResultSnapshot = buildManualMatchPlaySnapshot({
+      homeTeamId: match.homeTeamId,
+      awayTeamId: match.awayTeamId,
+      winningTeamId: parsed.winnerTeamId,
+      lead: parsed.resultScore.lead,
+      holesRemaining: parsed.resultScore.holesRemaining,
+      playedHoleCount: parsed.resultScore.playedHoleCount
+    });
+
+    if (!officialResultSnapshot) {
+      throw new Error("Could not freeze the playoff result.");
+    }
+
+    const winningTeamName =
+      parsed.winnerTeamId === match.homeTeamId ? match.homeTeam.name : match.awayTeam.name;
+    const note =
+      parsed.overrideNote ??
+      `Manual playoff result: ${winningTeamName} wins ${parsed.resultScore.displayScore}.`;
+
+    await db.$transaction(async (tx) => {
+      await tx.holeScore.deleteMany({
+        where: {
+          matchId: parsed.matchId
+        }
+      });
+
+      await tx.matchPlayer.deleteMany({
+        where: {
+          matchId: parsed.matchId
+        }
+      });
+
+      await tx.match.update({
+        where: {
+          id: parsed.matchId
+        },
+        data: {
+          status: "FINAL",
+          winningTeamId: parsed.winnerTeamId,
+          submittedAt: new Date(),
+          finalizedAt: new Date(),
+          reopenedAt: null,
+          isOverride: true,
+          overrideNote: note,
+          officialResultSnapshot: officialResultSnapshotToJson(officialResultSnapshot),
+          officialResultSnapshotVersion: OFFICIAL_RESULT_SNAPSHOT_VERSION,
+          officialResultSnapshotAt: new Date(officialResultSnapshot.generatedAt)
+        }
+      });
+
+      await tx.matchAuditLog.create({
+        data: {
+          id: nanoid(),
+          matchId: parsed.matchId,
+          action: "PLAYOFF_RESULT",
+          actorLabel: "Commissioner",
+          note
+        }
+      });
+
+      await syncTournamentBracketTx(tx, match.tournamentId);
+    });
+
+    revalidatePath("/admin");
+    revalidatePath(`/tournament/${match.tournament.slug}`);
+    revalidatePath(`/tournament/${match.tournament.slug}/bracket`);
+    successMessage = `${winningTeamName} advanced ${parsed.resultScore.displayScore}.`;
+  } catch (error) {
+    adminRedirect("error", error instanceof Error ? error.message : "Failed to record playoff result.");
   }
 
   adminRedirect("success", successMessage);

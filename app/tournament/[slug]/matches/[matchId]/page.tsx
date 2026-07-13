@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { PublicNav } from "@/components/public-nav";
 import { PublicMatchScorecard } from "@/components/public-match-scorecard";
 import { SectionCard } from "@/components/section-card";
@@ -155,6 +156,90 @@ export default async function PublicMatchPage({
 
   if (!data) {
     notFound();
+  }
+
+  if (data.match.stage !== "POD_PLAY") {
+    const homeTeam = data.homeTeam as { id: string; name: string } | null;
+    const awayTeam = data.awayTeam as { id: string; name: string } | null;
+    const teams = [
+      {
+        id: homeTeam?.id ?? "home",
+        name: homeTeam?.name ?? data.match.homeSeedLabel ?? "Home team",
+        seedNumber: data.match.homeSeedNumber ?? null
+      },
+      {
+        id: awayTeam?.id ?? "away",
+        name: awayTeam?.name ?? data.match.awaySeedLabel ?? "Away team",
+        seedNumber: data.match.awaySeedNumber ?? null
+      }
+    ];
+
+    return (
+      <>
+        <PublicNav slug={slug} seasonIsLive={new Date(data.tournamentStartDate) <= new Date()} />
+        <main className="mx-auto flex min-h-screen w-full max-w-[620px] flex-col gap-4 px-4 py-6 pb-24 sm:px-6">
+          <SectionCard
+            title={data.match.roundLabel}
+            eyebrow="Playoff match"
+            action={
+              <span
+                className={`inline-flex rounded-full px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] ${statusPillClass(
+                  data.match.status
+                )}`}
+              >
+                {data.match.status}
+              </span>
+            }
+          >
+            <div className="rounded-[24px] border border-gold/55 bg-[linear-gradient(135deg,#fff8df_0%,#f7ecd0_52%,#fffdf6_100%)] p-4">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-fairway/62">
+                {data.match.status === "FINAL" ? "Final result" : "Matchup"}
+              </p>
+              <h1 className="mt-2 text-2xl font-semibold leading-tight text-pine">
+                {data.match.resultLabel ?? `${teams[0].name} vs ${teams[1].name}`}
+              </h1>
+              <p className="mt-2 text-sm leading-6 text-ink/68">
+                {data.match.status === "FINAL"
+                  ? "Winner advances in the championship bracket."
+                  : "Higher seed has course selection."}
+              </p>
+            </div>
+
+            <div className="mt-4 overflow-hidden rounded-[20px] border border-mist bg-white">
+              {teams.map((team) => {
+                const isWinner = data.match.winningTeamId === team.id;
+
+                return (
+                  <div
+                    key={team.id}
+                    className={`grid grid-cols-[3rem_1fr_auto] items-center gap-3 border-b border-mist/70 px-3 py-3 last:border-b-0 ${
+                      isWinner ? "bg-[#e8f3ed]" : ""
+                    }`}
+                  >
+                    <span className={`grid h-9 w-9 place-items-center rounded-full text-sm font-semibold ${
+                      isWinner ? "bg-pine text-white" : "bg-sand text-ink/70"
+                    }`}>
+                      {team.seedNumber ?? "?"}
+                    </span>
+                    <span className="min-w-0 truncate text-sm font-semibold text-ink">{team.name}</span>
+                    <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-fairway/58">
+                      {isWinner ? "Adv" : "Team"}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+
+            <Link
+              href={`/tournament/${slug}/bracket?round=${data.match.stage.toLowerCase()}`}
+              className="mt-4 inline-flex rounded-full bg-pine px-4 py-2 text-sm font-semibold text-white"
+            >
+              View bracket
+            </Link>
+          </SectionCard>
+        </main>
+      </>
+    );
   }
 
   if (data.scorecard) {

@@ -165,6 +165,86 @@ export function parseMatchForfeitForm(formData: FormData) {
   });
 }
 
+export type PlayoffResultScore = {
+  lead: number;
+  holesRemaining: number;
+  playedHoleCount: number;
+  displayScore: string;
+  isTiebreaker: boolean;
+};
+
+export const playoffResultFormSchema = z.object({
+  matchId: z.string().min(1),
+  winnerTeamId: z.string().min(1),
+  resultScore: z.object({
+    lead: z.number().int().min(0).max(18),
+    holesRemaining: z.number().int().min(0).max(17),
+    playedHoleCount: z.number().int().min(1).max(18),
+    displayScore: z.string().min(1),
+    isTiebreaker: z.boolean()
+  }),
+  overrideNote: z.string().nullable()
+});
+
+export function parsePlayoffResultScore(value: FormDataEntryValue | null): PlayoffResultScore {
+  const raw = requiredString(value, "Match result");
+  const normalized = raw.toLowerCase().replace(/\s+/g, "");
+
+  if (["tb", "tiebreak", "tiebreaker"].includes(normalized)) {
+    return {
+      lead: 0,
+      holesRemaining: 0,
+      playedHoleCount: 18,
+      displayScore: "TB",
+      isTiebreaker: true
+    };
+  }
+
+  const upMatch = normalized.match(/^(\d+)(?:up|u)$/);
+  const closedMatch = normalized.match(/^(\d+)&(\d+)$/);
+  const lead = Number.parseInt(upMatch?.[1] ?? closedMatch?.[1] ?? "", 10);
+  const holesRemaining = upMatch ? 0 : Number.parseInt(closedMatch?.[2] ?? "", 10);
+
+  if (!Number.isFinite(lead) || !Number.isFinite(holesRemaining)) {
+    throw new Error("Enter a match-play result like 1 up, 4&3, or TB.");
+  }
+
+  if (lead < 1 || lead > 18) {
+    throw new Error("Match-play lead must be between 1 and 18.");
+  }
+
+  if (holesRemaining < 0 || holesRemaining > 17) {
+    throw new Error("Holes remaining must be between 0 and 17.");
+  }
+
+  const playedHoleCount = 18 - holesRemaining;
+
+  if (lead > playedHoleCount) {
+    throw new Error("Match-play lead cannot exceed holes played.");
+  }
+
+  if (holesRemaining > 0 && lead <= holesRemaining) {
+    throw new Error("Closed-out results must have a lead greater than the holes remaining.");
+  }
+
+  return {
+    lead,
+    holesRemaining,
+    playedHoleCount,
+    displayScore: holesRemaining === 0 ? `${lead} up` : `${lead}&${holesRemaining}`,
+    isTiebreaker: false
+  };
+}
+
+export function parsePlayoffResultForm(formData: FormData) {
+  return playoffResultFormSchema.parse({
+    matchId: requiredString(formData.get("matchId"), "Match"),
+    winnerTeamId: requiredString(formData.get("winnerTeamId"), "Winning team"),
+    resultScore: parsePlayoffResultScore(formData.get("resultScore")),
+    overrideNote: optionalString(formData.get("overrideNote"))
+  });
+}
+
 export const teamFormSchema = z
   .object({
     name: z.string().min(1),

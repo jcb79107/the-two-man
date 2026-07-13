@@ -1,6 +1,8 @@
 import "server-only";
 
+import { formatMatchPlayResultLabel } from "@/lib/scoring/match-play";
 import { db } from "@/lib/server/db";
+import { parseOfficialResultSnapshot } from "@/lib/server/official-result-snapshot";
 
 export interface AdminDashboardData {
   databaseReady: boolean;
@@ -42,6 +44,8 @@ export interface AdminDashboardData {
     roundLabel: string;
     stage: string;
     status: string;
+    winningTeamId: string | null;
+    resultLabel: string | null;
     createdAt: string;
     updatedAt: string;
     submittedAt: string | null;
@@ -51,8 +55,10 @@ export interface AdminDashboardData {
     podName: string | null;
     homeTeamId: string | null;
     homeTeamName: string | null;
+    homeSeedNumber: number | null;
     awayTeamId: string | null;
     awayTeamName: string | null;
+    awaySeedNumber: number | null;
     privateToken: string;
     publicScorecardSlug: string;
     isOverride: boolean;
@@ -60,6 +66,7 @@ export interface AdminDashboardData {
     playedOn: string | null;
     setupComplete: boolean;
     scoreEntryCount: number;
+    isPlayoffMatch: boolean;
     recipients: Array<{
       playerId: string;
       displayName: string;
@@ -280,12 +287,32 @@ export async function getAdminDashboardData(): Promise<AdminDashboardData> {
         displayName: entry.player.displayName,
         email: entry.player.email ?? null
       }));
+      const snapshot = match.stage !== "POD_PLAY"
+        ? parseOfficialResultSnapshot(match.officialResultSnapshot)
+        : null;
+      const teamNames = Object.fromEntries(
+        [
+          [match.homeTeamId, match.homeTeam?.name],
+          [match.awayTeamId, match.awayTeam?.name]
+        ].filter((entry): entry is [string, string] => Boolean(entry[0] && entry[1]))
+      );
+      const resultLabel = snapshot
+        ? formatMatchPlayResultLabel({
+            teamSummaries: snapshot.teamSummaries,
+            teamNames,
+            playedHoleCount: snapshot.holes.length,
+            totalHoleCount: 18,
+            winningTeamId: match.winningTeamId
+          })
+        : null;
 
       return {
         id: match.id,
         roundLabel: match.roundLabel,
         stage: match.stage,
         status: match.status,
+        winningTeamId: match.winningTeamId,
+        resultLabel,
         createdAt: match.createdAt.toISOString(),
         updatedAt: match.updatedAt.toISOString(),
         submittedAt: match.submittedAt?.toISOString() ?? null,
@@ -295,8 +322,10 @@ export async function getAdminDashboardData(): Promise<AdminDashboardData> {
         podName: match.pod?.name ?? null,
         homeTeamId: match.homeTeamId ?? null,
         homeTeamName: match.homeTeam?.name ?? null,
+        homeSeedNumber: match.homeSeedNumber ?? null,
         awayTeamId: match.awayTeamId ?? null,
         awayTeamName: match.awayTeam?.name ?? null,
+        awaySeedNumber: match.awaySeedNumber ?? null,
         privateToken: match.privateToken,
         publicScorecardSlug: match.publicScorecardSlug,
         isOverride: match.isOverride,
@@ -306,6 +335,7 @@ export async function getAdminDashboardData(): Promise<AdminDashboardData> {
           : null,
         setupComplete: match._count.playerSelections === 4,
         scoreEntryCount: match._count.holeScores,
+        isPlayoffMatch: match.stage !== "POD_PLAY",
         recipients
       };
     });

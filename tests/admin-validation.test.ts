@@ -3,6 +3,7 @@ import {
   parseAdminLoginForm,
   parseMatchForm,
   parsePodAssignmentForm,
+  parsePlayoffResultForm,
   parseTeamForm,
   parseTeamSeedUpdateForm
 } from "@/lib/server/admin-validation";
@@ -83,5 +84,36 @@ describe("admin validation safeguards", () => {
     });
 
     expect(() => parsePodAssignmentForm(formData)).toThrow();
+  });
+
+  it("parses playoff match-play results", () => {
+    const formData = buildFormData({
+      matchId: "match-1",
+      winnerTeamId: "team-1",
+      resultScore: "4&3"
+    });
+
+    expect(parsePlayoffResultForm(formData)).toEqual({
+      matchId: "match-1",
+      winnerTeamId: "team-1",
+      resultScore: {
+        lead: 4,
+        holesRemaining: 3,
+        playedHoleCount: 15,
+        displayScore: "4&3",
+        isTiebreaker: false
+      },
+      overrideNote: null
+    });
+  });
+
+  it("rejects playoff results that are not closed out", () => {
+    const formData = buildFormData({
+      matchId: "match-1",
+      winnerTeamId: "team-1",
+      resultScore: "2&3"
+    });
+
+    expect(() => parsePlayoffResultForm(formData)).toThrow(/closed-out/i);
   });
 });

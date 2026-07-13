@@ -229,6 +229,74 @@ function buildForfeitSnapshot(
   };
 }
 
+export function buildManualMatchPlaySnapshot(input: {
+  homeTeamId: string;
+  awayTeamId: string;
+  winningTeamId: string;
+  lead: number;
+  holesRemaining: number;
+  playedHoleCount: number;
+  generatedAt?: Date;
+}): OfficialResultSnapshot | null {
+  if (input.winningTeamId !== input.homeTeamId && input.winningTeamId !== input.awayTeamId) {
+    return null;
+  }
+
+  const losingTeamId = input.winningTeamId === input.homeTeamId ? input.awayTeamId : input.homeTeamId;
+  const playedHoleCount = Math.min(18, Math.max(1, input.playedHoleCount));
+  const lead = Math.min(18, Math.max(0, input.lead));
+  const winnerPoints = (playedHoleCount + lead) / 2;
+  const loserPoints = playedHoleCount - winnerPoints;
+  const teamSummaries: TeamMatchSummary[] = [
+    {
+      teamId: input.winningTeamId,
+      totalPoints: winnerPoints,
+      holesWon: lead,
+      betterBallGrossTotal: null,
+      betterBallNetTotal: null,
+      resultCode: "WIN"
+    },
+    {
+      teamId: losingTeamId,
+      totalPoints: loserPoints,
+      holesWon: 0,
+      betterBallGrossTotal: null,
+      betterBallNetTotal: null,
+      resultCode: "LOSS"
+    }
+  ];
+  const holes = Array.from({ length: playedHoleCount }, (_, index) => {
+    const holeNumber = index + 1;
+
+    return {
+      holeNumber,
+      teamPoints: {},
+      teamBetterBallGross: {},
+      teamBetterBallNet: {},
+      winningTeamId: null,
+      playerNetScores: {}
+    };
+  });
+
+  return {
+    version: OFFICIAL_RESULT_SNAPSHOT_VERSION,
+    generatedAt: (input.generatedAt ?? new Date()).toISOString(),
+    winningTeamId: input.winningTeamId,
+    allowancePct: 0.9,
+    maxStrokesPerHole: 1,
+    lowPlayerId: null,
+    teamSummaries,
+    holes,
+    players: [],
+    holeMeta: holes.map((hole) => ({
+      holeNumber: hole.holeNumber,
+      par: 4,
+      strokeIndex: hole.holeNumber,
+      yardage: null
+    }))
+  };
+}
+
 export function computeOfficialResultSnapshotForMatch(
   match: MatchForOfficialResult,
   options?: { generatedAt?: Date }

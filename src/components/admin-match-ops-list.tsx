@@ -3,7 +3,7 @@
 import Link from "next/link";
 import type { FormEvent } from "react";
 import { useState, useSyncExternalStore } from "react";
-import { resetMatchCardAction } from "../../app/admin/actions";
+import { recordPlayoffResultAction, resetMatchCardAction } from "../../app/admin/actions";
 import { CopyButton } from "@/components/copy-button";
 import { EmailInviteButton } from "@/components/email-invite-button";
 import { LocalTimestamp } from "@/components/local-timestamp";
@@ -15,6 +15,7 @@ let inviteSnapshotCache: Record<string, string> = {};
 
 export interface AdminMatchOpsRow {
   id: string;
+  stageCode: string;
   statusCode: string;
   stageLabel: string;
   statusLabel: string;
@@ -22,6 +23,14 @@ export interface AdminMatchOpsRow {
   matchup: string;
   meta: string;
   timestamp: string | null;
+  homeTeamId: string | null;
+  homeTeamName: string | null;
+  homeSeedNumber: number | null;
+  awayTeamId: string | null;
+  awayTeamName: string | null;
+  awaySeedNumber: number | null;
+  winningTeamId: string | null;
+  resultLabel: string | null;
   privateToken: string;
   privateUrl: string;
   inviteMessage: string;
@@ -32,6 +41,7 @@ export interface AdminMatchOpsRow {
   publicUrl: string | null;
   hasAssignedTeams: boolean;
   missingRecipientNames: string[];
+  isPlayoffMatch: boolean;
 }
 
 interface AdminMatchOpsListProps {
@@ -45,6 +55,7 @@ type AdminMatchOpsFilter =
   | "sent"
   | "missing-email"
   | "waiting-field"
+  | "playoffs"
   | "needs-setup"
   | "empty"
   | "live"
@@ -112,6 +123,10 @@ function matchPriority(row: AdminMatchOpsRow, sentAt: string | undefined, mode: 
     return isFinalStatus(row.statusCode) ? 5 : 4;
   }
 
+  if (row.isPlayoffMatch) {
+    return isFinalStatus(row.statusCode) ? 5 : 1;
+  }
+
   if (!row.setupComplete) return 1;
   if (row.statusCode === "READY") return 1;
   if (row.statusCode === "SUBMITTED" || row.statusCode === "REOPENED") return 2;
@@ -155,11 +170,11 @@ export function AdminMatchOpsList({ rows, mode = "scorecards" }: AdminMatchOpsLi
     }
 
     if (filter === "needs-setup") {
-      return row.hasAssignedTeams && !row.setupComplete;
+      return row.hasAssignedTeams && !row.isPlayoffMatch && !row.setupComplete;
     }
 
     if (filter === "empty") {
-      return row.setupComplete && row.statusCode === "READY";
+      return !row.isPlayoffMatch && row.setupComplete && row.statusCode === "READY";
     }
 
     if (filter === "live") {
@@ -172,6 +187,10 @@ export function AdminMatchOpsList({ rows, mode = "scorecards" }: AdminMatchOpsLi
 
     if (filter === "waiting-field") {
       return !row.hasAssignedTeams;
+    }
+
+    if (filter === "playoffs") {
+      return row.isPlayoffMatch;
     }
     return true;
   }).sort((left, right) => {
@@ -191,13 +210,15 @@ export function AdminMatchOpsList({ rows, mode = "scorecards" }: AdminMatchOpsLi
   }
 
   function confirmReset(event: FormEvent<HTMLFormElement>) {
-    if (!window.confirm("Reset this scorecard back to a blank setup state?")) {
+    if (!window.confirm("Reset this match back to a blank state?")) {
       event.preventDefault();
     }
   }
 
-  const needsSetupCount = rows.filter((row) => row.hasAssignedTeams && !row.setupComplete).length;
-  const readyCount = rows.filter((row) => row.setupComplete && row.statusCode === "READY").length;
+  const playoffOpenCount = rows.filter(
+    (row) => row.isPlayoffMatch && row.hasAssignedTeams && !isFinalStatus(row.statusCode)
+  ).length;
+  const needsSetupCount = rows.filter((row) => row.hasAssignedTeams && !row.isPlayoffMatch && !row.setupComplete).length;
   const liveCount = rows.filter((row) => isLiveStatus(row.statusCode)).length;
   const missingEmailCount = rows.filter(
     (row) => row.hasAssignedTeams && row.missingRecipientNames.length > 0
@@ -218,8 +239,8 @@ export function AdminMatchOpsList({ rows, mode = "scorecards" }: AdminMatchOpsLi
           { label: "No matchup", value: waitingFieldCount, tone: "text-[#5b4696]" }
         ]
       : [
+          { label: "Playoff open", value: playoffOpenCount, tone: "text-[#5b4696]" },
           { label: "Needs setup", value: needsSetupCount, tone: "text-[#8a6b08]" },
-          { label: "Empty cards", value: readyCount, tone: "text-[#8a6b08]" },
           { label: "Live edits", value: liveCount, tone: "text-[#8a6b08]" },
           { label: "Final cards", value: finalCount, tone: "text-fairway" }
         ];
@@ -235,6 +256,7 @@ export function AdminMatchOpsList({ rows, mode = "scorecards" }: AdminMatchOpsLi
         ]
       : [
           ["all", "All"],
+          ["playoffs", "Playoffs"],
           ["needs-setup", "Needs setup"],
           ["empty", "Empty cards"],
           ["live", "Live edits"],
@@ -258,6 +280,91 @@ export function AdminMatchOpsList({ rows, mode = "scorecards" }: AdminMatchOpsLi
     return "Continue scoring";
   }
 
+  function getCoursePickLabel(row: AdminMatchOpsRow) {
+    if (!row.homeSeedNumber && !row.awaySeedNumber) {
+      return null;
+    }
+
+    if (row.homeSeedNumber && (!row.awaySeedNumber || row.homeSeedNumber < row.awaySeedNumber)) {
+      return `#${row.homeSeedNumber} ${row.homeTeamName ?? "Home team"}`;
+    }
+
+    if (row.awaySeedNumber) {
+      return `#${row.awaySeedNumber} ${row.awayTeamName ?? "Away team"}`;
+    }
+
+    return null;
+  }
+
+  function renderPlayoffResultForm(row: AdminMatchOpsRow) {
+    const coursePickLabel = getCoursePickLabel(row);
+
+    if (!row.hasAssignedTeams || !row.homeTeamId || !row.awayTeamId) {
+      return (
+        <span className="rounded-full border border-[#cab8f2] bg-[#f3ebff] px-3 py-2 text-xs font-medium text-[#5b4696]">
+          Waiting on matchup
+        </span>
+      );
+    }
+
+    return (
+      <div className="grid w-full gap-2">
+        {coursePickLabel ? (
+          <p className="text-xs font-medium text-ink/58">Course pick: {coursePickLabel}</p>
+        ) : null}
+        <form action={recordPlayoffResultAction} className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_7.5rem_auto]">
+          <input type="hidden" name="matchId" value={row.id} />
+          <label className="sr-only" htmlFor={`winner-${row.id}`}>
+            Winner
+          </label>
+          <select
+            id={`winner-${row.id}`}
+            name="winnerTeamId"
+            defaultValue={row.winningTeamId ?? ""}
+            className="min-h-11 rounded-2xl border border-mist bg-white px-3 py-2 text-sm font-medium text-ink"
+          >
+            <option value="" disabled>
+              Winner
+            </option>
+            <option value={row.homeTeamId}>{row.homeTeamName ?? "Home team"}</option>
+            <option value={row.awayTeamId}>{row.awayTeamName ?? "Away team"}</option>
+          </select>
+          <label className="sr-only" htmlFor={`result-${row.id}`}>
+            Result
+          </label>
+          <input
+            id={`result-${row.id}`}
+            name="resultScore"
+            placeholder="4&3"
+            className="min-h-11 rounded-2xl border border-mist bg-white px-3 py-2 text-sm font-medium text-ink placeholder:text-ink/36"
+          />
+          <button
+            type="submit"
+            className="min-h-11 rounded-full bg-pine px-4 py-2 text-sm font-semibold text-white"
+          >
+            {isFinalStatus(row.statusCode) ? "Update" : "Record"}
+          </button>
+        </form>
+        {isFinalStatus(row.statusCode) ? (
+          <form action={resetMatchCardAction} onSubmit={confirmReset}>
+            <input type="hidden" name="matchId" value={row.id} />
+            <input
+              type="hidden"
+              name="overrideNote"
+              value="Reset playoff result from scorecard manager."
+            />
+            <button
+              type="submit"
+              className="rounded-full border border-[#d7c28d] bg-white px-4 py-2.5 text-sm font-semibold text-[#7a5a00]"
+            >
+              Reset result
+            </button>
+          </form>
+        ) : null}
+      </div>
+    );
+  }
+
   function renderRow(row: AdminMatchOpsRow) {
     const sentAt = inviteSentMap[row.id];
     const adminCardPath = row.setupComplete
@@ -265,9 +372,11 @@ export function AdminMatchOpsList({ rows, mode = "scorecards" }: AdminMatchOpsLi
       : `/admin/match/${row.privateToken}/setup`;
     const showEmailWarning = row.hasAssignedTeams && row.missingRecipientNames.length > 0;
     const isWaitingField = !row.hasAssignedTeams;
-    const scoreProgressLabel = row.setupComplete
-      ? `${Math.min(row.scoreEntryCount, 72)}/72 scores entered`
-      : "Needs course, tees, and handicap snapshot";
+    const scoreProgressLabel = row.isPlayoffMatch
+      ? row.resultLabel ?? "Awaiting winner and match-play score"
+      : row.setupComplete
+        ? `${Math.min(row.scoreEntryCount, 72)}/72 scores entered`
+        : "Needs course, tees, and handicap snapshot";
     const inviteStatusLabel = isWaitingField
       ? "No matchup"
       : showEmailWarning
@@ -302,7 +411,7 @@ export function AdminMatchOpsList({ rows, mode = "scorecards" }: AdminMatchOpsLi
                 {row.stageLabel}
               </span>
               <span className={`rounded-full border px-3 py-1.5 text-[11px] font-medium ${row.statusTone}`}>
-                {row.setupComplete ? row.statusLabel : "SETUP NEEDED"}
+                {row.isPlayoffMatch ? row.statusLabel : row.setupComplete ? row.statusLabel : "SETUP NEEDED"}
               </span>
             </>
           )}
@@ -374,7 +483,9 @@ export function AdminMatchOpsList({ rows, mode = "scorecards" }: AdminMatchOpsLi
             </>
           ) : (
             <>
-              {row.hasAssignedTeams ? (
+              {row.isPlayoffMatch ? (
+                renderPlayoffResultForm(row)
+              ) : row.hasAssignedTeams ? (
                 <Link
                   href={adminCardPath}
                   className="rounded-full bg-pine px-4 py-2.5 text-sm font-semibold text-white"
@@ -386,7 +497,7 @@ export function AdminMatchOpsList({ rows, mode = "scorecards" }: AdminMatchOpsLi
                   Waiting on matchup
                 </span>
               )}
-              {row.hasAssignedTeams ? (
+              {row.hasAssignedTeams && !row.isPlayoffMatch ? (
                 <form action={resetMatchCardAction} onSubmit={confirmReset}>
                   <input type="hidden" name="matchId" value={row.id} />
                   <input
