@@ -1,9 +1,11 @@
 node_modules
 .next
-.next.bak
+.next*
 .next-build-failed-*
+.DS_Store
 coverage
 dist
+exports
 .env
 .env.local
 .env*.local

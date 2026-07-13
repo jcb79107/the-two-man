@@ -482,7 +482,7 @@ export default async function AdminPage({
   const pagedActivityItems = activityItems.slice(0, activityVisibleCount);
   const hasMoreActivity = activityVisibleCount < activityItems.length;
   const matchOpsRows = filteredMatchLinks.map((match) => {
-    const bracketUrl = `${appUrl}${ROUTES.tournamentBracket(data.tournament?.slug ?? "fairway-match-2026")}?round=${bracketRoundParam(match.stage)}`;
+    const bracketUrl = `${appUrl}${ROUTES.tournamentBracket(data.tournament?.slug ?? "the-two-man-2026")}?round=${bracketRoundParam(match.stage)}`;
     const privateScorecardUrl = `${appUrl}${ROUTES.privateMatch(match.privateToken)}`;
     const privateUrl = match.isPlayoffMatch ? bracketUrl : privateScorecardUrl;
     const inviteMessage = buildMatchInviteMessage(match, privateUrl);
@@ -525,7 +525,7 @@ export default async function AdminPage({
         match.status === "FINAL" || match.status === "FORFEIT"
           ? match.isPlayoffMatch
             ? bracketUrl
-            : `${appUrl}${ROUTES.publicMatch(data.tournament?.slug ?? "fairway-match-2026", match.publicScorecardSlug)}`
+            : `${appUrl}${ROUTES.publicMatch(data.tournament?.slug ?? "the-two-man-2026", match.publicScorecardSlug)}`
           : null,
       hasAssignedTeams,
       missingRecipientNames,

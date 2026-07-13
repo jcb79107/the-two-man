@@ -2,12 +2,10 @@ import { PrismaClient } from "@prisma/client";
 import { nanoid } from "nanoid";
 import { readFileSync } from "node:fs";
 
-const DEFAULT_TEAMS_CSV =
-  "/Users/jason/Downloads/2026 Individual or Two Man Match Play Bracket Opt-In (Responses) - Teams.csv";
-const DEFAULT_PODS_CSV =
-  "/Users/jason/Downloads/2026 Individual or Two Man Match Play Bracket Opt-In (Responses) - Pods.csv";
-const DEFAULT_EMAILS_CSV =
-  "/Users/jason/Downloads/2026 Individual or Two Man Match Play Bracket Opt-In (Responses) - ghin.csv";
+const USAGE = `Usage: npm run field:import:csv -- <teams.csv> <pods.csv> <emails.csv> [--dry-run]
+
+Example:
+  npm run field:import:csv -- data/examples/teams.example.csv data/examples/pods.example.csv data/examples/emails.example.csv --dry-run`;
 
 const TEAM_NAME_ALIASES = new Map([
   ["jolcolver", "jolc"],
@@ -292,7 +290,7 @@ async function importToDatabase(plan) {
       data: {
         id: "tournament-2026",
         name: "The Two Man",
-        slug: "fairway-match-2026",
+        slug: "the-two-man-2026",
         seasonYear: 2026,
         status: "ACTIVE",
         startDate: new Date("2026-05-01T00:00:00.000Z"),
@@ -415,9 +413,11 @@ async function main() {
   const dryRun = args.includes("--dry-run");
   const positionalArgs = args.filter((arg) => arg !== "--dry-run");
 
-  const teamsCsvPath = positionalArgs[0] ?? DEFAULT_TEAMS_CSV;
-  const podsCsvPath = positionalArgs[1] ?? DEFAULT_PODS_CSV;
-  const emailsCsvPath = positionalArgs[2] ?? DEFAULT_EMAILS_CSV;
+  if (positionalArgs.length < 3) {
+    throw new Error(USAGE);
+  }
+
+  const [teamsCsvPath, podsCsvPath, emailsCsvPath] = positionalArgs;
 
   const plan = buildImportPlan(teamsCsvPath, podsCsvPath, emailsCsvPath);
 

@@ -3,7 +3,7 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 async function main() {
-  const tournamentSlug = process.argv[2] ?? "fairway-match-2026";
+  const tournamentSlug = process.argv[2] ?? "the-two-man-2026";
 
   const tournament = await prisma.tournament.findUnique({
     where: {

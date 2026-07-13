@@ -294,7 +294,7 @@ export function PrivateMatchWorkspace({
   const [submittedThisSession, setSubmittedThisSession] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [isSearchingCourses, startCourseSearchTransition] = useTransition();
-  const localDraftStorageKey = `fairway-match:draft:${data.match.privateToken}`;
+  const localDraftStorageKey = `the-two-man:draft:${data.match.privateToken}`;
   const canAdminOverridePostedCard = adminMode && pageMode === "scorecard" && data.isPublished;
   const isScorecardReadOnly = data.isPublished && !canAdminOverridePostedCard;
   const showSubmittedConfirmation = data.isPublished && submittedThisSession && !canAdminOverridePostedCard;

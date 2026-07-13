@@ -8,7 +8,7 @@ import { CopyButton } from "@/components/copy-button";
 import { EmailInviteButton } from "@/components/email-invite-button";
 import { LocalTimestamp } from "@/components/local-timestamp";
 
-const SENT_INVITE_STORAGE_KEY = "fairway-match.admin.sent-invite-map";
+const SENT_INVITE_STORAGE_KEY = "the-two-man.admin.sent-invite-map";
 const EMPTY_INVITE_SNAPSHOT: Record<string, string> = {};
 let inviteSnapshotCacheKey: string | null | undefined;
 let inviteSnapshotCache: Record<string, string> = {};

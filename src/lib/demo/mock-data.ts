@@ -14,7 +14,7 @@ import type {
   TournamentSummary
 } from "@/types/models";
 
-export const DEMO_TOURNAMENT_SLUG = "fairway-match-2026";
+export const DEMO_TOURNAMENT_SLUG = "the-two-man-2026";
 export const DEMO_PRIVATE_MATCH_TOKEN = "fm_demo_pod_a_01";
 
 const STANDARD_PARS = [4, 4, 3, 5, 4, 4, 3, 4, 4, 4, 3, 5, 4, 4, 3, 4, 5, 4];

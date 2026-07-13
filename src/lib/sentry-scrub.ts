@@ -1,7 +1,20 @@
-import type { ErrorEvent } from "@sentry/core";
-
 const SENSITIVE_KEY_PATTERN =
   /(admin|authorization|cookie|database|dsn|email|password|phone|private|secret|token)/i;
+
+type ScrubbableSentryEvent = {
+  request?: {
+    url?: string;
+    query_string?: unknown;
+    headers?: unknown;
+    cookies?: unknown;
+    data?: unknown;
+  };
+  user?: {
+    email?: string;
+    ip_address?: string | null;
+    [key: string]: unknown;
+  };
+};
 
 function redactMatchUrls(value: string) {
   return value
@@ -22,7 +35,7 @@ function redactRecord(record: unknown) {
   }
 }
 
-export function scrubSentryEvent(event: ErrorEvent) {
+export function scrubSentryEvent<TEvent extends ScrubbableSentryEvent>(event: TEvent) {
   if (event.request) {
     if (event.request.url) {
       event.request.url = redactMatchUrls(event.request.url);

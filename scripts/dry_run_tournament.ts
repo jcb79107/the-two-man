@@ -598,7 +598,12 @@ async function checkPublicEndpoints(slug: string, publicScorecardSlug: string) {
 }
 
 async function main() {
-  const preferredSlugs = [TOURNAMENT_SLUG, "two-match-2026", "fairway-match-2026"].filter(
+  const preferredSlugs = [
+    TOURNAMENT_SLUG,
+    "the-two-man-2026",
+    "two-match-2026",
+    "fairway-match-2026"
+  ].filter(
     (value): value is string => Boolean(value)
   );
   let tournament =

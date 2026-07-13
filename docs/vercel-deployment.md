@@ -1,112 +1,112 @@
 # Vercel Deployment Guide
 
-This repo is a good fit for Vercel:
+The Two Man is already connected to Vercel. Do not create a new project for
+normal production work.
 
-- Next.js App Router app
-- clean production build
-- GitHub remote already set to `jcb79107/fairway-match`
-- PostgreSQL via Prisma
+## Canonical Production Setup
 
-## Recommended Hosting Shape
+- GitHub repo: `jcb79107/the-two-man`
+- Vercel project: `the_two_man`
+- Production domain: `https://www.thetwoman.site`
+- Production branch: `main`
+- Build command: `npx prisma generate && npx next build`
 
-- App hosting: Vercel
-- Database: managed Postgres connected through `DATABASE_URL`
-- Source of truth: GitHub
-- Custom domain: attached in Vercel, DNS managed either in Vercel or at your registrar
+The build command is defined in `vercel.json` so Prisma Client is generated
+before the Next.js build.
 
-This is the fastest path to a live site on a purchased domain.
-
-## Required Environment Variables
+## Required Production Environment
 
 Set these in Vercel Project Settings -> Environment Variables:
 
-- `DATABASE_URL`
+- `DATABASE_URL` or the Vercel/Neon Postgres aliases used by the project
 - `ADMIN_PASSWORD`
 - `ADMIN_SESSION_SECRET`
-- `NEXT_PUBLIC_APP_URL`
-- `GOLF_COURSE_API_KEY` if you want course lookup
+- `NEXT_PUBLIC_APP_URL=https://www.thetwoman.site`
+- `APP_URL=https://www.thetwoman.site`
+- `THE_TWO_MAN_VALIDATE_PROD_DB=1`
 
-Suggested value for `NEXT_PUBLIC_APP_URL`:
+Optional production variables:
 
-- `https://www.yourdomain.com` if `www` is your canonical host
-- `https://yourdomain.com` if apex is your canonical host
+- `SENTRY_DSN`
+- `NEXT_PUBLIC_SENTRY_DSN`
+- `SENTRY_AUTH_TOKEN`
+- `GOLF_COURSE_API_KEY`
+- `DISABLED_UNLICENSED_SOURCES`
+- `USGA_LOOKUP_SCRIPT`
 
-## Create the Vercel Project
+The expected live Neon target is documented in `docs/production-database-target.md`.
+The runtime guardrail refuses to start in production-like environments if the
+configured database URL points at known stale targets.
 
-1. In Vercel, create a new project from the GitHub repo `jcb79107/fairway-match`.
-2. Let Vercel detect Next.js automatically.
-3. Keep the repo root as the project root.
-4. Deploy once to get the initial `.vercel.app` URL.
+## Local Preflight
 
-This repo includes [`vercel.json`](./../vercel.json), which forces Prisma Client generation before the Vercel build so schema changes do not get stuck behind cached dependencies.
-
-## Create the Production Database
-
-Use any managed PostgreSQL provider that gives you a standard Postgres connection string.
-
-Two practical options:
-
-- Prisma Postgres through the Vercel Marketplace
-- Neon through the Vercel Marketplace
-
-Once created, copy the production connection string into `DATABASE_URL` in Vercel.
-
-## Initialize the Database Schema
-
-This repo does not currently have a Prisma migrations folder, so the bootstrap path is `prisma db push`.
-
-From your local machine, run against the production database:
+Before deploying, start from a clean synced `main`:
 
 ```bash
-cd /Users/jason/Developer/active/fairway-match
-DATABASE_URL="your-production-connection-string" npx prisma db push
+git fetch origin main
+git status --short
+git rev-list --left-right --count main...origin/main
 ```
 
-If you want to preload the tournament data for first launch, you can then run:
+The rev-list command should print `0 0`. If it does not, sync or stop before
+deploying.
+
+Run the verification suite:
 
 ```bash
-cd /Users/jason/Developer/active/fairway-match
-DATABASE_URL="your-production-connection-string" npm run prisma:seed
+npm run lint
+npm test
+npm run build
 ```
 
-Important:
-
-- `npm run prisma:seed` clears and recreates tournament data
-- only run it for first launch or an intentional reset
-- do not run it on a live tournament database unless you mean to wipe it
-
-## Add Your Domain
-
-1. In Vercel, open the project and go to `Settings -> Domains`.
-2. Add your apex domain, for example `yourdomain.com`.
-3. Add `www.yourdomain.com` too.
-4. Pick one canonical domain and redirect the other to it.
-
-Vercel will show the exact DNS records required for your project. Commonly:
-
-- apex domain uses an `A` record to `76.76.21.21`
-- `www` uses a `CNAME` to `cname.vercel-dns-0.com`
-
-Do not rely on those values blindly. Use the records Vercel shows for your project when you add the domain.
-
-## Update Production URL
-
-After the domain is connected, set:
+Commit and push intended changes before production deployment:
 
 ```bash
-NEXT_PUBLIC_APP_URL=https://www.yourdomain.com
+git push origin main
 ```
 
-Use your actual canonical host. Then redeploy so generated links use the real domain.
+## Production Deploy
 
-## Launch Checklist
+Use the guarded deploy command:
 
-1. Confirm the Vercel deployment loads.
-2. Confirm `NEXT_PUBLIC_APP_URL` matches the final domain exactly.
-3. Visit the homepage, standings, bracket, admin, invite links, and scorecard routes.
-4. Confirm admin login works with the production password.
-5. Confirm the database has the expected tournament data before sharing links.
+```bash
+npm run deploy:prod
+```
 
-## Preview Deployment Warning
+That script checks that the current branch is `main`, the worktree is clean, and
+local `main` is synced with `origin/main` before running the Vercel production
+deploy.
 
-Vercel preview deployments should not share the same writable production database if you are changing schema or test data. If you plan to use previews heavily, give Preview its own `DATABASE_URL`.
+## Database Schema Changes
+
+This repo currently uses Prisma schema push rather than a migrations folder. For
+schema changes, apply the database update intentionally before promoting code
+that reads the new columns:
+
+```bash
+DATABASE_URL="production-or-branch-connection-string" npm run db:push
+```
+
+Use branch/disposable databases for rehearsal. `npm run prisma:seed` and
+`npm run tournament:reset:state` are destructive and should not be run against
+production unless the goal is an intentional reset.
+
+## Post-Deploy Smoke
+
+After deploy, check:
+
+- `/`
+- `/tournament/the-two-man-2026`
+- `/tournament/the-two-man-2026/standings`
+- `/tournament/the-two-man-2026/bracket`
+- `/tournament/the-two-man-2026/rules`
+- `/admin`
+- one private match link if a safe test token is available
+
+Then run the observability check:
+
+```bash
+npm run observability:check -- --skip-clarity
+```
+
+Run the full Clarity check only when the local Clarity token file is available.

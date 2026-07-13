@@ -302,7 +302,7 @@ async function main() {
     )
   });
 
-  console.log("Seeded Fairway Match tournament foundation with bracket + feed data.");
+  console.log("Seeded The Two Man tournament foundation with bracket + feed data.");
 }
 
 main()
