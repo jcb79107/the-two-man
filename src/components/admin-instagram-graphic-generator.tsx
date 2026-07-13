@@ -18,7 +18,7 @@ const HOME_WIN = "#d6eadc";
 const AWAY_WIN = "#e7def5";
 const HOME_STROKE = "#17533d";
 const AWAY_STROKE = "#6a4d90";
-const LOGO_SRC = "/two-man-main-logo.png";
+const LOGO_SRC = "/two-man-logo.png";
 const THIN_TEXT_VARIANT_PARAM = "thin-text";
 const FONT_STACK = "Avenir Next, Helvetica Neue, Arial, sans-serif";
 const DISPLAY_FONT_STACK = "Georgia, Times New Roman, serif";
@@ -700,21 +700,21 @@ function drawPlayoffGraphic(
   if (logoImage) {
     context.save();
     context.globalAlpha = 0.95;
-    context.drawImage(logoImage, 377, 52, 326, 246);
+    context.drawImage(logoImage, 395, 46, 290, 290);
     context.restore();
   }
 
   context.strokeStyle = "#a77b28";
   context.lineWidth = 2;
   context.beginPath();
-  context.moveTo(360, 368);
-  context.lineTo(400, 368);
-  context.moveTo(680, 368);
-  context.lineTo(720, 368);
+  context.moveTo(360, 374);
+  context.lineTo(400, 374);
+  context.moveTo(680, 374);
+  context.lineTo(720, 374);
   context.stroke();
-  drawGridText(context, "MATCH RECAP", 540, 380, 280, canvasFont(textVariant, "sectionLabel", 35), "#a77b28");
+  drawGridText(context, "MATCH RECAP", 540, 386, 280, canvasFont(textVariant, "sectionLabel", 35), "#a77b28");
 
-  const teamLineY = 492;
+  const teamLineY = 506;
   homeLines.slice(0, 2).forEach((line, index) => {
     drawFittedText(context, line, 285, teamLineY + index * 76, 330, {
       family: DISPLAY_FONT_STACK,
@@ -735,71 +735,71 @@ function drawPlayoffGraphic(
   context.strokeStyle = "#a77b28";
   context.lineWidth = 2;
   context.beginPath();
-  context.moveTo(540, 424);
-  context.lineTo(540, 452);
+  context.moveTo(540, 438);
+  context.lineTo(540, 466);
   context.stroke();
   context.beginPath();
-  context.arc(540, 515, 50, 0, Math.PI * 2);
+  context.arc(540, 529, 50, 0, Math.PI * 2);
   context.stroke();
-  drawGridText(context, "VS", 540, 533, 62, canvasDisplayFont(800, 38), "#a77b28");
+  drawGridText(context, "VS", 540, 547, 62, canvasDisplayFont(800, 38), "#a77b28");
 
   context.strokeStyle = "#a77b28";
   context.lineWidth = 2;
   context.beginPath();
-  context.moveTo(92, 636);
-  context.lineTo(988, 636);
+  context.moveTo(92, 652);
+  context.lineTo(988, 652);
   context.stroke();
 
-  drawFittedText(context, winnerName, 540, 704, 680, {
+  drawFittedText(context, winnerName, 540, 718, 680, {
     color: INK,
     maxSize: 38,
     minSize: 26,
     weight: GRAPHIC_TEXT_WEIGHTS[textVariant].sectionLabel
   });
-  drawGoldRays(context, 230, 786, "left");
-  drawGoldRays(context, 850, 786, "right");
-  drawFittedText(context, resultHeadline, 540, 832, 660, {
+  drawGoldRays(context, 228, 806, "left");
+  drawGoldRays(context, 852, 806, "right");
+  drawFittedText(context, resultHeadline, 540, 852, 660, {
     color: INK,
     family: DISPLAY_FONT_STACK,
-    maxSize: 96,
+    maxSize: 88,
     minSize: 54,
     weight: 900
   });
 
   context.beginPath();
-  context.moveTo(92, 888);
-  context.lineTo(988, 888);
+  context.moveTo(92, 914);
+  context.lineTo(988, 914);
   context.stroke();
   context.beginPath();
-  context.moveTo(392, 918);
-  context.lineTo(392, 1010);
-  context.moveTo(688, 918);
-  context.lineTo(688, 1010);
+  context.moveTo(392, 936);
+  context.lineTo(392, 1020);
+  context.moveTo(688, 936);
+  context.lineTo(688, 1020);
   context.stroke();
 
-  drawLocationPinIcon(context, 217, 916, 48, INK);
-  drawCalendarIcon(context, 519, 915, 48, INK);
-  drawTrophyIcon(context, 818, 918, 46, INK);
+  drawLocationPinIcon(context, 217, 932, 48, INK);
+  drawCalendarIcon(context, 519, 932, 48, INK);
+  drawTrophyIcon(context, 818, 935, 46, INK);
 
-  drawFittedText(context, courseName.toUpperCase(), 240, 985, 260, {
+  drawFittedText(context, courseName.toUpperCase(), 240, 996, 260, {
     color: INK,
     maxSize: 20,
     minSize: 14,
     weight: 800
   });
-  drawFittedText(context, courseMeta.toUpperCase(), 240, 1016, 260, {
+  drawFittedText(context, courseMeta.toUpperCase(), 240, 1026, 260, {
     color: INK,
     maxSize: 18,
     minSize: 13,
     weight: 500
   });
-  drawFittedText(context, dateLabel, 540, 1000, 250, {
+  drawFittedText(context, dateLabel, 540, 1010, 250, {
     color: INK,
     maxSize: 22,
     minSize: 15,
     weight: 800
   });
-  drawFittedText(context, roundLabel, 840, 1000, 250, {
+  drawFittedText(context, roundLabel, 840, 1010, 250, {
     color: INK,
     maxSize: 22,
     minSize: 15,

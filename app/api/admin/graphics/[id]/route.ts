@@ -505,7 +505,7 @@ function goldRays(centerX: number, centerY: number, direction: "left" | "right")
 
 async function logoDataUri() {
   try {
-    const logo = await readFile(path.join(process.cwd(), "public", "two-man-main-logo.png"));
+    const logo = await readFile(path.join(process.cwd(), "public", "two-man-logo.png"));
     return `data:image/png;base64,${logo.toString("base64")}`;
   } catch {
     return null;
@@ -696,7 +696,7 @@ async function renderPlayoffGraphicSvg(recap: AdminGraphicRecap, textVariant: Gr
   const homeLines = teamDisplayLines(recap.homeTeam.name);
   const awayLines = teamDisplayLines(recap.awayTeam.name);
   const headline = playoffResultHeadline(recap);
-  const headlineSize = headline.length > 12 ? 76 : 96;
+  const headlineSize = headline.length > 12 ? 76 : 88;
   const elements: string[] = [];
 
   elements.push(rect(0, 0, 1080, 1080, { fill: "#063322" }));
@@ -704,13 +704,13 @@ async function renderPlayoffGraphicSvg(recap: AdminGraphicRecap, textVariant: Gr
   elements.push(rect(31, 31, 1018, 1018, { stroke: GOLD, strokeWidth: 4 }));
 
   if (logo) {
-    elements.push(`<image href="${logo}" x="377" y="52" width="326" height="246" opacity="0.95" />`);
+    elements.push(`<image href="${logo}" x="395" y="46" width="290" height="290" opacity="0.95" />`);
   }
 
-  elements.push(line(360, 368, 400, 368, "#a77b28", 2));
-  elements.push(line(680, 368, 720, 368, "#a77b28", 2));
+  elements.push(line(360, 374, 400, 374, "#a77b28", 2));
+  elements.push(line(680, 374, 720, 374, "#a77b28", 2));
   elements.push(
-    text("MATCH RECAP", 540, 380, {
+    text("MATCH RECAP", 540, 386, {
       color: "#a77b28",
       erodeFill: textErodeFill(textVariant, PAPER),
       letterSpacing: 9,
@@ -721,7 +721,7 @@ async function renderPlayoffGraphicSvg(recap: AdminGraphicRecap, textVariant: Gr
 
   homeLines.slice(0, 2).forEach((lineText, index) => {
     elements.push(
-      text(clipText(lineText, 16), 285, 492 + index * 76, {
+      text(clipText(lineText, 16), 285, 506 + index * 76, {
         erodeFill: textErodeFill(textVariant, PAPER),
         size: lineText.length > 12 ? 52 : 62,
         weight: 800
@@ -730,7 +730,7 @@ async function renderPlayoffGraphicSvg(recap: AdminGraphicRecap, textVariant: Gr
   });
   awayLines.slice(0, 2).forEach((lineText, index) => {
     elements.push(
-      text(clipText(lineText, 16), 795, 492 + index * 76, {
+      text(clipText(lineText, 16), 795, 506 + index * 76, {
         erodeFill: textErodeFill(textVariant, PAPER),
         size: lineText.length > 12 ? 52 : 62,
         weight: 800
@@ -738,10 +738,10 @@ async function renderPlayoffGraphicSvg(recap: AdminGraphicRecap, textVariant: Gr
     );
   });
 
-  elements.push(line(540, 424, 540, 452, "#a77b28", 2));
-  elements.push(`<circle cx="540" cy="515" r="50" fill="none" stroke="#a77b28" stroke-width="2" />`);
+  elements.push(line(540, 438, 540, 466, "#a77b28", 2));
+  elements.push(`<circle cx="540" cy="529" r="50" fill="none" stroke="#a77b28" stroke-width="2" />`);
   elements.push(
-    text("VS", 540, 533, {
+    text("VS", 540, 547, {
       color: "#a77b28",
       erodeFill: textErodeFill(textVariant, PAPER),
       size: 38,
@@ -749,54 +749,54 @@ async function renderPlayoffGraphicSvg(recap: AdminGraphicRecap, textVariant: Gr
     })
   );
 
-  elements.push(line(92, 636, 988, 636, "#a77b28", 2));
+  elements.push(line(92, 652, 988, 652, "#a77b28", 2));
   elements.push(
-    text(clipText(winner.name.toUpperCase(), 28), 540, 704, {
+    text(clipText(winner.name.toUpperCase(), 28), 540, 718, {
       erodeFill: textErodeFill(textVariant, PAPER),
       letterSpacing: 3,
       size: winner.name.length > 22 ? 31 : 38,
       weight: graphicTextWeight(textVariant, "sectionLabel")
     })
   );
-  elements.push(goldRays(230, 786, "left"));
-  elements.push(goldRays(850, 786, "right"));
+  elements.push(goldRays(228, 806, "left"));
+  elements.push(goldRays(852, 806, "right"));
   elements.push(
-    text(headline, 540, 832, {
+    text(headline, 540, 852, {
       erodeFill: textErodeFill(textVariant, PAPER),
       size: headlineSize,
       weight: 900
     })
   );
 
-  elements.push(line(92, 888, 988, 888, "#a77b28", 2));
-  elements.push(line(392, 918, 392, 1010, "#a77b28", 2));
-  elements.push(line(688, 918, 688, 1010, "#a77b28", 2));
-  elements.push(locationPinIcon(217, 916, 48, INK));
-  elements.push(calendarIcon(519, 915, 48, INK));
-  elements.push(trophyIcon(818, 918, 46, INK));
+  elements.push(line(92, 914, 988, 914, "#a77b28", 2));
+  elements.push(line(392, 936, 392, 1020, "#a77b28", 2));
+  elements.push(line(688, 936, 688, 1020, "#a77b28", 2));
+  elements.push(locationPinIcon(217, 932, 48, INK));
+  elements.push(calendarIcon(519, 932, 48, INK));
+  elements.push(trophyIcon(818, 935, 46, INK));
   elements.push(
-    text(clipText(recap.courseName.toUpperCase(), 24), 240, 985, {
+    text(clipText(recap.courseName.toUpperCase(), 30), 240, 996, {
       erodeFill: textErodeFill(textVariant, PAPER),
       size: recap.courseName.length > 22 ? 17 : 20,
       weight: 800
     })
   );
   elements.push(
-    text(clipText((recap.courseMeta ?? "").toUpperCase(), 24), 240, 1016, {
+    text(clipText((recap.courseMeta ?? "").toUpperCase(), 24), 240, 1026, {
       erodeFill: textErodeFill(textVariant, PAPER),
       size: 18,
       weight: 500
     })
   );
   elements.push(
-    text(formatFullDate(recap.playedOn).toUpperCase(), 540, 1000, {
+    text(formatFullDate(recap.playedOn).toUpperCase(), 540, 1010, {
       erodeFill: textErodeFill(textVariant, PAPER),
       size: 22,
       weight: 800
     })
   );
   elements.push(
-    text(stageLabel(recap.stage), 840, 1000, {
+    text(stageLabel(recap.stage), 840, 1010, {
       erodeFill: textErodeFill(textVariant, PAPER),
       letterSpacing: 1,
       size: 22,
