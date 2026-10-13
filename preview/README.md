@@ -45,3 +45,7 @@ The build outputs static files to `out/`; no server/database is needed to host t
 ## Hosting this isolated preview
 
 After a successful build, run `node scripts/package-preview.mjs` to prepare Vercel's static Build Output API bundle. Verify the existing project link before using `vercel deploy --prebuilt --target preview`. Do not use `--prod` or change the production project's root directory. Documentation: https://vercel.com/docs/build-output-api/configuration.
+
+## Season history
+
+Open **History** for season archives, past champions and the all-time record book. Try **2026 → Playoffs → Final → team career → player career**, or filter the record book to **Players / 2026 / Playoffs**. Current-season approval updates career stats, while the completed sample archive stays unchanged. [History architecture and acceptance notes](docs/SEASON-HISTORY.md) explain the stable identity model, metric definitions and the work required to import real seasons safely.

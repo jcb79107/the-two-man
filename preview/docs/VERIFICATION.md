@@ -37,3 +37,11 @@ Approve visual direction, buy-in/payout amounts, field size, qualification/tie r
 Preview: https://thetwo-puo19dxos-jcb79107s-projects.vercel.app
 
 Deployment `dpl_4pqR8TykfGfPiKmeeSDN6oLq9QzG`, built from application revision `55bdaa6`. Final browser smoke verified direct match deep links and gross/net switching. HTTP checks returned 200 for a valid match, 404 for an unknown path, and `X-Robots-Tag: noindex, nofollow`. Desktop screenshot: preview-desktop.jpg. Earlier hosted revision verified approval/reload; final code only changes net score notation to match displayed values. Canonical main remained clean at `f8fc0d8`. No branch push or PR was created.
+
+## League history extension — October 13, 2026
+
+The new history implementation adds season archives, champions, career profiles and query-backed all-time records while preserving the active-season flows. All history remains labeled fictional; real Season 1 has not been imported. See SEASON-HISTORY.md for identity, statistics and migration decisions.
+
+Final checks: 19 tests pass (11 existing + 8 history); typecheck, lint, formatting and build pass. Static build now generates 132 pages, approximately 137 kB first-load JavaScript (about 7 kB above the initial preview). Strict design audit still has zero findings. Dependencies are unchanged from the prior recorded audit.
+
+Browser verification: archive → final → partnership career; record book teams/players, year, playoff-only scope, title sort and name search; filter values survive reload; empty search recovery works. Mobile 390px, tablet 820px/1024px and desktop inspected. The navigation now switches at 900px to avoid cramped tablet labels. Document width did not overflow. Archived gross/net/front/back controls work with snapshot participant labels. Missing playoff card data renders an explicit unavailable state. Browser-local prior edits persist and remain separate from the completed archive. No production mutation, merge or import occurred.

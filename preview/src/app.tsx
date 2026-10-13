@@ -17,6 +17,13 @@ import {
   Empty,
 } from "./ui";
 import { MatchDetail, Submission, Review } from "./workflows";
+import {
+  HistoryHome,
+  SeasonArchive,
+  RecordBook,
+  CareerProfile,
+  ArchivedMatch,
+} from "./history";
 const nav = [
   ["/", "Clubhouse", "home"],
   ["/matches", "Matches", "calendar"],
@@ -33,6 +40,10 @@ export function PreviewApp() {
 function App() {
   const path = usePathname();
   const store = usePreview();
+  const router = useRouter();
+  const archiveYear = path.startsWith("/history/")
+    ? path.split("/")[2]
+    : "2027";
   const [resetOpen, setResetOpen] = useState(false);
   const [menu, setMenu] = useState(false);
   const title = path === "/" ? "Clubhouse" : path.split("/")[1];
@@ -119,6 +130,19 @@ function App() {
           >
             The purse
           </Link>
+          <Link
+            href="/history"
+            aria-current={
+              path.startsWith("/history") ||
+              path.startsWith("/records") ||
+              path.startsWith("/players") ||
+              path === "/champions"
+                ? "page"
+                : undefined
+            }
+          >
+            History
+          </Link>
         </nav>
         <div className="header-end">
           <Link
@@ -144,6 +168,9 @@ function App() {
       {menu && (
         <nav className="more-nav" aria-label="More navigation">
           {[
+            ["/history", "Season history"],
+            ["/records", "All-time records"],
+            ["/champions", "Champions"],
             ["/earnings", "The purse"],
             ["/rules", "Format & rules"],
             ["/review", "Commissioner demo"],
@@ -164,7 +191,19 @@ function App() {
           Two players. Two guaranteed matches.
           <Icon name="arrow" size={14} />
         </Link>
-        <span>SEASON 02 / 2027</span>
+        <label className="season-jump">
+          <span className="sr-only">Browse season</span>
+          <select
+            value={archiveYear}
+            onChange={(e) => router.push(`/history/${e.target.value}`)}
+          >
+            <option value="" disabled>
+              Browse seasons
+            </option>
+            <option value="2027">2027 · Current season</option>
+            <option value="2026">2026 · Season archive</option>
+          </select>
+        </label>
       </div>
       <main id="main" className="main" tabIndex={-1}>
         {!store.ready ? (
@@ -173,6 +212,21 @@ function App() {
           </div>
         ) : path === "/" ? (
           <Home />
+        ) : path === "/history" || path === "/champions" ? (
+          <HistoryHome champions={path === "/champions"} />
+        ) : path.startsWith("/history/") && path.includes("/matches/") ? (
+          <ArchivedMatch
+            year={Number(path.split("/")[2])}
+            id={path.split("/")[4]}
+          />
+        ) : path.startsWith("/history/") ? (
+          <SeasonArchive year={Number(path.split("/")[2])} />
+        ) : path === "/records" ? (
+          <RecordBook />
+        ) : path.startsWith("/records/teams/") ? (
+          <CareerProfile kind="teams" id={path.split("/")[3]} />
+        ) : path.startsWith("/players/") ? (
+          <CareerProfile kind="players" id={path.split("/")[2]} />
         ) : path === "/standings" ? (
           <Standings />
         ) : path === "/matches" ? (
@@ -204,6 +258,8 @@ function App() {
           THE TWO-MAN<span>Good golf. Better company.</span>
         </Link>
         <nav aria-label="Footer">
+          <Link href="/history">Season history</Link>
+          <Link href="/champions">Champions</Link>
           <Link href="/rules">Format & rules</Link>
           <Link href="/brand">Brand direction</Link>
           <Link href="/review">Commissioner demo</Link>
@@ -361,6 +417,18 @@ function Home() {
             </Empty>
           )}
         </div>
+      </section>
+      <section className="home-history-link">
+        <div>
+          <p className="eyebrow">THE TWO-MAN / SINCE 2026</p>
+          <h2>More than one season.</h2>
+          <p>
+            Past champions, career records, and every year of the competition.
+          </p>
+        </div>
+        <Link href="/history" className="button outline">
+          Explore league history <Icon name="arrow" />
+        </Link>
       </section>
       <section className="home-bottom">
         <div>
@@ -686,6 +754,9 @@ function TeamDetail({ id }: { id: string }) {
             <span>& {t.names[1]}</span>
           </h1>
           <p>Two players. One team.</p>
+          <Link className="text-link" href={`/records/teams/${id}`}>
+            View career & past seasons <Icon name="arrow" size={16} />
+          </Link>
         </div>
         <div className="team-record">
           <strong>

@@ -31,3 +31,6 @@ No database, server actions, API routes, telemetry, authentication secrets, paym
 
 ## Accessibility and resilience
 Semantic links, buttons, tables, labels, native controls, visible focus, text status, aria-current/pressed, reduced motion and forced-color support. No modal needed. No network pending state is simulated as live work. Local load has a status; empty filters and empty review queue have recovery links. Upload accepts JPG/PNG/WebP to 8MB with browse alternative to drag/drop. No external file transmission. Validation preserves inputs. Performance and accessibility compliance require broader production testing.
+
+## League history
+History navigation, the record book and career pages are owned by `src/history.tsx`; season snapshots and career aggregation by `src/history-data.ts`. Season identity belongs in the route, not a mutable global current-year variable. Search/ranking/entity/scope live in URL query parameters. Archive cards use the shared Scorecard with historical participant labels. Immutable sample history stays separate from editable current-season storage. Unknown playoff hole data renders an explicit unavailable state. See docs/SEASON-HISTORY.md for metric definitions and production migration boundaries.

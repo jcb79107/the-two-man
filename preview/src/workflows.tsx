@@ -199,14 +199,21 @@ export function Scorecard({
   match: m,
   editable = false,
   onChange,
+  labels,
 }: {
   match: Match;
+  labels?: {
+    teams: [string, string];
+    players: [string, string, string, string];
+  };
   editable?: boolean;
   onChange?: (scores: number[][]) => void;
 }) {
   const [nine, setNine] = useState(0);
   const [mode, setMode] = useState<"gross" | "net">("gross");
   const r = result(m);
+  const teamLabels = labels?.teams ?? [nameOf(m.a), nameOf(m.b)];
+  const playerLabels = labels?.players ?? players(m);
   const holes = Array.from({ length: 9 }, (_, i) => i + nine * 9);
   return (
     <section className="scorecard">
@@ -254,7 +261,7 @@ export function Scorecard({
       >
         <table className="score-table">
           <caption className="sr-only">
-            {nameOf(m.a)} versus {nameOf(m.b)} · {mode} scores ·{" "}
+            {teamLabels[0]} versus {teamLabels[1]} · {mode} scores ·{" "}
             {nine === 0 ? "Front" : "Back"} nine
           </caption>
           <thead>
@@ -286,7 +293,7 @@ export function Scorecard({
               <td>—</td>
               <td>—</td>
             </tr>
-            {players(m).map((name, p) => (
+            {playerLabels.map((name, p) => (
               <tr className={p === 2 ? "team-break" : ""} key={name}>
                 <th scope="row">
                   <span>{name}</span>
@@ -358,7 +365,7 @@ export function Scorecard({
                     title={
                       r.holes[h] === "tie"
                         ? "Half a point each"
-                        : `${r.holes[h] === "a" ? nameOf(m.a) : nameOf(m.b)} wins hole`
+                        : `${r.holes[h] === "a" ? teamLabels[0] : teamLabels[1]} wins hole`
                     }
                   >
                     {r.holes[h] === "tie" ? "½" : r.holes[h].toUpperCase()}
@@ -381,7 +388,7 @@ export function Scorecard({
         </span>
         <span>• Agreed stroke</span>
         <span>
-          A = {nameOf(m.a)} · B = {nameOf(m.b)}
+          A = {teamLabels[0]} · B = {teamLabels[1]}
         </span>
       </div>
     </section>

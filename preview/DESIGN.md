@@ -41,7 +41,7 @@ Pine and cream retain the supplied assets' identity. Pale green supports the mas
 Impact (available locally on the reviewed Mac) supplies athletic display lettering; Helvetica-based fallback remains usable across systems. Avenir/Helvetica body text and monospace competition labels differentiate information. Display faces are reserved for page titles and the brand; data remains readable and tabular. A final licensed/self-hosted display font remains a design decision before production.
 
 ## Layout
-Full-width tournament identity on the clubhouse, then compact match rows and navigable data. Desktop uses up to 1,360px. At 800px, navigation becomes a bottom bar plus an explicit More menu. At 560px, page columns stack. Tables own their horizontal scroll; the document owns vertical scroll. No global overflow hiding. Preview controls remain visibly separate from product UI.
+Full-width tournament identity on the clubhouse, then compact match rows and navigable data. Desktop uses up to 1,360px. At 900px, navigation becomes a bottom bar plus an explicit More menu. At 560px, page columns stack. Tables own their horizontal scroll; the document owns vertical scroll. No global overflow hiding. Preview controls remain visibly separate from product UI.
 
 ## Elevation & Depth
 Flat surfaces with borders. Only the illustrative paper card and temporary status message use shadows. No glass panels, background gradients or decorative charts.
@@ -62,3 +62,6 @@ Do keep the mascot recognizable at header scale. Do show earned separately from 
 | 12–28px rounded cards | 4–6px surfaces | Reduce generic stacked-card appearance |
 | Sand/gold throughout | Cream/pine with pale green and restrained brass | Simplify the supplied brand while preserving recognition |
 | Live score setup as main player journey | Post-round card submission + externally agreed strokes | Latest commissioner direction |
+
+## History and recognition
+Archive pages use the same pine/cream tokens and typography as the active season. A year-led season list, quiet tab navigation and dense records tables take precedence over decorative charts. Champions receive a single framed year panel with direct links to the final and both player records. Repeated pod and match tables use the same spacing and score notation. On mobile, tables scroll within their region, and the record book keeps names visible while scrolling. Fictional archive provenance appears beside the content, not only in a footer.
