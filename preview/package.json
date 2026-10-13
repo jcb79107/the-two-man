@@ -1,0 +1,33 @@
+{
+  "name": "two-man-season-two-preview",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --hostname 127.0.0.1 --port 3027",
+    "build": "next build",
+    "start": "node scripts/serve-preview.mjs",
+    "lint": "eslint src app tests --ext .ts,.tsx",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "format:check": "prettier --check src app tests *.json *.ts *.mjs"
+  },
+  "dependencies": {
+    "next": "15.5.27",
+    "react": "19.2.7",
+    "react-dom": "19.2.7"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.3.1",
+    "@types/node": "^22.20.1",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "15.5.27",
+    "prettier": "3.6.2",
+    "typescript": "^5.9.3",
+    "vitest": "^5.0.4"
+  },
+  "overrides": {
+    "postcss": "8.5.30"
+  }
+}
