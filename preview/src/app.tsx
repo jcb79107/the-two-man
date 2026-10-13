@@ -41,9 +41,7 @@ function App() {
   const path = usePathname();
   const store = usePreview();
   const router = useRouter();
-  const archiveYear = path.startsWith("/history/")
-    ? path.split("/")[2]
-    : "2027";
+  const archiveYear = path.startsWith("/history/") ? path.split("/")[2] : "";
   const [resetOpen, setResetOpen] = useState(false);
   const [menu, setMenu] = useState(false);
   const title = path === "/" ? "Clubhouse" : path.split("/")[1];
