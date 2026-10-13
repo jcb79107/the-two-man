@@ -1,6 +1,6 @@
 # Season 2 staged preview — verification
 
-October 13–14, 2026. This is a functional, browser-local proposal, not production-ready software. All application changes are confined to `preview/` on `codex/season-2-preview`.
+October 13, 2026. This is a functional, browser-local proposal, not production-ready software. All application changes are confined to `preview/` on `codex/season-2-preview`.
 
 ## Acceptance evidence
 
@@ -31,3 +31,9 @@ Do not promote this artifact to production. Recovery requires only abandoning/re
 ## Remaining product/engineering decisions
 
 Approve visual direction, buy-in/payout amounts, field size, qualification/tie rules, deadlines/extensions and handicap allowances. Finalize authorized GHIN access separately. Real OCR needs accuracy evaluation, human-review provenance and secure image handling. Real implementation needs authentication/authorization, server-enforced stroke deadlines, durable audit history, upload storage, transactional result approval, production migration planning and integration tests. Playoff administration and registration remain future work. This preview demonstrates regular-season workflows and illustrative bracket/earnings states; it does not replace the entire existing application.
+
+## Final hosted artifact
+
+Preview: https://thetwo-puo19dxos-jcb79107s-projects.vercel.app
+
+Deployment `dpl_4pqR8TykfGfPiKmeeSDN6oLq9QzG`, built from application revision `55bdaa6`. Final browser smoke verified direct match deep links and gross/net switching. HTTP checks returned 200 for a valid match, 404 for an unknown path, and `X-Robots-Tag: noindex, nofollow`. Desktop screenshot: preview-desktop.jpg. Earlier hosted revision verified approval/reload; final code only changes net score notation to match displayed values. Canonical main remained clean at `f8fc0d8`. No branch push or PR was created.

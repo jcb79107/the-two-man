@@ -10,4 +10,4 @@ Architecture choice: a standalone static Next.js app under preview/, not importe
 
 Logo: generated with the built-in image tool using the user's golf-ball duo reference. Prompt: simplify to one pine-green ink; flat cap left/bucket hat right, sunglasses, 3–4 dimples each, transparent negative space, no text/gradients/shadows. Saved as public/two-man-mark.png. The asset is a raster concept; vector/embroidery validation remains after design selection. User originals untouched.
 
-Nothing is merged or deployed to production. No global Vercel project setting may be changed to serve this standalone preview. A future hosted preview must deploy the static output in preview scope only.
+Nothing is merged or deployed to production. No global Vercel project setting may be changed to serve this standalone preview. The hosted preview deploys only static output in preview scope.
