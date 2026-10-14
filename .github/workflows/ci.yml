@@ -23,6 +23,9 @@ jobs:
           node-version: 22
           cache: npm
 
+      - name: Reject tracked build artifacts and private environment files
+        run: npm run security:artifacts
+
       - name: Install dependencies
         run: npm ci
 
