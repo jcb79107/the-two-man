@@ -4,6 +4,7 @@
   "private": true,
   "packageManager": "npm@11.6.2",
   "scripts": {
+    "security:artifacts": "node scripts/check_tracked_artifacts.mjs",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
