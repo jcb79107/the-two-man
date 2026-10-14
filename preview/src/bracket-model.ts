@@ -12,6 +12,7 @@ export type BracketMatch = {
   winner: string | null;
   score: string | null;
   href: string | null;
+  date: string | null;
 };
 const path = [
   { id: "q1", label: "QF1", round: "quarters", seeds: [0, 7], next: "s1" },
@@ -89,7 +90,24 @@ export function bracketMatches(
       winner: consistent ? game.winner : null,
       score: consistent ? game.score : null,
       href: consistent ? game.href : null,
+      date: consistent ? game.date : null,
     });
   }
   return nodes;
+}
+
+// Includes future feeder rounds only while the team remains alive.
+export function teamPath(nodes: BracketMatch[], teamId: string): string[] {
+  if (!teamId) return [];
+  const start = nodes.find(
+    (n) => n.round === "quarters" && n.slots.some((s) => s.id === teamId),
+  );
+  const ids: string[] = [];
+  let node = start;
+  while (node) {
+    ids.push(node.id);
+    if (node.winner && node.winner !== teamId) break;
+    node = nodes.find((n) => n.id === node!.next);
+  }
+  return ids;
 }

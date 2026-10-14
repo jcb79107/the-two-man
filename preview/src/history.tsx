@@ -8,6 +8,7 @@ import {
   entryName,
   careerRows,
   careerGames,
+  headToHead,
   players,
   type SeasonRecord,
   type HistoricalGame,
@@ -58,11 +59,7 @@ export function HistoryHome({ champions = false }: { champions?: boolean }) {
     <>
       <PageHeading
         eyebrow="THE TWO-MAN / LEAGUE HISTORY"
-        title={
-          champions
-            ? "Their names stay."
-            : "Every season.<br/>Part of the story."
-        }
+        title={champions ? "Champions" : "Season history"}
         description={
           champions
             ? "The champions roll. One place for every team that finishes on top."
@@ -166,7 +163,7 @@ function Champion({ season: s }: { season: SeasonRecord }) {
           ))}
         </div>
         <Link href={final?.href ?? `/history/${s.year}`} className="text-link">
-          {final ? `Relive the final · ${final.score}` : "View season"}{" "}
+          {final ? `View final result · ${final.score}` : "View season"}{" "}
           <Icon name="arrow" size={16} />
         </Link>
       </div>
@@ -715,6 +712,46 @@ export function CareerProfile({
           </strong>
         </div>
       </div>
+      {kind === "teams" && (
+        <section className="section">
+          <SectionTitle title="Head-to-head" />
+          <p className="field-help">
+            This partnership’s official record against each opponent, across all
+            seasons.
+          </p>
+          <div className="rivalry-list">
+            {headToHead(records, id).map((opponent) => (
+              <details key={opponent.id}>
+                <summary>
+                  <span>{opponent.name}</span>
+                  <strong>
+                    {opponent.won}–{opponent.lost}–{opponent.tied}{" "}
+                    <small>W–L–T</small>
+                  </strong>
+                  <span>{opponent.games.length} matches</span>
+                </summary>
+                <div className="rivalry-results">
+                  {opponent.games
+                    .slice()
+                    .sort((a, b) => Date.parse(b.date) - Date.parse(a.date))
+                    .map((g) => (
+                      <Link key={`${g.year}-${g.id}`} href={g.href}>
+                        <span>
+                          {g.year} · {g.round}
+                        </span>
+                        <strong>
+                          {g.winner === id ? "Win" : g.winner ? "Loss" : "Tie"}{" "}
+                          · {g.score}
+                        </strong>
+                        <Icon name="arrow" size={16} />
+                      </Link>
+                    ))}
+                </div>
+              </details>
+            ))}
+          </div>
+        </section>
+      )}
       <section className="section">
         <SectionTitle title="Season by season" />
         <div

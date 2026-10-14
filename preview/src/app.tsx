@@ -3,7 +3,7 @@ import Link from "next/link";
 import { usePathname, useSearchParams, useRouter } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { usePreview } from "./store";
-import { teams, pods, nameOf, money, season } from "./data";
+import { teams, pods, nameOf, money, season, dateLabel } from "./data";
 import { standings, podWinner, qualified } from "./domain";
 import {
   Icon,
@@ -143,7 +143,7 @@ function App() {
             aria-expanded={menu}
             onClick={() => setMenu(!menu)}
           >
-            <Icon name={menu ? "close" : "plus"} />
+            <Icon name={menu ? "close" : "menu"} />
           </button>
         </div>
       </header>
@@ -287,49 +287,38 @@ function Home() {
   const active = matches.filter((m) => m.status !== "official");
   return (
     <>
-      <section className="home-hero">
-        <div className="hero-copy">
-          <div className="hero-kicker">
-            <span className="live-dot" /> REGULAR SEASON <span>APR—JUN</span>
-          </div>
-          <h1>
-            PLAY YOUR
-            <br />
-            <em>WAY IN.</em>
-          </h1>
+      <section className="season-scoreboard">
+        <div>
+          <p className="eyebrow">THE TWO-MAN · 2027 · REGULAR SEASON</p>
+          <h1>The season, at a glance.</h1>
           <p>
-            Eighteen teams. Two matches each.
-            <br />
-            Eight spots in the bracket. Make yours count.
+            {count} of 18 results official. Two matches guaranteed; the title is
+            earned from there.
           </p>
-          <Link href="/standings" className="button cream">
-            See the playoff picture
-            <Icon name="arrow" />
-          </Link>
-          <div className="hero-bottom">
-            <span>THE TWO-MAN / SEASON 02</span>
-            <span>CHICAGO, IL ↗</span>
-          </div>
         </div>
-        <div className="hero-art">
-          <div className="hero-art-top">
-            <span>
-              BETTER BALL.
-              <br />
-              BETTER COMPANY.
-            </span>
-            <span className="round-stamp">
-              EST.
-              <br />
-              <strong>2026</strong>
-            </span>
-          </div>
-          <Mark className="hero-mascot" />
-          <div className="art-word">TWO-MAN</div>
-          <div className="art-caption">
-            <span>BRING YOUR PARTNER.</span>
-            <span>LEAVE IT ALL OUT THERE.</span>
-          </div>
+        <Link className="button primary" href="/bracket">
+          View bracket <Icon name="arrow" />
+        </Link>
+      </section>
+      <section className="latest-results" aria-label="Latest official results">
+        <SectionTitle
+          title="Latest results"
+          href="/matches?filter=official"
+          label="All results"
+        />
+        <div className="match-grid">
+          {matches
+            .filter((m) => m.status === "official")
+            .sort((a, b) => Date.parse(b.date) - Date.parse(a.date))
+            .slice(0, 3)
+            .map((m) => (
+              <div key={m.id}>
+                <p className="result-date">
+                  {dateLabel(m.date)} · Pod {m.pod}
+                </p>
+                <MatchRow match={m} />
+              </div>
+            ))}
         </div>
       </section>
       <div className="season-stats">
@@ -480,8 +469,8 @@ function Matches() {
     <>
       <PageHeading
         eyebrow="The fixtures"
-        title="Find your match."
-        description="Two guaranteed rounds. Then it’s win or go home."
+        title="Matches & results"
+        description="Official scores, scheduled matches and results still to come."
       />
       <div className="toolbar">
         <nav className="tabs" aria-label="Match status">

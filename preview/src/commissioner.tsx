@@ -7,6 +7,7 @@ import { matches as originals, nameOf, teams, type Match } from "./data";
 import { approvalError, publishDraft, result } from "./domain";
 import { Scorecard } from "./workflows";
 import { PageHeading } from "./ui";
+import { FastScoreEntry } from "./score-entry";
 
 export function Commissioner() {
   const store = usePreview();
@@ -17,7 +18,7 @@ export function Commissioner() {
     <>
       <PageHeading
         eyebrow="COMMISSIONER WORKSPACE · DEMO"
-        title="Enter once. Publish clearly."
+        title="Commissioner desk"
         description="Record the card received by text or email, check the result, then publish."
       />
       <p className="notice">
@@ -333,11 +334,18 @@ function Entry({ match: original }: { match: Match }) {
               </table>
             </div>
           </details>
-          <Scorecard
+          <FastScoreEntry
             match={draft}
-            editable
             onChange={(scores) => update({ ...draft, scores })}
           />
+          <details className="agreed-details">
+            <summary>Full scorecard editor</summary>
+            <Scorecard
+              match={draft}
+              editable
+              onChange={(scores) => update({ ...draft, scores })}
+            />
+          </details>
           <details className="agreed-details">
             <summary>Show fictional source card</summary>
             <p>
@@ -353,6 +361,7 @@ function Entry({ match: original }: { match: Match }) {
                 : "Commissioner note (optional)"}
             </label>
             <textarea
+              className="resize-none"
               id="entry-note"
               rows={3}
               maxLength={1000}

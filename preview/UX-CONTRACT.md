@@ -19,4 +19,20 @@ History navigation, the record book and career pages are owned by `src/history.t
 
 ## Connected bracket
 
-Full bracket is the default: all seven matches are visible in a horizontally scrollable region, with SVG connections and textual feeder labels. Round views use the URL round parameter and preserve archive view=playoffs. Progression links identify and target the next round. Current unresolved fields show seed placeholders; downstream slots show Winner QF/SF labels until official source winners exist. Archived result links remain season-scoped. The bracket is read-only and does not mutate scores or history.
+Overview is the default: desktop shows the full bracket; phones show the first unfinished round (or the final for completed seasons). Full bracket is available explicitly on every screen size: all seven matches are visible in a horizontally scrollable region, with SVG connections and textual feeder labels. Round views use the URL round parameter and preserve archive view=playoffs. Progression links identify and target the next round. Current unresolved fields show seed placeholders; downstream slots show Winner QF/SF labels until official source winners exist. Archived result links remain season-scoped. The bracket is read-only and does not mutate scores or history.
+
+
+## Canonical UI Map
+
+| Capability | Canonical owner | Source of truth | Allowed variants | Verification |
+| --- | --- | --- | --- | --- |
+| Select/Listbox | Native select in shared workflows | DESIGN.md | OS-owned popup | Browser keyboard and mobile checks |
+| Date | Native datetime-local in commissioner.tsx | Current workflow above | Fictional CDT dates | Publication validation tests |
+| Form | commissioner.tsx and score-entry.tsx | domain.ts and score-entry-model.ts | Hole entry, full card, paste row | tests/commissioner.test.ts and tests/score-entry.test.ts |
+| Scrollbar | app/globals.css | DESIGN.md | Table and bracket horizontal scrolling | Narrow viewport inspection |
+| Toast | store.tsx notice rendered by app.tsx | Current workflow above | Saved, storage unavailable | Browser draft and publication checks |
+| CRUD | commissioner.tsx with store.tsx | domain.ts publishDraft | New result, correction, discard draft | tests/commissioner.test.ts |
+
+## Core experience update
+
+Results lead the clubhouse. ResultSummary explains the 18 hole points without changing scoring rules. FastScoreEntry edits the same draft as the full-card editor; paste accepts exactly 18 whole-number scores and never publishes. Head-to-head records aggregate official games by stable partnership identity and link to season-specific results. Bracket team selection and round selection persist in the URL; highlighting stops at an elimination and never predicts a winner.

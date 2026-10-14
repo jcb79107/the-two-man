@@ -10,6 +10,7 @@ import {
   strokeIndex,
   type Match,
 } from "./data";
+import { ResultSummary } from "./result-summary";
 import { result, validateCard } from "./domain";
 import { Icon, Badge, TeamAvatar, Empty } from "./ui";
 const sum = (ns: number[]) => ns.reduce((a, b) => a + b, 0);
@@ -95,6 +96,7 @@ export function MatchDetail({ id }: { id: string }) {
         </div>
       ) : (
         <>
+          <ResultSummary match={m} />
           <div className="toolbar">
             <div className="tabs" role="group" aria-label="Match details">
               <button

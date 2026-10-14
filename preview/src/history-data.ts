@@ -259,3 +259,39 @@ export function careerGames(
     })
     .sort((a, b) => b.game.date.localeCompare(a.game.date));
 }
+
+// Team identities persist across seasons; include only recorded official games.
+export function headToHead(records: SeasonRecord[], teamId: string) {
+  const rows = new Map<
+    string,
+    {
+      id: string;
+      name: string;
+      won: number;
+      lost: number;
+      tied: number;
+      games: HistoricalGame[];
+    }
+  >();
+  for (const s of records)
+    for (const game of s.games) {
+      if (game.a !== teamId && game.b !== teamId) continue;
+      const other = game.a === teamId ? game.b : game.a;
+      const row = rows.get(other) ?? {
+        id: other,
+        name: entryName(s, other),
+        won: 0,
+        lost: 0,
+        tied: 0,
+        games: [],
+      };
+      if (!game.winner) row.tied++;
+      else if (game.winner === teamId) row.won++;
+      else row.lost++;
+      row.games.push(game);
+      rows.set(other, row);
+    }
+  return [...rows.values()].sort(
+    (a, b) => b.games.length - a.games.length || a.name.localeCompare(b.name),
+  );
+}

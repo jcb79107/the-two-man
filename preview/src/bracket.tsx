@@ -1,10 +1,12 @@
 "use client";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-import { bracketMatches, type BracketMatch } from "./bracket-model";
+import { useSearchParams, useRouter } from "next/navigation";
+import { bracketMatches, teamPath, type BracketMatch } from "./bracket-model";
 import type { HistoricalGame } from "./history-data";
 import { Icon } from "./ui";
+import { dateLabel } from "./data";
 const roundLabels = {
+  overview: "Overview",
   all: "Full bracket",
   quarters: "Quarterfinals",
   semis: "Semifinals",
@@ -22,25 +24,38 @@ export function ConnectedBracket({
   label?: string;
 }) {
   const params = useSearchParams();
-  const selected = params.get("round") ?? "all";
+  const selected = params.get("round") ?? "overview";
   const round = Object.hasOwn(roundLabels, selected)
     ? (selected as keyof typeof roundLabels)
-    : "all";
+    : "overview";
   const nodes = bracketMatches(seedIds, games);
-  const href = (r: string, id?: string) =>
-    `${baseHref}${baseHref.includes("?") ? "&" : "?"}round=${r}${id ? `#bracket-${id}` : ""}`;
-  const card = (m: BracketMatch) => (
+  const router = useRouter();
+  const selectedTeam = params.get("team") ?? "";
+  const route = teamPath(nodes, selectedTeam);
+  const field = nodes
+    .filter((n) => n.round === "quarters")
+    .flatMap((n) => n.slots)
+    .filter((s) => s.id);
+  const focusRound = nodes.find((n) => !n.winner)?.round ?? "final";
+  const href = (r: string, id?: string, team = selectedTeam) => {
+    const [pathname, search] = baseHref.split("?");
+    const query = new URLSearchParams(search);
+    query.set("round", r);
+    if (team) query.set("team", team);
+    return `${pathname}?${query}${id ? `#bracket-${id}` : ""}`;
+  };
+  const card = (m: BracketMatch, mobile = false) => (
     <article
-      id={`bracket-${m.id}`}
+      id={`${mobile ? "mobile-" : ""}bracket-${m.id}`}
       key={m.id}
-      className={`tournament-match match-${m.id}${m.winner ? " decided" : ""}`}
+      className={`tournament-match match-${m.id}${m.winner ? " decided" : ""}${route.includes(m.id) ? " on-path" : ""}${selectedTeam && !route.includes(m.id) ? " off-path" : ""}`}
       aria-label={`${m.label} ${m.winner ? "completed" : "awaiting result"}`}
     >
       <div className="tournament-match-meta">
         <strong>{m.label}</strong>
         <span>
           {m.winner
-            ? m.score
+            ? `${m.score} · Final`
             : m.round === "quarters"
               ? "Awaiting result"
               : "Awaiting winners"}
@@ -66,6 +81,7 @@ export function ConnectedBracket({
           )}
         </div>
       ))}
+      {m.date && <p className="bracket-date">{dateLabel(m.date)}</p>}
       <div className="tournament-match-footer">
         {m.href ? (
           <Link href={m.href} aria-label={`Open ${m.label} result`}>
@@ -107,49 +123,92 @@ export function ConnectedBracket({
           </Link>
         ))}
       </nav>
+      {field.length > 0 && (
+        <label className="bracket-team-filter">
+          Follow a team
+          <select
+            value={field.some((s) => s.id === selectedTeam) ? selectedTeam : ""}
+            onChange={(e) =>
+              router.replace(href(round, undefined, e.target.value), {
+                scroll: false,
+              })
+            }
+          >
+            <option value="">All teams</option>
+            {field.map((s) => (
+              <option key={s.id} value={s.id!}>
+                {s.label}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
+      {route.length > 0 && (
+        <p className="path-summary" role="status">
+          {field.find((s) => s.id === selectedTeam)?.label}:{" "}
+          {route.map((id) => nodes.find((n) => n.id === id)!.label).join(" → ")}
+          . Highlighted rounds show the recorded or remaining route; they do not
+          predict winners.
+        </p>
+      )}
       <p className="bracket-help">
-        {round === "all"
+        {round === "all" || round === "overview"
           ? "Follow the lines toward the final. Scroll sideways on a small screen, or choose a round above."
           : "Round view. Choose Full bracket to see every connection."}{" "}
         A check marks the winner; unplayed rounds name their feeder matches.
       </p>
-      {round === "all" ? (
-        <div
-          className="tournament-scroll"
-          role="region"
-          aria-label="Full connected bracket, horizontally scrollable"
-          tabIndex={0}
-        >
-          <div className="tournament-board">
-            <div className="tournament-heading heading-qleft">
-              Quarterfinals
+      {round === "all" || round === "overview" ? (
+        <>
+          <div
+            className={`tournament-scroll${round === "overview" ? " responsive-board" : ""}`}
+            role="region"
+            aria-label="Full connected bracket, horizontally scrollable"
+            tabIndex={0}
+          >
+            <div className="tournament-board">
+              <div className="tournament-heading heading-qleft">
+                Quarterfinals
+              </div>
+              <div className="tournament-heading heading-sleft">Semifinals</div>
+              <div className="tournament-heading heading-final">
+                <Icon name="cup" size={22} /> Championship
+              </div>
+              <div className="tournament-heading heading-sright">
+                Semifinals
+              </div>
+              <div className="tournament-heading heading-qright">
+                Quarterfinals
+              </div>
+              <svg
+                className="tournament-lines"
+                viewBox="0 0 1200 600"
+                aria-hidden="true"
+              >
+                <path d="M220 168 H232.5 V318 H245 M220 468 H232.5 V318" />
+                <path d="M980 168 H967.5 V318 H955 M980 468 H967.5 V318" />
+                <path d="M465 318 H490 M735 318 H710" />
+              </svg>
+              {nodes.map((m) => card(m))}
+              <p className="tournament-path-note">
+                QF1 + QF2 → SF1 → FINAL ← SF2 ← QF3 + QF4
+              </p>
             </div>
-            <div className="tournament-heading heading-sleft">Semifinals</div>
-            <div className="tournament-heading heading-final">
-              <Icon name="cup" size={22} /> Championship
-            </div>
-            <div className="tournament-heading heading-sright">Semifinals</div>
-            <div className="tournament-heading heading-qright">
-              Quarterfinals
-            </div>
-            <svg
-              className="tournament-lines"
-              viewBox="0 0 1200 600"
-              aria-hidden="true"
-            >
-              <path d="M220 168 H232.5 V318 H245 M220 468 H232.5 V318" />
-              <path d="M980 168 H967.5 V318 H955 M980 468 H967.5 V318" />
-              <path d="M465 318 H490 M735 318 H710" />
-            </svg>
-            {nodes.map(card)}
-            <p className="tournament-path-note">
-              QF1 + QF2 → SF1 → FINAL ← SF2 ← QF3 + QF4
-            </p>
           </div>
-        </div>
+          {round === "overview" && (
+            <div className="mobile-bracket-overview">
+              <h3>{roundLabels[focusRound]}</h3>
+              <p>Current round · choose Full bracket for the complete tree.</p>
+              <div className="tournament-round-list">
+                {nodes
+                  .filter((m) => m.round === focusRound)
+                  .map((m) => card(m, true))}
+              </div>
+            </div>
+          )}
+        </>
       ) : (
         <div className="tournament-round-list">
-          {nodes.filter((m) => m.round === round).map(card)}
+          {nodes.filter((m) => m.round === round).map((m) => card(m))}
         </div>
       )}
     </section>
