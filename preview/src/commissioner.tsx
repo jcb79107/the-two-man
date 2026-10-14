@@ -58,11 +58,10 @@ export function Commissioner() {
   );
 }
 function startingDraft(m: Match): Match {
-  if (
-    m.status === "official" ||
-    m.status === "review" ||
-    m.status === "correction"
-  )
+  // A new correction needs its own explanation; a saved draft is restored
+  // separately and keeps the reason already entered for that correction.
+  if (m.status === "official") return { ...structuredClone(m), note: "" };
+  if (m.status === "review" || m.status === "correction")
     return structuredClone(m);
   return {
     ...structuredClone(m),

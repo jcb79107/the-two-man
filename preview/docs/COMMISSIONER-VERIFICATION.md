@@ -33,3 +33,7 @@ A temporary dev/build manifest collision occurred during QA; browser verificatio
 ## Staging release authorization
 
 Jason authorized committing and pushing `codex/season-2-preview` and deploying the tested static output to the existing Vercel project in preview scope. The original Codex thread was idle and canonical main remained clean during the release reconciliation. This does not authorize production deployment or production data changes.
+
+## Follow-up correction QA
+
+Reproduced a stale-reason issue on staging: after publishing a fictional correction and reopening it, the previous explanation prefilled the required reason. New corrections now begin with a blank explanation; saved drafts still retain the reason being edited. This prevents an earlier explanation silently satisfying the new correction review.
