@@ -9,6 +9,7 @@ import {
 } from "react";
 import { matches as initial, type Match } from "./data";
 import { validSnapshot } from "./domain";
+const DRAFT_KEY = "two-man-commissioner-drafts-v1";
 const KEY = "two-man-season2-preview-v1";
 export type ReviewDraft = { match: Match; note: string };
 type Store = {
@@ -17,11 +18,6 @@ type Store = {
   notice: string;
   save: (next: Match[], message: string) => boolean;
   reset: () => void;
-  role: "player" | "commissioner";
-  setRole: (r: "player" | "commissioner") => void;
-  photo: string | null;
-  photoMatch: string | null;
-  setPhoto: (p: string | null, matchId?: string) => void;
   drafts: Record<string, ReviewDraft>;
   setDraft: (id: string, draft: ReviewDraft | null) => void;
 };
@@ -30,14 +26,7 @@ export function PreviewProvider({ children }: { children: ReactNode }) {
   const [matches, setMatches] = useState<Match[]>(initial);
   const [ready, setReady] = useState(false);
   const [notice, setNotice] = useState("");
-  const [role, setRole] = useState<"player" | "commissioner">("player");
-  const [photo, updatePhoto] = useState<string | null>(null);
-  const [photoMatch, setPhotoMatch] = useState<string | null>(null);
   const [drafts, setDrafts] = useState<Record<string, ReviewDraft>>({});
-  const setPhoto = (p: string | null, id?: string) => {
-    updatePhoto(p);
-    setPhotoMatch(id ?? null);
-  };
   const setDraft = useCallback((id: string, draft: ReviewDraft | null) => {
     setDrafts((current) => {
       const next = { ...current };
@@ -47,6 +36,54 @@ export function PreviewProvider({ children }: { children: ReactNode }) {
     });
   }, []);
   useEffect(() => {
+    try {
+      const rawDrafts = localStorage.getItem(DRAFT_KEY);
+      if (rawDrafts) {
+        const value = JSON.parse(rawDrafts);
+        if (value && typeof value === "object" && !Array.isArray(value)) {
+          const restored: Record<string, ReviewDraft> = {};
+          for (const [id, d] of Object.entries(value)) {
+            const v = d as ReviewDraft;
+            const base = initial.find((m) => m.id === id);
+            if (
+              base &&
+              v?.match &&
+              v.match.id === id &&
+              v.match.a === base.a &&
+              v.match.b === base.b &&
+              v.match.pod === base.pod &&
+              typeof v.note === "string" &&
+              typeof v.match.note === "string" &&
+              typeof v.match.course === "string" &&
+              typeof v.match.tees === "string" &&
+              typeof v.match.date === "string" &&
+              (v.match.lockedAt === null ||
+                typeof v.match.lockedAt === "string") &&
+              typeof v.match.evidence === "boolean" &&
+              [v.match.scores, v.match.strokes].every(
+                (rows) =>
+                  Array.isArray(rows) &&
+                  rows.length === 4 &&
+                  rows.every(
+                    (row) =>
+                      Array.isArray(row) &&
+                      row.length === 18 &&
+                      row.every(
+                        (n) => typeof n === "number" && Number.isFinite(n),
+                      ),
+                  ),
+              )
+            )
+              restored[id] = v;
+          }
+          setDrafts(restored);
+        }
+      }
+    } catch {
+      setNotice(
+        "Saved drafts could not be restored. Published sample results are retained separately.",
+      );
+    }
     try {
       const saved = localStorage.getItem(KEY);
       if (saved) {
@@ -64,6 +101,16 @@ export function PreviewProvider({ children }: { children: ReactNode }) {
     }
     setReady(true);
   }, []);
+  useEffect(() => {
+    if (!ready) return;
+    try {
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(drafts));
+    } catch {
+      setNotice(
+        "Draft storage is unavailable. Keep this tab open; drafts will be lost on refresh.",
+      );
+    }
+  }, [drafts, ready]);
   const save = useCallback((next: Match[], message: string) => {
     setMatches(next);
     try {
@@ -80,8 +127,6 @@ export function PreviewProvider({ children }: { children: ReactNode }) {
   }, []);
   const reset = () => {
     save(initial, "Sample season restored.");
-    if (photo) URL.revokeObjectURL(photo);
-    setPhoto(null);
     setDrafts({});
   };
   return (
@@ -92,11 +137,6 @@ export function PreviewProvider({ children }: { children: ReactNode }) {
         notice,
         save,
         reset,
-        role,
-        setRole,
-        photo,
-        setPhoto,
-        photoMatch,
         drafts,
         setDraft,
       }}

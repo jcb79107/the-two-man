@@ -15,6 +15,7 @@ import {
 } from "./history-data";
 import { PageHeading, Icon, Empty, SectionTitle } from "./ui";
 import { Scorecard } from "./workflows";
+import { ConnectedBracket } from "./bracket";
 
 function ArchiveNav({ active }: { active: string }) {
   return (
@@ -369,18 +370,11 @@ export function SeasonArchive({ year }: { year: number }) {
               Completed playoff path · winners are marked on each match. Open
               any result for its record.
             </p>
-            <div className="archive-playoffs">
-              {["Quarterfinal", "Semifinal", "Final"].map((round) => (
-                <section key={round}>
-                  <h2>{round === "Final" ? "The final" : `${round}s`}</h2>
-                  <GameList
-                    season={s}
-                    games={s.games.filter((g) => g.round === round)}
-                    compact
-                  />
-                </section>
-              ))}
-            </div>
+            <ConnectedBracket
+              games={s.games}
+              baseHref={`/history/${year}?view=playoffs`}
+              label={`${year} archive`}
+            />
           </>
         ) : (
           <Empty title="The bracket is still taking shape.">

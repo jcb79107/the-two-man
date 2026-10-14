@@ -106,10 +106,10 @@ export function Mark({ className = "" }: { className?: string }) {
 export function Badge({ status }: { status: string }) {
   const labels: Record<string, string> = {
     official: "Official",
-    review: "Needs review",
+    review: "Awaiting result",
     scheduled: "Scheduled",
     unbooked: "Date needed",
-    correction: "Needs correction",
+    correction: "Awaiting result",
   };
   return (
     <span className={`badge ${status}`}>

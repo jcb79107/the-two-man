@@ -16,7 +16,10 @@ import {
   MatchRow,
   Empty,
 } from "./ui";
-import { MatchDetail, Submission, Review } from "./workflows";
+import { MatchDetail } from "./workflows";
+import { Commissioner } from "./commissioner";
+import { ConnectedBracket } from "./bracket";
+import { archive2026 } from "./history-data";
 import {
   HistoryHome,
   SeasonArchive,
@@ -59,19 +62,6 @@ function App() {
           <span className="strip-detail">· Fictional data · June 24, 2027</span>
         </span>
         <div>
-          <label className="sr-only" htmlFor="preview-role">
-            Preview role
-          </label>
-          <select
-            id="preview-role"
-            value={store.role}
-            onChange={(e) =>
-              store.setRole(e.target.value as "player" | "commissioner")
-            }
-          >
-            <option value="player">Player view</option>
-            <option value="commissioner">Commissioner view</option>
-          </select>
           <button
             onClick={() => setResetOpen(!resetOpen)}
             aria-expanded={resetOpen}
@@ -89,6 +79,7 @@ function App() {
             className="button small"
             onClick={() => {
               store.reset();
+              router.push("/");
               setResetOpen(false);
             }}
           >
@@ -143,15 +134,8 @@ function App() {
           </Link>
         </nav>
         <div className="header-end">
-          <Link
-            className="button small primary"
-            href={store.role === "commissioner" ? "/review" : "/submit"}
-          >
-            {store.role === "commissioner" ? "Review cards" : "Submit a card"}
-            <Icon
-              name={store.role === "commissioner" ? "check" : "plus"}
-              size={16}
-            />
+          <Link className="button small outline" href="/rules">
+            What to send
           </Link>
           <button
             className="menu-button"
@@ -240,9 +224,16 @@ function App() {
         ) : path === "/rules" ? (
           <Rules />
         ) : path === "/submit" ? (
-          <Submission />
+          <Empty title="Send your card to the commissioner.">
+            <p>
+              Text or email your completed scorecard and GHIN screenshots
+              showing all four players, course and tees. There is no website
+              submission.
+            </p>
+            <Link href="/rules">Read the checklist</Link>
+          </Empty>
         ) : path === "/review" ? (
-          <Review />
+          <Commissioner />
         ) : path === "/brand" ? (
           <Brand />
         ) : (
@@ -291,7 +282,7 @@ function App() {
   );
 }
 function Home() {
-  const { matches, role } = usePreview();
+  const { matches } = usePreview();
   const count = matches.filter((m) => m.status === "official").length;
   const active = matches.filter((m) => m.status !== "official");
   return (
@@ -371,35 +362,19 @@ function Home() {
       </div>
       <section className="next-action">
         <div className="action-icon">
-          <Icon
-            name={role === "commissioner" ? "check" : "calendar"}
-            size={26}
-          />
+          <Icon name="calendar" size={26} />
         </div>
         <div>
-          <p className="eyebrow">
-            {role === "commissioner" ? "COMMISSIONER DESK" : "THE NEXT THING"}
-          </p>
-          <h2>
-            {role === "commissioner"
-              ? `${matches.filter((m) => m.status === "review").length} card waiting for your eyes.`
-              : "Get it on the calendar."}
-          </h2>
+          <p className="eyebrow">AFTER YOUR MATCH</p>
+          <h2>Send the card. Follow the season.</h2>
           <p>
-            {role === "commissioner"
-              ? "Compare the original, check the draft, then make it official."
-              : "Regular-season matches wrap June 30. Contact your opponents now; request any extension before the deadline."}
+            Text or email the commissioner your scorecard and GHIN screenshots
+            for all four players, with the course and tees. Results appear here
+            once published.
           </p>
         </div>
-        <Link
-          href={
-            role === "commissioner" ? "/review" : "/matches?filter=upcoming"
-          }
-          className="button outline"
-        >
-          {role === "commissioner"
-            ? "Review scorecards"
-            : "See upcoming matches"}
+        <Link href="/rules" className="button outline">
+          What to send
           <Icon name="arrow" />
         </Link>
       </section>
@@ -507,19 +482,13 @@ function Matches() {
         eyebrow="The fixtures"
         title="Find your match."
         description="Two guaranteed rounds. Then it’s win or go home."
-        action={
-          <Link href="/submit" className="button primary">
-            Submit a card
-            <Icon name="upload" />
-          </Link>
-        }
       />
       <div className="toolbar">
         <nav className="tabs" aria-label="Match status">
           {[
             ["all", "All matches"],
             ["upcoming", "Upcoming"],
-            ["review", "In review"],
+            ["review", "Awaiting result"],
             ["official", "Official"],
           ].map(([v, l]) => (
             <Link
@@ -817,74 +786,34 @@ function TeamDetail({ id }: { id: string }) {
 function Bracket() {
   const { matches } = usePreview();
   const params = useSearchParams();
-  const round = params.get("round") ?? "quarters";
   const scenario = params.get("scenario") === "final";
   const seeds = qualified(matches);
-  const seedIds = seeds.length
-    ? seeds.map((r) => r.team.id)
-    : ["t1", "t4", "t7", "t10", "t13", "t16", "t2", "t5"];
-  const games =
-    round === "quarters"
-      ? [
-          [0, 7],
-          [3, 4],
-          [1, 6],
-          [2, 5],
-        ]
-      : round === "semis"
-        ? [
-            [0, 3],
-            [1, 2],
-          ]
-        : [[0, 1]];
   return (
     <>
       <PageHeading
         eyebrow="The knockout rounds"
-        title="Eight in. One left."
-        description="Win your way through July, August and September."
+        title="Playoff bracket."
+        description="Eight places. One connected path."
         action={
           <Link
-            href={`/bracket?round=final&scenario=${scenario ? "regular" : "final"}`}
             className="button outline"
+            href={scenario ? "/bracket" : "/history/2026?view=playoffs"}
           >
-            {scenario ? "Back to current season" : "Preview a completed final"}
+            {scenario
+              ? "Back to current season"
+              : "View completed sample bracket"}
             <Icon name="arrow" />
           </Link>
         }
       />
-      <div className="toolbar">
-        <nav className="tabs" aria-label="Bracket rounds">
-          {[
-            ["quarters", "Quarterfinals"],
-            ["semis", "Semifinals"],
-            ["final", "The final"],
-          ].map(([v, l]) => (
-            <Link
-              key={v}
-              href={`/bracket?round=${v}${scenario ? "&scenario=final" : ""}`}
-              aria-current={round === v ? "page" : undefined}
-            >
-              {l}
-            </Link>
-          ))}
-        </nav>
-        <span className="eyebrow">
-          {round === "quarters"
-            ? "JULY"
-            : round === "semis"
-              ? "AUGUST"
-              : "SEPTEMBER"}
-        </span>
-      </div>
       {scenario ? (
         <div className="notice">
           <Icon name="image" />
           <div>
-            <strong>Completed-season design preview</strong>
+            <strong>Completed 2026 sample archive</strong>
             <p>
-              These playoff results are fictional examples, separate from the
-              active sample season.
+              This is the existing fictional archive, separate from the active
+              season. No current-season champion is implied.
             </p>
           </div>
         </div>
@@ -895,66 +824,26 @@ function Bracket() {
             <div>
               <strong>Waiting for the regular season.</strong>
               <p>
-                No seeds are locked yet. Six pod winners and two wild cards
-                qualify after all cards are official.
+                No field is locked. Complete official cards and resolve
+                qualification ties before seeding the existing eight-slot
+                preview.
               </p>
             </div>
           </div>
         )
       )}
-      {round === "final" && scenario && (
-        <section className="champion">
-          <Icon name="cup" size={48} />
-          <p className="eyebrow">YOUR SEASON 02 CHAMPIONS</p>
-          <h2>{nameOf(seedIds[0])}</h2>
-          <p>4 & 2 over {nameOf(seedIds[1])}</p>
-          <span>{money(season.championAward)} championship award · Sample</span>
-        </section>
-      )}
-      <div className={`bracket-grid ${round === "final" ? "single" : ""}`}>
-        {games.map(([a, b], i) => (
-          <div className="bracket-game" key={i}>
-            <div className="match-meta">
-              <span className="eyebrow">
-                {round === "quarters"
-                  ? "QUARTERFINAL"
-                  : round === "semis"
-                    ? "SEMIFINAL"
-                    : "CHAMPIONSHIP"}{" "}
-                {round !== "final" && i + 1}
-              </span>
-              <Badge status={scenario ? "official" : "Awaiting field"} />
-            </div>
-            {[a, b].map((s, j) => (
-              <div
-                className={`bracket-team ${scenario && j === 0 ? "winner" : ""}`}
-                key={s}
-              >
-                <span className="seed">
-                  {seeds.length || scenario ? s + 1 : "—"}
-                </span>
-                {seeds.length || scenario ? (
-                  <TeamName id={seedIds[s]} />
-                ) : (
-                  <span>Seed {s + 1}</span>
-                )}
-                {scenario && j === 0 && <Icon name="check" size={18} />}
-              </div>
-            ))}
-            <div className="match-footer">
-              {scenario
-                ? `${round === "final" ? "4 & 2" : "2 & 1"} · ${round === "final" ? "Champion" : "Advances"}`
-                : "Match date agreed by both teams"}
-            </div>
-          </div>
-        ))}
-      </div>
+      <ConnectedBracket
+        seedIds={seeds.map((r) => r.team.id)}
+        games={scenario ? archive2026.games : []}
+        baseHref={scenario ? "/bracket?scenario=final" : "/bracket"}
+        label={scenario ? "2026 sample archive" : "Current season"}
+      />
       <section className="fine-note">
-        <strong>Two rounds first. Then everything to play for.</strong>
+        <strong>The existing eight-team path.</strong>
         <p>
-          The bracket uses a fixed path. No detailed hole card is required to
-          report a playoff winner. Final format and field size remain open for
-          Season 2.
+          Unplayed semifinals and the final show their feeder matches, never
+          assumed seed winners. Season 2 field size and final rules remain
+          unconfirmed. No playoff results are entered or changed here.
         </p>
       </section>
     </>
@@ -1087,7 +976,7 @@ function Rules() {
               n: "03",
               title: "Play it. Photograph it. Send it.",
               tag: "Proposed workflow",
-              body: "For regular-season seeding, submit the card with the agreed strokes marked. AI can help draft the transcription; a human checks it before the result becomes official. Playoff reporting can stay winner and result only.",
+              body: "Text or email the commissioner a photo of the regular-season card with all 18 holes, player names, date and agreed stroke marks, plus GHIN screenshots for all four players showing the course and tees. Keep the stroke agreement made at least 24 hours before tee time. The commissioner enters and publishes results; there are no player accounts or online submissions. Playoff card requirements remain to be confirmed.",
             },
             {
               n: "04",

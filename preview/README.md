@@ -21,15 +21,17 @@ Open http://127.0.0.1:3027. No .env file is required. Do not copy production env
 2. Matches: filter/search, view an official scorecard, switch gross/net and nines.
 3. Standings: pods/full field/playoff picture; team pages and earned pod awards.
 4. The purse: illustrative, reconciled prize distribution; earned is not paid.
-5. Submit a card: use the staged card, test missing agreement or simulated failure, then submit.
-6. Try commissioner review: correct scores, save a draft, inspect the immutable source and agreed strokes, then approve. Standings and review queue update; refresh preserves saved sample changes.
-7. Upcoming match: record a date; lock sample strokes. A tee time less than 24 hours after the staged June 24 noon clock is rejected.
-8. Bracket: switch URL-backed rounds; preview a completed final. This illustration is separate from the active season.
+5. Commissioner demo (footer): choose a match, record course/tees and agreed timestamps, enter all 18 gross scores and supplied strokes, then review and publish.
+6. Save or navigate away from a draft; return or refresh to resume. Official standings remain unchanged until publication. Discard asks before removing a draft.
+7. Select an official match to correct it. A reason and fresh evidence confirmation are required; the previous published score remains visible until the correction is published.
+8. Bracket: follow connected quarterfinals and semifinals into the central final, or choose a round for mobile. Open the completed sample archive and follow each match to its saved result. No advancing seeds are assumed.
 9. Brand direction: mascot/wordmark concept and rationale. Reset demo restores original fixtures.
 
 ## Honest boundaries
 
-All names, scorecards, awards and dates are fixtures. Real file selection previews the image locally; it is never uploaded and disappears after refresh. The supplied sample transcription is not an AI result. GHIN retrieval, secure storage, real authentication, notifications, playoffs administration, payout transfers, multi-device synchronization and production write safety are not implemented. The commissioner role toggle is a demo affordance, not an authorization system. Generated mark needs vector cleanup before print production.
+All names, scorecards, awards and dates are fixtures. The public site has no player writes. Players text or email evidence to the commissioner outside the app. The static commissioner workspace has no login or access protection; all browser-local data is inspectable. Do not enter real cards, GHIN screenshots or personal information. No upload, AI extraction or GHIN connection exists. Real authentication, private storage, notifications, playoff administration, payout transfers, multi-device synchronization and production write safety remain unimplemented. Generated mark needs vector cleanup before print production.
+
+The hosted link above is the earlier preview. The commissioner and connected-bracket changes have completed local verification and are authorized for a staging-only preview deployment. See docs/COMMISSIONER-VERIFICATION.md and docs/BRACKET-VERIFICATION.md for evidence.
 
 ## Verify and export
 

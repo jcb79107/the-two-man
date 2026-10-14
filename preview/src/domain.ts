@@ -120,7 +120,11 @@ export function lockAllowed(teeTime: string, now: string) {
   );
 }
 export function approvalError(m: Match): string | null {
-  if (!m.date || Date.parse(m.date) > Date.parse(PREVIEW_NOW))
+  if (
+    !m.date ||
+    !Number.isFinite(Date.parse(m.date)) ||
+    Date.parse(m.date) > Date.parse(PREVIEW_NOW)
+  )
     return "This match has not been played yet in the sample season.";
   if (!m.lockedAt || !lockAllowed(m.date, m.lockedAt))
     return "Strokes must be locked at least 24 hours before tee time. This match needs commissioner resolution.";
@@ -166,4 +170,26 @@ export function validSnapshot(value: unknown): value is Match[] {
       typeof m.evidence === "boolean"
     );
   });
+}
+
+// Draft replacement is atomic at the demo state boundary. Never save drafts into
+// the official result list; repeated publication replaces the same match only.
+export function publishDraft(ms: Match[], draft: Match): Match[] {
+  const current = ms.find((m) => m.id === draft.id);
+  if (
+    !current ||
+    current.a !== draft.a ||
+    current.b !== draft.b ||
+    current.pod !== draft.pod
+  )
+    throw new Error("The draft does not belong to this fixture.");
+  const error = approvalError(draft);
+  if (error) throw new Error(error);
+  if (!draft.course.trim() || !draft.tees.trim())
+    throw new Error("Enter the course and tees.");
+  if (current.status === "official" && !draft.note.trim())
+    throw new Error("Explain the correction before publishing.");
+  return ms.map((m) =>
+    m.id === draft.id ? { ...draft, status: "official" as const } : m,
+  );
 }
