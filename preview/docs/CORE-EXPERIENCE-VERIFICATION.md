@@ -45,3 +45,14 @@ across devices; commissioner demo has no authentication. Real Season 1 history i
 not imported. Playoff administration and production authorization/persistence
 remain separate work. No full screen-reader, cross-browser or field performance
 certification is claimed. This preview must not be promoted directly to production.
+
+## Hosted preview
+
+Deployed commit `3286f0b` to the existing Vercel project's preview environment:
+https://thetwo-ayip8rck1-jcb79107s-projects.vercel.app
+
+Deployment `dpl_BtmPsL2hMSa7vXiKNm8ft9LQvMCB` reached READY. Hosted browser
+smoke checks confirmed the results-first homepage, focused commissioner entry,
+and archived bracket/final link; captured browser warnings/errors were empty.
+The packaged output contains no runtime function directory, environment files,
+or `.rscinfo` files. No production promotion was performed.

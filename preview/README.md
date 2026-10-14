@@ -1,6 +1,6 @@
 # The Two-Man · Season 02 preview
 
-[Open the hosted Season 2 preview](https://thetwo-hdno6b7ik-jcb79107s-projects.vercel.app).
+[Open the hosted Season 2 preview](https://thetwo-ayip8rck1-jcb79107s-projects.vercel.app).
 
 A fully separate staged preview for visual and workflow review. No production data connection or live integrations. See [docs/DECISIONS.md](docs/DECISIONS.md), [DESIGN.md](DESIGN.md) and [UX-CONTRACT.md](UX-CONTRACT.md).
 
@@ -31,7 +31,7 @@ Open http://127.0.0.1:3027. No .env file is required. Do not copy production env
 
 All names, scorecards, awards and dates are fixtures. The public site has no player writes. Players text or email evidence to the commissioner outside the app. The static commissioner workspace has no login or access protection; all browser-local data is inspectable. Do not enter real cards, GHIN screenshots or personal information. No upload, AI extraction or GHIN connection exists. Real authentication, private storage, notifications, playoff administration, payout transfers, multi-device synchronization and production write safety remain unimplemented. Generated mark needs vector cleanup before print production.
 
-The hosted link above includes the verified commissioner and connected-bracket changes from commit `c94af21`, published to staging on October 14, 2026. See docs/COMMISSIONER-VERIFICATION.md and docs/BRACKET-VERIFICATION.md for evidence.
+The hosted link above includes the core experience changes from commit `3286f0b`, published to staging on October 14, 2026. See docs/CORE-EXPERIENCE-VERIFICATION.md for test results and remaining limits.
 
 ## Verify and export
 
