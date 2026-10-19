@@ -4529,3 +4529,37 @@ details.fine-note > summary {
     margin-bottom: 24px;
   }
 }
+
+/* Keep standings readable instead of shrinking six columns on phones. */
+@media (max-width: 600px) {
+  .standings-table {
+    min-width: 510px;
+    font-size: 13px;
+  }
+  .standings-table thead th {
+    font-size: 11px;
+    padding: 12px 9px;
+  }
+  .standings-table td {
+    font-size: 13px;
+    padding: 14px 9px;
+  }
+  .standings-table tbody th {
+    font-size: 13px;
+    min-width: 160px;
+  }
+  .standings-table .rank {
+    font-size: 11px;
+  }
+  .bracket-view-tabs {
+    flex-wrap: nowrap;
+    gap: 0;
+  }
+  .bracket-view-tabs a {
+    flex: 1;
+    text-align: center;
+    padding: 12px 6px;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+}

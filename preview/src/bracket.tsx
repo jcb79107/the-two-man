@@ -8,8 +8,8 @@ import { dateLabel } from "./data";
 const roundLabels = {
   overview: "Overview",
   all: "Full bracket",
-  quarters: "Quarterfinals",
-  semis: "Semifinals",
+  quarters: "Quarters",
+  semis: "Semis",
   final: "Final",
 };
 export function ConnectedBracket({
@@ -113,15 +113,18 @@ export function ConnectedBracket({
       aria-label={`${label} playoff bracket`}
     >
       <nav className="tabs bracket-view-tabs" aria-label="Bracket view">
-        {Object.entries(roundLabels).map(([r, title]) => (
-          <Link
-            key={r}
-            href={href(r)}
-            aria-current={r === round ? "page" : undefined}
-          >
-            {title}
-          </Link>
-        ))}
+        {Object.entries(roundLabels)
+          .filter(([r]) => r !== "overview")
+          .sort(([a], [b]) => (a === "all" ? 1 : b === "all" ? -1 : 0))
+          .map(([r, title]) => (
+            <Link
+              key={r}
+              href={href(r)}
+              aria-current={r === round ? "page" : undefined}
+            >
+              {title}
+            </Link>
+          ))}
       </nav>
       {field.length > 0 && (
         <label className="bracket-team-filter">

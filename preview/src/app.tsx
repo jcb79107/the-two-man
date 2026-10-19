@@ -579,7 +579,7 @@ function StandingsTable({
             <th scope="col">Team</th>
             <th scope="col">W–L–T</th>
             <th scope="col">Hole pts</th>
-            <th scope="col">Won</th>
+            <th scope="col">Holes won</th>
             <th scope="col">Net BB</th>
             <th scope="col">Played</th>
           </tr>
