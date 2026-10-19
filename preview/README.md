@@ -1,6 +1,6 @@
 # The Two-Man · Season 02 preview
 
-[Open the hosted Season 2 preview](https://thetwo-i1y3rpe9l-jcb79107s-projects.vercel.app).
+[Open the hosted Season 2 preview](https://thetwo-pzflhg88b-jcb79107s-projects.vercel.app).
 
 A fully separate staged preview for visual and workflow review. No production data connection or live integrations. See [docs/DECISIONS.md](docs/DECISIONS.md), [DESIGN.md](DESIGN.md) and [UX-CONTRACT.md](UX-CONTRACT.md).
 
