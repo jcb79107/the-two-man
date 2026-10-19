@@ -45,9 +45,8 @@ function ArchiveNav({ active }: { active: string }) {
 function SampleHistory() {
   return (
     <p className="archive-disclosure">
-      <strong>Sample archive.</strong> The 2026 winners, results and awards
-      below are fictional design data. Real Season 1 history has not been
-      imported.
+      <strong>Sample archive.</strong> Fictional winners, results and awards.
+      Season 1 data has not been imported.
     </p>
   );
 }
@@ -85,43 +84,25 @@ export function HistoryHome({ champions = false }: { champions?: boolean }) {
                     {s.complete ? "COMPLETE" : "IN PROGRESS"}
                   </p>
                   <h2>
-                    {s.champion
-                      ? entryName(s, s.champion)
-                      : "The next chapter."}
+                    {s.champion ? entryName(s, s.champion) : "Current season"}
                   </h2>
                   <p>
-                    {s.champion
-                      ? "Champions"
-                      : "The title is still up for grabs."}{" "}
-                    · {s.entries.length} teams · {s.games.length} official
-                    matches
+                    {s.champion ? "Champions" : "In progress"} ·{" "}
+                    {s.entries.length} teams · {s.games.length} official matches
                   </p>
                 </div>
                 <span className="archive-row-cta">
-                  Explore season <Icon name="arrow" />
+                  View season <Icon name="arrow" />
                 </span>
               </Link>
             ))}
           </div>
           <section className="section">
-            <SectionTitle title="The champions roll" href="/champions" />
+            <SectionTitle title="Champions" href="/champions" />
             {completed.slice(0, 1).map((s) => (
               <Champion key={s.year} season={s} />
             ))}
           </section>
-          <div className="archive-record-promo">
-            <div>
-              <p className="eyebrow">BEYOND A SINGLE SUMMER</p>
-              <h2>Build a career here.</h2>
-              <p>
-                Wins, appearances and titles follow the player. Partnership
-                records stay with the team.
-              </p>
-            </div>
-            <Link href="/records" className="button primary">
-              Open the record book <Icon name="arrow" />
-            </Link>
-          </div>
         </>
       )}
     </>
@@ -193,12 +174,7 @@ export function SeasonArchive({ year }: { year: number }) {
       </Link>
       <PageHeading
         eyebrow={`SEASON ${String(s.number).padStart(2, "0")} · ${s.complete ? "FINAL ARCHIVE" : "IN PROGRESS"}`}
-        title={`${year}.`}
-        description={
-          s.complete
-            ? "A season preserved. Every result belongs to this year."
-            : "Official results so far. The record grows as cards are approved."
-        }
+        title={`${year}`}
         action={
           <label className="archive-picker">
             Season
@@ -233,8 +209,8 @@ export function SeasonArchive({ year }: { year: number }) {
             <Champion season={s} />
           ) : (
             <div className="archive-live">
-              <p className="eyebrow">THE RACE IS ON</p>
-              <h2>No champion yet.</h2>
+              <p className="eyebrow">CURRENT SEASON</p>
+              <h2>Season in progress</h2>
               <p>
                 {s.games.length} regular-season results are official. Pending
                 cards do not count toward career stats.
@@ -282,12 +258,7 @@ export function SeasonArchive({ year }: { year: number }) {
           </section>
           <div className="fine-note">
             <strong>Season record</strong>
-            <p>
-              Three-team pods, two regular-season matches per team, then an
-              eight-team knockout. The archive stores this season’s format and
-              awards separately from the current season. All values shown are
-              sample data.
-            </p>
+            <p>Three-team pods · Two matches per team · Eight-team playoffs.</p>
           </div>
         </>
       )}
@@ -358,10 +329,6 @@ export function SeasonArchive({ year }: { year: number }) {
       {view === "playoffs" &&
         (s.complete ? (
           <>
-            <p className="muted">
-              Completed playoff path · winners are marked on each match. Open
-              any result for its record.
-            </p>
             <ConnectedBracket
               games={s.games}
               baseHref={`/history/${year}?view=playoffs`}
@@ -369,7 +336,7 @@ export function SeasonArchive({ year }: { year: number }) {
             />
           </>
         ) : (
-          <Empty title="The bracket is still taking shape.">
+          <Empty title="Playoffs not started">
             <p>No playoff result is official yet.</p>
             <Link className="text-link" href="/bracket">
               View the current playoff picture
@@ -594,8 +561,8 @@ export function RecordBook() {
           </button>
         </Empty>
       )}
-      <div className="fine-note">
-        <strong>What these numbers mean</strong>
+      <details className="fine-note">
+        <summary>Statistics definitions</summary>
         <p>
           Win percentage = wins ÷ official matches; ties are not wins. No
           minimum appearances. Equal values share a rank. Match scope changes
@@ -604,7 +571,7 @@ export function RecordBook() {
           reflect their team’s match outcomes, not individual stroke-play wins.
           No prize split is assumed.
         </p>
-      </div>
+      </details>
     </>
   );
 }
@@ -706,10 +673,7 @@ export function CareerProfile({
       {kind === "teams" && (
         <section className="section">
           <SectionTitle title="Head-to-head" />
-          <p className="field-help">
-            This partnership’s official record against each opponent, across all
-            seasons.
-          </p>
+          <p className="field-help">All seasons · Official matches</p>
           <div className="rivalry-list">
             {headToHead(records, id).map((opponent) => (
               <details key={opponent.id}>
@@ -811,8 +775,7 @@ export function CareerProfile({
       <section className="section">
         <SectionTitle title="Match history" />
         <p className="field-help">
-          Regular-season scores are hole points. Playoff scores use match-play
-          notation. Select a result to view its source record.
+          Regular season: hole points · Playoffs: match-play margin
         </p>
         <div className="career-match-list">
           {games.map(({ season: s, game: g, teamId }) => (
@@ -841,14 +804,13 @@ export function CareerProfile({
           ))}
         </div>
       </section>
-      <div className="fine-note">
-        <strong>Recorded, not estimated</strong>
+      <details className="fine-note">
+        <summary>Data coverage</summary>
         <p>
-          Only official results count. Individual gross averages, birdies and
-          handicap history are not shown where complete verified hole data is
-          missing. A missing historical statistic is not treated as zero.
+          Official results only. Missing historical statistics are not counted
+          as zero.
         </p>
-      </div>
+      </details>
     </>
   );
 }
@@ -890,7 +852,7 @@ export function ArchivedMatch({ year, id }: { year: number; id: string }) {
       <p className="muted">
         {g.phase === "regular"
           ? "Regular-season hole points, first-listed team then second-listed team."
-          : "Final match-play margin. This sample archive records the result without inventing a hole-by-hole playoff card."}
+          : "Final match-play margin."}
       </p>
       {g.card ? (
         <Scorecard
@@ -906,10 +868,7 @@ export function ArchivedMatch({ year, id }: { year: number; id: string }) {
       ) : (
         <div className="fine-note">
           <strong>Hole data not recorded</strong>
-          <p>
-            The final result is available. A detailed card and photograph are
-            not available for this sample playoff match.
-          </p>
+          <p>No scorecard is available for this sample match.</p>
         </div>
       )}
       <div className="archive-match-links">

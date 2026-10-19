@@ -87,11 +87,7 @@ export function MatchDetail({ id }: { id: string }) {
           <Icon name="clock" />
           <div>
             <strong>Awaiting result</strong>
-            <p>
-              The commissioner will publish the score after receiving the card
-              and GHIN screenshots. Arrange your match directly with your
-              opponents.
-            </p>
+            <p>Send your scorecard and GHIN screenshots to the commissioner.</p>
           </div>
         </div>
       ) : (
@@ -126,11 +122,7 @@ export function MatchDetail({ id }: { id: string }) {
             ? "Verified sample result"
             : "Regular-season match"}
         </strong>
-        <p>
-          All golfers are fictional. Strokes are supplied fixture values, not
-          fetched from GHIN. Regular-season play covers all 18 holes for
-          seeding.
-        </p>
+        <p>Sample scores and strokes; no GHIN connection.</p>
       </section>
     </>
   );
@@ -140,11 +132,7 @@ function StrokeSummary({ match: m }: { match: Match }) {
     <section className="stroke-summary">
       <div>
         <Icon name="lock" size={28} />
-        <h2>
-          {m.lockedAt
-            ? "Agreed before the first tee."
-            : "Strokes need agreement."}
-        </h2>
+        <h2>{m.lockedAt ? "Agreed strokes" : "Strokes not locked"}</h2>
         <p>
           {m.lockedAt
             ? `Locked ${dateLabel(m.lockedAt, true)} CT · ${m.course}`
@@ -202,7 +190,7 @@ export function Scorecard({
       <div className="scorecard-title">
         <div>
           <p className="eyebrow">{m.course}</p>
-          <h2>{editable ? "Check the draft." : "The card."}</h2>
+          <h2>{editable ? "Draft scorecard" : "Scorecard"}</h2>
         </div>
         <div className="scorecard-controls">
           <div className="segmented" role="group" aria-label="Score type">
@@ -232,9 +220,8 @@ export function Scorecard({
       </div>
       {editable && (
         <p className="field-help">
-          Edit gross scores to correct the draft. Net values use the externally
-          agreed strokes. Results and totals appear once all scores and strokes
-          are valid.
+          Edit gross scores. Net totals appear when all scores and agreed
+          strokes are valid.
         </p>
       )}
       <div

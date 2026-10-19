@@ -4504,3 +4504,28 @@ summary {
     font-size: 17px;
   }
 }
+
+/* Keep rule content in one readable column; definitions expand on demand. */
+.rules-layout {
+  display: block;
+  max-width: 850px;
+}
+details.fine-note > summary {
+  font-weight: 600;
+  min-height: 44px;
+  display: list-item;
+  align-content: center;
+}
+.page-heading h1 {
+  font-size: clamp(32px, 4vw, 48px);
+}
+.page-heading {
+  margin-bottom: 28px;
+}
+@media (max-width: 600px) {
+  .page-heading {
+    padding-top: 8px;
+    padding-bottom: 8px;
+    margin-bottom: 24px;
+  }
+}

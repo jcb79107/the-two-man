@@ -32,7 +32,7 @@ export function FastScoreEntry({
       <div className="entry-heading">
         <div>
           <p className="eyebrow">GROSS SCORES</p>
-          <h3>One hole. Four players.</h3>
+          <h3>Enter scores</h3>
         </div>
         <span role="status">{completed} / 72 entered</span>
       </div>

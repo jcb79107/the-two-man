@@ -634,7 +634,7 @@ function TeamDetail({ id }: { id: string }) {
             <br />
             <span>& {t.names[1]}</span>
           </h1>
-          <p>Two players. One team.</p>
+
           <Link className="text-link" href={`/records/teams/${id}`}>
             View career & past seasons <Icon name="arrow" size={16} />
           </Link>
@@ -756,7 +756,7 @@ function Earnings() {
   const earned = winners.filter((w) => w.team).length * season.podAward;
   return (
     <>
-      <PageHeading eyebrow="Something to play for" title="Prize money" />
+      <PageHeading eyebrow="2027" title="Prize money" />
       <div className="prize-hero">
         <div>
           <span className="eyebrow">TOTAL SAMPLE PURSE</span>
@@ -774,8 +774,8 @@ function Earnings() {
         <div>
           <strong>Proposed amounts for this preview</strong>
           <p>
-            Buy-in and payouts are not decided. These example awards stack, are
-            per team, and do not represent payments.
+            Illustrative amounts, per team. Awards stack; payment status is not
+            tracked.
           </p>
         </div>
       </div>
@@ -800,7 +800,7 @@ function Earnings() {
           <h2>
             {money(season.podAward)} <small>× 6</small>
           </h2>
-          <p>Win your pod · Earn your buy-in back</p>
+          <p>Per pod winner</p>
           <Badge
             status={`${winners.filter((w) => w.team).length} of 6 earned`}
           />
@@ -840,56 +840,54 @@ function Rules() {
       <PageHeading
         eyebrow="The way we play"
         title="Rules"
-        description="A proposed Season 2 guide. Confirmed decisions are marked below."
+        description="Season 2 · Proposals labeled below."
+        action={
+          <a
+            className="button outline"
+            href={RULES_JUDGE_URL}
+            target="_blank"
+            rel="noreferrer"
+          >
+            AI rules judge <Icon name="arrow" size={16} />
+          </a>
+        }
       />
       <div className="rules-layout">
-        <aside>
-          <Mark />
-          <h2>
-            Bring a partner.
-            <br />
-            Find your game.
-          </h2>
-          <p>
-            The same format people loved, with clearer expectations before the
-            first tee.
-          </p>
-        </aside>
         <div className="rules-list">
           {[
             {
               n: "01",
-              title: "Two matches, guaranteed.",
+              title: "Format",
               tag: "Confirmed direction",
               body: "Three teams per pod in this sample format. Play both opponents before elimination. Six pod winners and two wild cards move on; expanded field details are still to be decided.",
             },
             {
               n: "02",
-              title: "Strokes settled 24 hours ahead.",
+              title: "Lock strokes at least 24 hours before tee time",
               tag: "Confirmed rule",
               body: "Use GHIN for the correct course and tees. All four players agree on strokes no later than 24 hours before tee time. Preserve those values for the match, even if an index changes later. Course, tee or date changes after locking need commissioner guidance.",
             },
             {
               n: "03",
-              title: "Play it. Photograph it. Send it.",
-              tag: "Proposed workflow",
-              body: "Text or email the commissioner a photo of the regular-season card with all 18 holes, player names, date and agreed stroke marks, plus GHIN screenshots for all four players showing the course and tees. Keep the stroke agreement made at least 24 hours before tee time. The commissioner enters and publishes results; there are no player accounts or online submissions. Playoff card requirements remain to be confirmed.",
+              title: "After your match",
+              tag: "Confirmed workflow",
+              body: "Text or email the commissioner your completed 18-hole card with names, date and agreed strokes, plus GHIN screenshots for all four players showing course and tees. The commissioner posts the result. Playoff card requirements are still to be confirmed.",
             },
             {
               n: "04",
-              title: "Get a date on the books.",
+              title: "Scheduling",
               tag: "Proposed scheduling policy",
               body: "Optional April early play. May and June for regular-season matches. Contact opponents early. Request any extension before the deadline with a new date both sides accept. Penalties and exception rules are not finalized.",
             },
             {
               n: "05",
-              title: "Every hole has a say.",
+              title: "Scoring & seeding",
               tag: "Sample competition format",
               body: "Net better-ball on each hole. Win a hole for one point; halve it for half a point each. Regular-season ranking uses match record, hole points, holes won and cumulative net better-ball. Remaining ties need a recorded decision.",
             },
             {
               n: "06",
-              title: "Know what you’ve earned.",
+              title: "Prize money",
               tag: "Amounts still to be decided",
               body: "Pod winners, champions and runners-up have their awards displayed. Earned money and paid money are different. Sample amounts shown in this preview are per team and stack.",
             },

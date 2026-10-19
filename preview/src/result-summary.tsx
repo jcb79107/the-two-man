@@ -13,8 +13,7 @@ export function ResultSummary({ match }: { match: Match }) {
           {a} holes won · {tied} halved · {b} holes won
         </h2>
         <p>
-          {nameOf(match.a)} on the left; {nameOf(match.b)} on the right. Each
-          halved hole adds ½ point to both teams.
+          {nameOf(match.a)} vs {nameOf(match.b)}
         </p>
       </div>
       <div className="result-hole-strip" aria-label="Hole outcomes">

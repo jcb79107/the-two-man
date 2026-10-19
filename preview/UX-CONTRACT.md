@@ -39,3 +39,5 @@ Results lead the clubhouse. ResultSummary explains the 18 hole points without ch
 
 ## October 19 focus revision
 Home is a chronological official-results timeline. Keep the existing rules judge and Instagram links. No brand-direction page, promotional homepage panels, or slogan headings. Standings retain ranking statistics; playoffs default to round view with full bracket optional. Preview sample disclosure remains visible on mobile.
+
+Site-wide follow-up: compact page headings; literal scorecard/history/rules labels; statistical definitions available on demand. Preserve validation errors, publishing attestation, sample/privacy warnings and confirmed versus proposed rules.

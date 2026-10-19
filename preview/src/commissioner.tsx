@@ -19,12 +19,11 @@ export function Commissioner() {
       <PageHeading
         eyebrow="COMMISSIONER WORKSPACE · DEMO"
         title="Commissioner desk"
-        description="Record the card received by text or email, check the result, then publish."
       />
       <p className="notice">
-        Fictional data only. This static demo has no login or access protection.
-        Anyone can open this workspace; browser storage is not private. Do not
-        enter real cards, GHIN evidence or personal information.
+        Public demo · Saved in this browser only. No login or privacy
+        protection. Use fictional data only; do not enter real cards, GHIN
+        evidence or personal information.
       </p>
       {id && !match ? (
         <p>
@@ -34,10 +33,7 @@ export function Commissioner() {
         <Entry key={match.id} match={match} />
       ) : (
         <>
-          <p className="fine-note">
-            Regular-season entry only. Playoff reporting and bracket corrections
-            are outside this slice.
-          </p>
+          <p className="fine-note">Regular-season entry only.</p>
           <div className="queue-nav" aria-label="Choose a match">
             {store.matches.map((m) => (
               <Link href={`/review?match=${m.id}`} key={m.id}>
@@ -138,10 +134,7 @@ function Entry({ match: original }: { match: Match }) {
       <section className="review-actions">
         <div>
           <h2>Result published.</h2>
-          <p>
-            Only this browser’s sample season changed. Past seasons remain
-            unchanged.
-          </p>
+          <p>Saved to this browser’s sample season.</p>
           <Link className="button primary" href={`/matches/${draft.id}`}>
             View published scorecard
           </Link>{" "}
@@ -182,10 +175,8 @@ function Entry({ match: original }: { match: Match }) {
           <section className="form-panel">
             <h3>Match record</h3>
             <p>
-              Copy the course, tees and timestamps from the agreed record. These
-              fields record what happened; they do not schedule or lock a match
-              online. Times below use Chicago daylight time for the fictional
-              June season.
+              Copy the agreed match details. Times are Chicago daylight time;
+              this form does not schedule or lock matches.
             </p>
             <div className="commissioner-fields">
               <label>
@@ -261,8 +252,7 @@ function Entry({ match: original }: { match: Match }) {
               showing course and tees.
             </label>
             <p className="field-help">
-              Evidence stays with the commissioner outside this demo. No upload,
-              AI extraction or GHIN connection.
+              Keep evidence outside this demo. No uploads or GHIN connection.
             </p>
           </section>
           <details className="agreed-details">
@@ -348,10 +338,7 @@ function Entry({ match: original }: { match: Match }) {
           </details>
           <details className="agreed-details">
             <summary>Show fictional source card</summary>
-            <p>
-              Fixed sample evidence for this match. It is never changed by your
-              draft.
-            </p>
+            <p>Original sample card; unaffected by draft edits.</p>
             <Scorecard match={originals.find((m) => m.id === draft.id)!} />
           </details>
           <section className="form-panel">
