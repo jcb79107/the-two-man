@@ -24,7 +24,7 @@ export function ConnectedBracket({
   label?: string;
 }) {
   const params = useSearchParams();
-  const selected = params.get("round") ?? "overview";
+  const selected = params.get("round") ?? "quarters";
   const round = Object.hasOwn(roundLabels, selected)
     ? (selected as keyof typeof roundLabels)
     : "overview";
@@ -147,16 +147,8 @@ export function ConnectedBracket({
         <p className="path-summary" role="status">
           {field.find((s) => s.id === selectedTeam)?.label}:{" "}
           {route.map((id) => nodes.find((n) => n.id === id)!.label).join(" → ")}
-          . Highlighted rounds show the recorded or remaining route; they do not
-          predict winners.
         </p>
       )}
-      <p className="bracket-help">
-        {round === "all" || round === "overview"
-          ? "Follow the lines toward the final. Scroll sideways on a small screen, or choose a round above."
-          : "Round view. Choose Full bracket to see every connection."}{" "}
-        A check marks the winner; unplayed rounds name their feeder matches.
-      </p>
       {round === "all" || round === "overview" ? (
         <>
           <div

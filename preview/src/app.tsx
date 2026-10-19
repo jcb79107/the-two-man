@@ -4,7 +4,7 @@ import { usePathname, useSearchParams, useRouter } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { usePreview } from "./store";
 import { teams, pods, nameOf, money, season, dateLabel } from "./data";
-import { standings, podWinner, qualified } from "./domain";
+import { standings, podWinner, qualified, result } from "./domain";
 import {
   Icon,
   Mark,
@@ -27,8 +27,9 @@ import {
   CareerProfile,
   ArchivedMatch,
 } from "./history";
+import { RULES_JUDGE_URL } from "./rules-judge";
 const nav = [
-  ["/", "Clubhouse", "home"],
+  ["/", "Home", "home"],
   ["/matches", "Matches", "calendar"],
   ["/standings", "Standings", "table"],
   ["/bracket", "Bracket", "cup"],
@@ -58,7 +59,7 @@ function App() {
       </a>
       <div className="preview-strip">
         <span>
-          <span className="preview-dot" /> SEASON 02 PREVIEW{" "}
+          <span className="preview-dot" /> PREVIEW · SAMPLE DATA{" "}
           <span className="strip-detail">· Fictional data · June 24, 2027</span>
         </span>
         <div>
@@ -135,8 +136,17 @@ function App() {
         </nav>
         <div className="header-end">
           <Link className="button small outline" href="/rules">
-            What to send
+            Rules
           </Link>
+          <a
+            className="text-link"
+            href="https://www.instagram.com/twomantournament/"
+            target="_blank"
+            rel="noreferrer"
+            aria-label="The Two-Man on Instagram"
+          >
+            Instagram ↗
+          </a>
           <button
             className="menu-button"
             aria-label="More navigation"
@@ -156,7 +166,6 @@ function App() {
             ["/earnings", "The purse"],
             ["/rules", "Format & rules"],
             ["/review", "Commissioner demo"],
-            ["/brand", "Brand direction"],
           ].map(([href, label]) => (
             <Link key={href} href={href} onClick={() => setMenu(false)}>
               {label}
@@ -170,7 +179,7 @@ function App() {
           CHICAGOLAND <i /> EST. 2026
         </span>
         <Link href="/rules">
-          Two players. Two guaranteed matches.
+          Regular season · 2027
           <Icon name="arrow" size={14} />
         </Link>
         <label className="season-jump">
@@ -234,8 +243,6 @@ function App() {
           </Empty>
         ) : path === "/review" ? (
           <Commissioner />
-        ) : path === "/brand" ? (
-          <Brand />
         ) : (
           <Empty title="Page not found">
             <Link href="/">Return to the clubhouse</Link>
@@ -244,13 +251,19 @@ function App() {
       </main>
       <footer className="footer">
         <Link className="footer-brand" href="/">
-          THE TWO-MAN<span>Good golf. Better company.</span>
+          THE TWO-MAN
         </Link>
         <nav aria-label="Footer">
           <Link href="/history">Season history</Link>
           <Link href="/champions">Champions</Link>
           <Link href="/rules">Format & rules</Link>
-          <Link href="/brand">Brand direction</Link>
+          <a
+            href="https://www.instagram.com/twomantournament/"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Instagram ↗
+          </a>
           <Link href="/review">Commissioner demo</Link>
         </nav>
         <p>
@@ -283,163 +296,79 @@ function App() {
 }
 function Home() {
   const { matches } = usePreview();
-  const count = matches.filter((m) => m.status === "official").length;
-  const active = matches.filter((m) => m.status !== "official");
+  const [limit, setLimit] = useState(8);
+  const official = matches
+    .filter((m) => m.status === "official")
+    .sort(
+      (a, b) =>
+        Date.parse(b.date) - Date.parse(a.date) || a.id.localeCompare(b.id),
+    );
   return (
-    <>
-      <section className="season-scoreboard">
+    <div className="feed-home">
+      <div className="feed-heading">
         <div>
-          <p className="eyebrow">THE TWO-MAN · 2027 · REGULAR SEASON</p>
-          <h1>The season, at a glance.</h1>
-          <p>
-            {count} of 18 results official. Two matches guaranteed; the title is
-            earned from there.
-          </p>
+          <p className="eyebrow">2027 · REGULAR SEASON</p>
+          <h1>Live feed</h1>
+          <p>{official.length} of 18 matches final</p>
         </div>
-        <Link className="button primary" href="/bracket">
-          View bracket <Icon name="arrow" />
-        </Link>
-      </section>
-      <section className="latest-results" aria-label="Latest official results">
-        <SectionTitle
-          title="Latest results"
-          href="/matches?filter=official"
-          label="All results"
-        />
-        <div className="match-grid">
-          {matches
-            .filter((m) => m.status === "official")
-            .sort((a, b) => Date.parse(b.date) - Date.parse(a.date))
-            .slice(0, 3)
-            .map((m) => (
-              <div key={m.id}>
-                <p className="result-date">
-                  {dateLabel(m.date)} · Pod {m.pod}
-                </p>
-                <MatchRow match={m} />
-              </div>
-            ))}
-        </div>
-      </section>
-      <div className="season-stats">
-        <div>
-          <span className="eyebrow">The field</span>
-          <strong>
-            18 <small>teams</small>
-          </strong>
-        </div>
-        <div>
-          <span className="eyebrow">Cards in</span>
-          <strong>
-            {count}
-            <small> / 18 official</small>
-          </strong>
-        </div>
-        <div>
-          <span className="eyebrow">Playoff places</span>
-          <strong>
-            08 <small>up for grabs</small>
-          </strong>
-        </div>
-        <Link href="/earnings">
-          <span className="eyebrow">Sample prize pool</span>
-          <strong>
-            {money(season.prizePool)}
-            <Icon name="arrow" size={22} />
-          </strong>
-        </Link>
+        <a
+          className="button outline"
+          href={RULES_JUDGE_URL}
+          target="_blank"
+          rel="noreferrer"
+        >
+          AI rules judge <Icon name="arrow" size={16} />
+        </a>
       </div>
-      <section className="next-action">
-        <div className="action-icon">
-          <Icon name="calendar" size={26} />
-        </div>
-        <div>
-          <p className="eyebrow">AFTER YOUR MATCH</p>
-          <h2>Send the card. Follow the season.</h2>
-          <p>
-            Text or email the commissioner your scorecard and GHIN screenshots
-            for all four players, with the course and tees. Results appear here
-            once published.
-          </p>
-        </div>
-        <Link href="/rules" className="button outline">
-          What to send
-          <Icon name="arrow" />
+      <nav className="feed-shortcuts" aria-label="Season shortcuts">
+        <Link href="/standings">
+          Standings <Icon name="arrow" size={14} />
         </Link>
-      </section>
-      <section className="section">
-        <SectionTitle title="Still in play" href="/matches" />
-        <div className="match-grid">
-          {active.slice(0, 3).map((m) => (
-            <MatchRow key={m.id} match={m} />
-          ))}
-          {active.length === 0 && (
-            <Empty title="Regular season complete">
-              All cards are official. The bracket is next.
-            </Empty>
-          )}
-        </div>
-      </section>
-      <section className="home-history-link">
-        <div>
-          <p className="eyebrow">THE TWO-MAN / SINCE 2026</p>
-          <h2>More than one season.</h2>
-          <p>
-            Past champions, career records, and every year of the competition.
-          </p>
-        </div>
-        <Link href="/history" className="button outline">
-          Explore league history <Icon name="arrow" />
+        <Link href="/bracket">
+          Bracket <Icon name="arrow" size={14} />
         </Link>
-      </section>
-      <section className="home-bottom">
-        <div>
-          <SectionTitle
-            title="The road to the final"
-            href="/bracket"
-            label="View bracket"
-          />
-          <div className="roadmap">
-            <div className="current">
-              <span>NOW</span>
-              <h3>Pod play</h3>
-              <p>May — June</p>
-            </div>
-            <div>
-              <span>08 TEAMS</span>
-              <h3>Quarterfinals</h3>
-              <p>July</p>
-            </div>
-            <div>
-              <span>04 TEAMS</span>
-              <h3>Semifinals</h3>
-              <p>August</p>
-            </div>
-            <div>
-              <Icon name="cup" />
-              <h3>The final</h3>
-              <p>September</p>
-            </div>
-          </div>
-        </div>
-        <div className="club-note">
-          <p className="eyebrow">KEEP IT SIMPLE</p>
-          <h2>
-            Your strokes.
-            <br />
-            Settled beforehand.
-          </h2>
-          <p>
-            Use GHIN for your course and tees. Agree on strokes and lock them at
-            least 24 hours before tee time.
-          </p>
-          <Link href="/rules" className="text-link">
-            How the season works
-            <Icon name="arrow" size={16} />
-          </Link>
-        </div>
-      </section>
-    </>
+        <Link href="/matches?filter=upcoming">
+          Upcoming matches <Icon name="arrow" size={14} />
+        </Link>
+      </nav>
+      <ol className="activity-timeline">
+        {official.slice(0, limit).map((m) => {
+          const r = result(m);
+          return (
+            <li key={m.id}>
+              <div className="feed-meta">
+                <span>FINAL · HOLE PTS</span>
+                <time dateTime={m.date}>{dateLabel(m.date)}</time>
+              </div>
+              <Link className="feed-result" href={`/matches/${m.id}`}>
+                <span>
+                  {nameOf(m.a)} <b>{r.aPoints}</b>
+                </span>
+                <span>
+                  {nameOf(m.b)} <b>{r.bPoints}</b>
+                </span>
+              </Link>
+              <p className="feed-detail">
+                Pod {m.pod} · {m.course}
+              </p>
+              <Link className="text-link" href={`/matches/${m.id}`}>
+                Scorecard <Icon name="arrow" size={14} />
+              </Link>
+            </li>
+          );
+        })}
+      </ol>
+      {!official.length && (
+        <Empty title="No results yet">
+          Results appear after the commissioner posts them.
+        </Empty>
+      )}
+      {official.length > limit && (
+        <button className="button outline" onClick={() => setLimit(limit + 8)}>
+          Earlier results
+        </button>
+      )}
+    </div>
   );
 }
 function Matches() {
@@ -467,11 +396,7 @@ function Matches() {
   };
   return (
     <>
-      <PageHeading
-        eyebrow="The fixtures"
-        title="Matches & results"
-        description="Official scores, scheduled matches and results still to come."
-      />
+      <PageHeading eyebrow="The fixtures" title="Matches & results" />
       <div className="toolbar">
         <nav className="tabs" aria-label="Match status">
           {[
@@ -537,11 +462,7 @@ function Standings() {
   const seeds = qualified(matches);
   return (
     <>
-      <PageHeading
-        eyebrow="The regular season"
-        title="Every hole counts."
-        description="Win your pod. Or earn one of two wild cards. The next round starts here."
-      />
+      <PageHeading eyebrow="The regular season" title="Standings" />
       <div className="toolbar">
         <nav className="tabs" aria-label="Standings views">
           {[
@@ -657,7 +578,9 @@ function StandingsTable({
           <tr>
             <th scope="col">Team</th>
             <th scope="col">W–L–T</th>
-            <th scope="col">Points</th>
+            <th scope="col">Hole pts</th>
+            <th scope="col">Won</th>
+            <th scope="col">Net BB</th>
             <th scope="col">Played</th>
           </tr>
         </thead>
@@ -675,6 +598,8 @@ function StandingsTable({
               <td>
                 <strong>{r.points.toFixed(1)}</strong>
               </td>
+              <td>{r.holesWon}</td>
+              <td>{r.net}</td>
               <td>{r.played}/2</td>
             </tr>
           ))}
@@ -781,16 +706,13 @@ function Bracket() {
     <>
       <PageHeading
         eyebrow="The knockout rounds"
-        title="Playoff bracket."
-        description="Eight places. One connected path."
+        title="Bracket"
         action={
           <Link
             className="button outline"
             href={scenario ? "/bracket" : "/history/2026?view=playoffs"}
           >
-            {scenario
-              ? "Back to current season"
-              : "View completed sample bracket"}
+            {scenario ? "Back to current season" : "2026 bracket"}
             <Icon name="arrow" />
           </Link>
         }
@@ -813,9 +735,7 @@ function Bracket() {
             <div>
               <strong>Waiting for the regular season.</strong>
               <p>
-                No field is locked. Complete official cards and resolve
-                qualification ties before seeding the existing eight-slot
-                preview.
+                Seeds lock once all results and qualifying ties are settled.
               </p>
             </div>
           </div>
@@ -827,14 +747,6 @@ function Bracket() {
         baseHref={scenario ? "/bracket?scenario=final" : "/bracket"}
         label={scenario ? "2026 sample archive" : "Current season"}
       />
-      <section className="fine-note">
-        <strong>The existing eight-team path.</strong>
-        <p>
-          Unplayed semifinals and the final show their feeder matches, never
-          assumed seed winners. Season 2 field size and final rules remain
-          unconfirmed. No playoff results are entered or changed here.
-        </p>
-      </section>
     </>
   );
 }
@@ -844,11 +756,7 @@ function Earnings() {
   const earned = winners.filter((w) => w.team).length * season.podAward;
   return (
     <>
-      <PageHeading
-        eyebrow="Something to play for"
-        title="The purse."
-        description="What’s on the line. What’s been earned. All in one place."
-      />
+      <PageHeading eyebrow="Something to play for" title="Prize money" />
       <div className="prize-hero">
         <div>
           <span className="eyebrow">TOTAL SAMPLE PURSE</span>
@@ -931,7 +839,7 @@ function Rules() {
     <>
       <PageHeading
         eyebrow="The way we play"
-        title="Good competition.<br/>No guesswork."
+        title="Rules"
         description="A proposed Season 2 guide. Confirmed decisions are marked below."
       />
       <div className="rules-layout">
@@ -996,57 +904,6 @@ function Rules() {
             </section>
           ))}
         </div>
-      </div>
-    </>
-  );
-}
-function Brand() {
-  return (
-    <>
-      <PageHeading
-        eyebrow="A new chapter"
-        title="Same two. Less noise."
-        description="A simpler mark and a sharper tournament identity. Proposed for Season 2."
-      />
-      <div className="brand-showcase">
-        <div>
-          <Mark />
-          <span>THE TWO-MAN</span>
-          <p>THE PRIMARY MARK</p>
-        </div>
-        <div className="brand-wordmark">
-          <span>THE</span>
-          <strong>
-            TWO-
-            <br />
-            MAN.
-          </strong>
-          <p>THE COMPACT WORDMARK</p>
-        </div>
-      </div>
-      <div className="brand-notes">
-        <section>
-          <h2>Built around the pair.</h2>
-          <p>
-            The flat cap. The bucket hat. Two familiar characters, simplified to
-            a single green mark. Personality stays; the clutter goes.
-          </p>
-        </section>
-        <section>
-          <h2>Made for the competition.</h2>
-          <p>
-            Bold type, clear scores and plenty of breathing room. Green and
-            cream stay central. Clay marks attention; brass celebrates earned
-            results.
-          </p>
-        </section>
-        <section>
-          <h2>From a phone to a cap.</h2>
-          <p>
-            This is a raster concept for review. Final vector cleanup and
-            embroidery-size proofs come after selecting the mark.
-          </p>
-        </section>
       </div>
     </>
   );

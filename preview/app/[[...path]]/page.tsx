@@ -13,7 +13,6 @@ export function generateStaticParams() {
       "rules",
       "submit",
       "review",
-      "brand",
       "history",
       "champions",
       "records",

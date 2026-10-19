@@ -60,11 +60,6 @@ export function HistoryHome({ champions = false }: { champions?: boolean }) {
       <PageHeading
         eyebrow="THE TWO-MAN / LEAGUE HISTORY"
         title={champions ? "Champions" : "Season history"}
-        description={
-          champions
-            ? "The champions roll. One place for every team that finishes on top."
-            : "The results, the rivalries, the people who made it. A permanent home for each season."
-        }
       />
       <ArchiveNav active={champions ? "champions" : "seasons"} />
       <SampleHistory />
@@ -469,11 +464,7 @@ export function RecordBook() {
   }
   return (
     <>
-      <PageHeading
-        eyebrow="THE RECORD BOOK"
-        title="Numbers that last."
-        description="Official matches across seasons. Follow a player, a partnership, or the chase for another title."
-      />
+      <PageHeading eyebrow="THE RECORD BOOK" title="All-time records" />
       <ArchiveNav active="records" />
       <SampleHistory />
       <div className="record-controls">

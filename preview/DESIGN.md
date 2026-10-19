@@ -68,3 +68,6 @@ Archive pages use the same pine/cream tokens and typography as the active season
 
 ## October 14 refinement
 Results replace the oversized promotional hero. The existing palette and typography remain unchanged. Focused hole entry and a nine-column mobile hole selector prioritize readable inputs; the full card remains available. The bracket keeps the connected desktop tree and adds a readable mobile overview. This deliberately resolves the earlier promotional layout drift without a new visual identity.
+
+## Focus revision
+Prefer a single results timeline and direct utility links over promotional panels. Use literal page titles. Keep season history and commissioner entry accessible; remove public brand-direction content. Round-by-round playoffs are the default.

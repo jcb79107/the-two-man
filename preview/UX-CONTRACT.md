@@ -36,3 +36,6 @@ Overview is the default: desktop shows the full bracket; phones show the first u
 ## Core experience update
 
 Results lead the clubhouse. ResultSummary explains the 18 hole points without changing scoring rules. FastScoreEntry edits the same draft as the full-card editor; paste accepts exactly 18 whole-number scores and never publishes. Head-to-head records aggregate official games by stable partnership identity and link to season-specific results. Bracket team selection and round selection persist in the URL; highlighting stops at an elimination and never predicts a winner.
+
+## October 19 focus revision
+Home is a chronological official-results timeline. Keep the existing rules judge and Instagram links. No brand-direction page, promotional homepage panels, or slogan headings. Standings retain ranking statistics; playoffs default to round view with full bracket optional. Preview sample disclosure remains visible on mobile.
