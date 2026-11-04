@@ -200,14 +200,6 @@ function Entry({ match: original }: { match: Match }) {
                 <input
                   type="datetime-local"
                   value={draft.date.slice(0, 16)}
-                  onInput={(e) =>
-                    update({
-                      ...draft,
-                      date: e.currentTarget.value
-                        ? `${e.currentTarget.value}:00-05:00`
-                        : "",
-                    })
-                  }
                   onChange={(e) =>
                     update({
                       ...draft,
@@ -221,14 +213,6 @@ function Entry({ match: original }: { match: Match }) {
                 <input
                   type="datetime-local"
                   value={draft.lockedAt?.slice(0, 16) ?? ""}
-                  onInput={(e) =>
-                    update({
-                      ...draft,
-                      lockedAt: e.currentTarget.value
-                        ? `${e.currentTarget.value}:00-05:00`
-                        : null,
-                    })
-                  }
                   onChange={(e) =>
                     update({
                       ...draft,

@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname, useSearchParams, useRouter } from "next/navigation";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { usePreview } from "./store";
 import { teams, pods, nameOf, money, season, dateLabel } from "./data";
 import { standings, podWinner, qualified, result } from "./domain";
@@ -48,6 +48,18 @@ function App() {
   const archiveYear = path.startsWith("/history/") ? path.split("/")[2] : "";
   const [resetOpen, setResetOpen] = useState(false);
   const [menu, setMenu] = useState(false);
+  const menuButton = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (!menu) return;
+    const dismiss = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setMenu(false);
+        menuButton.current?.focus();
+      }
+    };
+    document.addEventListener("keydown", dismiss);
+    return () => document.removeEventListener("keydown", dismiss);
+  }, [menu]);
   const title = path === "/" ? "Clubhouse" : path.split("/")[1];
   useEffect(() => {
     document.title = `${title.charAt(0).toUpperCase() + title.slice(1)} • The Two-Man preview`;
@@ -59,7 +71,7 @@ function App() {
       </a>
       <div className="preview-strip">
         <span>
-          <span className="preview-dot" /> PREVIEW · SAMPLE DATA{" "}
+          <span className="preview-dot" /> Preview · Sample data{" "}
           <span className="strip-detail">· Fictional data · June 24, 2027</span>
         </span>
         <div>
@@ -148,7 +160,9 @@ function App() {
             Instagram ↗
           </a>
           <button
+            ref={menuButton}
             className="menu-button"
+            aria-controls="more-navigation"
             aria-label="More navigation"
             aria-expanded={menu}
             onClick={() => setMenu(!menu)}
@@ -158,7 +172,11 @@ function App() {
         </div>
       </header>
       {menu && (
-        <nav className="more-nav" aria-label="More navigation">
+        <nav
+          id="more-navigation"
+          className="more-nav"
+          aria-label="More navigation"
+        >
           {[
             ["/history", "Season history"],
             ["/records", "All-time records"],
@@ -337,7 +355,7 @@ function Home() {
           return (
             <li key={m.id}>
               <div className="feed-meta">
-                <span>FINAL · HOLE PTS</span>
+                <span>Final · Hole points</span>
                 <time dateTime={m.date}>{dateLabel(m.date)}</time>
               </div>
               <Link className="feed-result" href={`/matches/${m.id}`}>

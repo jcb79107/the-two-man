@@ -71,3 +71,9 @@ Results replace the oversized promotional hero. The existing palette and typogra
 
 ## Focus revision
 Prefer a single results timeline and direct utility links over promotional panels. Use literal page titles. Keep season history and commissioner entry accessible; remove public brand-direction content. Round-by-round playoffs are the default.
+
+## Phone controls
+Hole selection uses an adaptive grid with at least 44px targets rather than a fixed number of columns. Score entry keeps large numerals and compact player labels; bottom navigation labels stay readable at 12px. Scorecard toggles and the More control have 44px targets. Phone standings keep team names pinned while statistics scroll. Preserve table-owned scrolling and the existing results-first layout.
+
+## Unslop polish — November 4, 2026
+Preserve the mascot, pine/cream palette, athletic headings and results-first timeline. Utility disclosure and result metadata use readable 12px sentence-case text; scores remain the visual priority. Feed shortcuts, scorecard links, reset and phone Rules controls have 44px minimum targets. More navigation supports Escape and returns focus to its trigger. Guidance: Unslop by Damir Sokolovsky, https://github.com/heydamir/unslop (CC BY 4.0); reviewed as text only, with no installation or scripts.

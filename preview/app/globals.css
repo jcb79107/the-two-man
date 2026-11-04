@@ -1329,7 +1329,7 @@ textarea {
 .segmented button {
   font-size: 11px;
   padding: 9px 13px;
-  min-height: 34px;
+  min-height: 44px;
   border-radius: 3px;
 }
 .segmented [aria-pressed="true"] {
@@ -2140,8 +2140,8 @@ summary {
   .menu-button {
     display: grid;
     place-items: center;
-    width: 42px;
-    height: 42px;
+    width: 44px;
+    height: 44px;
     border: 1px solid var(--line);
     border-radius: 4px;
   }
@@ -2404,7 +2404,8 @@ summary {
     flex-direction: column;
     align-items: center;
     gap: 5px;
-    font-size: 9px;
+    min-height: 44px;
+    font-size: 12px;
     font-weight: 650;
     padding: 5px;
     color: var(--muted);
@@ -2488,10 +2489,6 @@ summary {
   }
   .header-end .button svg {
     width: 13px;
-  }
-  .menu-button {
-    width: 34px;
-    height: 38px;
   }
   .season-line {
     margin: 0 17px;
@@ -2958,7 +2955,7 @@ summary {
   }
   .segmented button {
     padding: 8px 10px;
-    font-size: 10px;
+    font-size: 12px;
   }
   .score-table {
     min-width: 760px;
@@ -4186,7 +4183,7 @@ summary {
 }
 .hole-picker {
   display: grid;
-  grid-template-columns: repeat(18, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(44px, 1fr));
   gap: 4px;
   margin: 20px 0;
 }
@@ -4203,6 +4200,9 @@ summary {
   background: var(--pine);
   color: var(--paper);
 }
+.fast-entry .button {
+  min-height: 44px;
+}
 .hole-picker button:hover {
   background: var(--mist);
   color: var(--pine);
@@ -4213,19 +4213,21 @@ summary {
   gap: 16px;
   margin: 20px 0;
 }
-.hole-inputs label {
+.fast-entry.form-panel .hole-inputs label {
   display: grid;
   gap: 12px;
+  margin: 0;
+  font-size: 14px;
   font-weight: 600;
 }
 .hole-inputs small {
   display: block;
-  font-size: 10px;
+  font-size: 12px;
   color: var(--muted);
   font-weight: 400;
   margin-top: 4px;
 }
-.hole-inputs input {
+.fast-entry .hole-inputs input[type="number"] {
   width: 100%;
   height: 64px;
   font-size: 28px;
@@ -4361,9 +4363,6 @@ summary {
   .result-hole-strip {
     grid-template-columns: repeat(9, minmax(0, 1fr));
   }
-  .hole-picker {
-    grid-template-columns: repeat(9, minmax(0, 1fr));
-  }
   .hole-inputs {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -4430,7 +4429,7 @@ summary {
   align-items: center;
   font-size: 14px;
   font-weight: 600;
-  min-height: 32px;
+  min-height: 44px;
 }
 .activity-timeline {
   list-style: none;
@@ -4457,12 +4456,11 @@ summary {
 .feed-meta {
   display: flex;
   gap: 16px;
-  font-size: 11px;
-  letter-spacing: 0.06em;
-  margin-bottom: 14px;
+  font-size: 12px;
+  margin-bottom: 12px;
 }
 .feed-meta span {
-  font-weight: 800;
+  font-weight: 600;
 }
 .feed-meta time {
   color: var(--muted);
@@ -4551,6 +4549,12 @@ details.fine-note > summary {
   .standings-table .rank {
     font-size: 11px;
   }
+  .standings-table th:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    background: var(--paper);
+  }
   .bracket-view-tabs {
     flex-wrap: nowrap;
     gap: 0;
@@ -4561,5 +4565,28 @@ details.fine-note > summary {
     padding: 12px 6px;
     font-size: 12px;
     white-space: nowrap;
+  }
+}
+
+/* Season 2 polish: readable utility copy and comfortable action targets. */
+.preview-strip {
+  font-size: 12px;
+  letter-spacing: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  min-height: 44px;
+}
+.preview-strip button {
+  font-size: 12px;
+  min-height: 44px;
+}
+.activity-timeline .text-link {
+  min-height: 44px;
+  font-size: 13px;
+}
+@media (max-width: 600px) {
+  .header-end .button {
+    min-height: 44px;
+    font-size: 12px;
   }
 }
