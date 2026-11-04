@@ -88,3 +88,28 @@ describe("staged tournament integrity", () => {
     expect(validSnapshot(matches.slice(1))).toBe(false);
   });
 });
+
+describe("saved fixture identity", () => {
+  it("rejects a different pairing even when both teams belong to the same pod", () => {
+    const changed = structuredClone(matches);
+    changed[0].b = "t3";
+    expect(validSnapshot(changed)).toBe(false);
+  });
+  it("rejects reversing a fixture and moving one into another pod", () => {
+    const reversed = structuredClone(matches);
+    [reversed[0].a, reversed[0].b] = [reversed[0].b, reversed[0].a];
+    expect(validSnapshot(reversed)).toBe(false);
+    const moved = structuredClone(matches);
+    Object.assign(moved[0], { a: "t4", b: "t5", pod: "B" });
+    expect(validSnapshot(moved)).toBe(false);
+  });
+  it("still restores valid edits to results without mutating the original fixtures", () => {
+    const changed = structuredClone(matches);
+    changed[0].scores[0][0] = 6;
+    changed[0].course = "Edited sample course";
+    changed[0].note = "Corrected sample card";
+    changed[0].status = "official";
+    expect(validSnapshot(changed)).toBe(true);
+    expect(changed[0]).not.toEqual(matches[0]);
+  });
+});

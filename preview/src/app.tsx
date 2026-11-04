@@ -787,85 +787,115 @@ function Bracket() {
 function Earnings() {
   const { matches } = usePreview();
   const winners = pods.map((p) => ({ pod: p, team: podWinner(matches, p) }));
-  const earned = winners.filter((w) => w.team).length * season.podAward;
+  const earnedCount = winners.filter((w) => w.team).length;
+  const earned = earnedCount * season.podAward;
   return (
-    <>
-      <PageHeading eyebrow="2027" title="Prize money" />
-      <div className="prize-hero">
+    <div className="earnings-page">
+      <PageHeading eyebrow="2027 season" title="Prize money" />
+      <div className="earnings-disclosure">
+        <strong>Proposed amounts for this preview</strong>
+        <p>
+          Illustrative amounts, per team. Awards stack; payment status is not
+          tracked.
+        </p>
+      </div>
+      <dl className="earnings-summary">
         <div>
-          <span className="eyebrow">TOTAL SAMPLE PURSE</span>
-          <h2>{money(season.prizePool)}</h2>
-          <p>18 teams × {money(season.buyIn)} per team</p>
+          <dt>Total sample purse</dt>
+          <dd>
+            {money(season.prizePool)}
+            <span>18 teams × {money(season.buyIn)} per team</span>
+          </dd>
         </div>
         <div>
-          <span className="eyebrow">EARNED SO FAR</span>
-          <strong>{money(earned)}</strong>
-          <p>Official pod outcomes only</p>
+          <dt>Earned so far</dt>
+          <dd>
+            {money(earned)}
+            <span>Official pod outcomes only</span>
+          </dd>
         </div>
-      </div>
-      <div className="notice">
-        <Icon name="flag" />
-        <div>
-          <strong>Proposed amounts for this preview</strong>
-          <p>
-            Illustrative amounts, per team. Awards stack; payment status is not
-            tracked.
-          </p>
-        </div>
-      </div>
-      <div className="award-grid">
-        <section>
-          <Icon name="cup" size={34} />
-          <p className="eyebrow">THE CHAMPIONS</p>
-          <h2>{money(season.championAward)}</h2>
-          <p>First place · Additional award</p>
-          <Badge status="Not yet earned" />
-        </section>
-        <section>
-          <Icon name="flag" size={34} />
-          <p className="eyebrow">THE RUNNERS-UP</p>
-          <h2>{money(season.runnerUpAward)}</h2>
-          <p>Second place · Additional award</p>
-          <Badge status="Not yet earned" />
-        </section>
-        <section>
-          <Icon name="users" size={34} />
-          <p className="eyebrow">THE POD WINNERS</p>
-          <h2>
-            {money(season.podAward)} <small>× 6</small>
-          </h2>
-          <p>Per pod winner</p>
-          <Badge
-            status={`${winners.filter((w) => w.team).length} of 6 earned`}
-          />
-        </section>
-      </div>
-      <section className="section">
-        <SectionTitle title="Earned awards" />
-        <div className="earnings-list">
-          {winners.map((w) => (
-            <div key={w.pod}>
-              <span className="pod-letter">{w.pod}</span>
-              <div>
-                <strong>
+      </dl>
+      <div className="earnings-columns">
+        <section aria-labelledby="earned-awards-heading">
+          <div className="earnings-section-heading">
+            <h2 id="earned-awards-heading">Earned awards</h2>
+            <span>{earnedCount} of 6 pods decided</span>
+          </div>
+          <ul className="awards-ledger">
+            {winners.map((w) => (
+              <li key={w.pod}>
+                <span className="ledger-pod">
+                  Pod <b>{w.pod}</b>
+                </span>
+                <div className="ledger-team">
                   {w.team ? (
                     <TeamName id={w.team} />
                   ) : (
-                    <>Pod {w.pod} · Still in play</>
+                    <strong>Still in play</strong>
+                  )}
+                  <span>
+                    {w.team
+                      ? "Pod winner · Earned"
+                      : "Awaiting official outcome"}
+                  </span>
+                </div>
+                <strong className="ledger-amount">
+                  {w.team ? (
+                    money(season.podAward)
+                  ) : (
+                    <>
+                      <span aria-hidden="true">—</span>
+                      <span className="sr-only">Not yet earned</span>
+                    </>
                   )}
                 </strong>
-                <span>
-                  {w.team
-                    ? "Pod winner · Earned"
-                    : "Awaiting official pod outcome"}
-                </span>
-              </div>
-              <strong>{w.team ? money(season.podAward) : "—"}</strong>
+              </li>
+            ))}
+          </ul>
+        </section>
+        <section
+          className="award-breakdown"
+          aria-labelledby="award-breakdown-heading"
+        >
+          <div className="earnings-section-heading">
+            <h2 id="award-breakdown-heading">Award breakdown</h2>
+            <span>Per team</span>
+          </div>
+          <dl className="award-schedule">
+            <div>
+              <dt>
+                Champions <span>First place · Additional award</span>
+              </dt>
+              <dd>
+                {money(season.championAward)}
+                <span>Not yet earned</span>
+              </dd>
             </div>
-          ))}
-        </div>
-      </section>
-    </>
+            <div>
+              <dt>
+                Runners-up <span>Second place · Additional award</span>
+              </dt>
+              <dd>
+                {money(season.runnerUpAward)}
+                <span>Not yet earned</span>
+              </dd>
+            </div>
+            <div>
+              <dt>
+                Pod winners <span>One award for each of 6 pods</span>
+              </dt>
+              <dd>
+                {money(season.podAward)}
+                <span>{earnedCount} of 6 earned</span>
+              </dd>
+            </div>
+          </dl>
+          <p className="award-explainer">
+            Pod awards are added to any first- or second-place award.
+          </p>
+        </section>
+      </div>
+    </div>
   );
 }
 function Rules() {

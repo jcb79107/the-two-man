@@ -77,6 +77,7 @@ function Entry({ match: original }: { match: Match }) {
   const [confirmed, setConfirmed] = useState(false);
   const [cancelOpen, setCancelOpen] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [publicationSaved, setPublicationSaved] = useState(false);
   const [strokeNine, setStrokeNine] = useState(0);
   const correcting = original.status === "official";
   function update(next: Match) {
@@ -111,13 +112,14 @@ function Entry({ match: original }: { match: Match }) {
     }
     try {
       const next = publishDraft(store.matches, draft);
-      store.save(
+      const persisted = store.save(
         next,
         correcting
           ? "Correction published. Current standings and records recalculated."
           : "Result published. Current standings and records updated.",
       );
-      store.setDraft(original.id, null);
+      setPublicationSaved(persisted);
+      if (persisted) store.setDraft(original.id, null);
       setError("");
       setStep("done");
       window.scrollTo(0, 0);
@@ -133,8 +135,37 @@ function Entry({ match: original }: { match: Match }) {
     return (
       <section className="review-actions">
         <div>
-          <h2>Result published.</h2>
-          <p>Saved to this browser’s sample season.</p>
+          <h2>
+            {publicationSaved
+              ? "Result published."
+              : "Result published for this visit."}
+          </h2>
+          {publicationSaved ? (
+            <p>Saved to this browser’s sample season.</p>
+          ) : (
+            <div className="notice" role="alert">
+              <div>
+                <strong>
+                  This result could not be saved to browser storage.
+                </strong>
+                <p>
+                  Keep this tab open. Your draft is retained, but this published
+                  result will be lost on refresh unless saving succeeds.
+                </p>
+                <button
+                  className="button outline"
+                  onClick={() => {
+                    if (store.save(store.matches, "Result published.")) {
+                      setPublicationSaved(true);
+                      store.setDraft(original.id, null);
+                    }
+                  }}
+                >
+                  Retry saving
+                </button>
+              </div>
+            </div>
+          )}
           <Link className="button primary" href={`/matches/${draft.id}`}>
             View published scorecard
           </Link>{" "}

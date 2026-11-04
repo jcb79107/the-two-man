@@ -1,4 +1,10 @@
-import { teams, PREVIEW_NOW, type Match, type Team } from "./data";
+import {
+  teams,
+  matches as fixtures,
+  PREVIEW_NOW,
+  type Match,
+  type Team,
+} from "./data";
 export function validateCard(
   scores: number[][],
   strokes: number[][],
@@ -142,15 +148,12 @@ export function validSnapshot(value: unknown): value is Match[] {
   if (!Array.isArray(value) || value.length !== 18) return false;
   return value.every((m, i) => {
     if (!m || typeof m !== "object") return false;
-    const teamA = teams.find((t) => t.id === m.a);
-    const teamB = teams.find((t) => t.id === m.b);
+    const fixture = fixtures[i];
     return (
-      m.id === `m${i + 1}` &&
-      !!teamA &&
-      !!teamB &&
-      m.a !== m.b &&
-      teamA.pod === m.pod &&
-      teamB.pod === m.pod &&
+      m.id === fixture.id &&
+      m.a === fixture.a &&
+      m.b === fixture.b &&
+      m.pod === fixture.pod &&
       ["official", "review", "scheduled", "unbooked", "correction"].includes(
         m.status,
       ) &&

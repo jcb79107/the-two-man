@@ -41,3 +41,6 @@ Results lead the clubhouse. ResultSummary explains the 18 hole points without ch
 Home is a chronological official-results timeline. Keep the existing rules judge and Instagram links. No brand-direction page, promotional homepage panels, or slogan headings. Standings retain ranking statistics; playoffs default to round view with full bracket optional. Preview sample disclosure remains visible on mobile.
 
 Site-wide follow-up: compact page headings; literal scorecard/history/rules labels; statistical definitions available on demand. Preserve validation errors, publishing attestation, sample/privacy warnings and confirmed versus proposed rules.
+
+## Publication persistence recovery
+A browser storage failure leaves the published result available for the current visit, but it must not claim durable saving or delete the draft. The completion screen keeps an explicit warning and Retry saving action. Only a successful retry clears the draft. Reload still uses the last durably saved season. Saved season snapshots must preserve each fixture's original ordered team pairing and pod. This is validation of fictional local data, not authentication or a cross-tab concurrency guarantee.
