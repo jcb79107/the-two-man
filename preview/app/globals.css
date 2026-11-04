@@ -4590,3 +4590,175 @@ details.fine-note > summary {
     font-size: 12px;
   }
 }
+
+/* Hallmark / Awesome DESIGN.md study: the match result is the visual focus.
+   Keep the existing brand tokens and table-owned scrolling. */
+.feed-home {
+  max-width: 880px;
+}
+.feed-season,
+.page-heading .eyebrow {
+  font-family: var(--body);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--muted);
+}
+.feed-heading {
+  padding-bottom: 24px;
+  border-bottom: 2px solid var(--pine);
+}
+.feed-heading h1 {
+  margin: 8px 0 12px;
+}
+.feed-shortcuts {
+  padding: 8px 0;
+  column-gap: 32px;
+  row-gap: 0;
+}
+.activity-timeline {
+  border-left: 0;
+  padding: 0;
+  margin: 0;
+}
+.activity-timeline li {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  column-gap: 24px;
+  padding: 24px 0;
+  margin: 0;
+}
+.activity-timeline li::before {
+  content: none;
+}
+.feed-meta {
+  grid-column: 1;
+  grid-row: 1 / 4;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+  padding-top: 4px;
+  font-size: 13px;
+}
+.feed-meta time {
+  color: var(--ink);
+  font-size: 16px;
+  font-weight: 600;
+}
+.feed-meta > span {
+  color: var(--muted);
+  font-weight: 400;
+}
+.feed-scoreboard,
+.feed-detail,
+.activity-timeline .text-link {
+  grid-column: 2;
+}
+.feed-score-label {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 12px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.feed-result {
+  max-width: none;
+  gap: 0;
+  font-size: 18px;
+  font-weight: 500;
+  background: var(--paper);
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+.feed-result:hover {
+  color: var(--ink);
+  background: var(--mist);
+}
+.feed-result > span {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 72px;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  padding-left: 16px;
+}
+.feed-result > span + span {
+  border-top: 1px solid var(--line);
+}
+.feed-team {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  padding: 8px 0;
+  overflow-wrap: anywhere;
+}
+.feed-team small {
+  color: var(--pine);
+  font-size: 12px;
+  font-weight: 600;
+}
+.feed-result b {
+  display: grid;
+  place-items: center;
+  align-self: stretch;
+  border-left: 1px solid var(--line);
+  font-size: 28px;
+  font-weight: 500;
+}
+.feed-winner b {
+  color: var(--pine);
+  background: var(--mist);
+  font-weight: 700;
+}
+.feed-detail {
+  margin: 12px 0 0;
+}
+.activity-timeline .text-link {
+  justify-self: start;
+}
+.feed-home > .button {
+  margin-top: 24px;
+}
+.standings-table thead th {
+  font-family: var(--body);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+.standings-table tbody tr:hover th:first-child {
+  background: var(--mist);
+}
+@media (max-width: 600px) {
+  .activity-timeline li {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 20px 0;
+  }
+  .feed-meta {
+    grid-column: 1;
+    grid-row: auto;
+    flex-direction: row;
+    align-items: baseline;
+    margin-bottom: 12px;
+    padding: 0;
+    gap: 12px;
+  }
+  .feed-scoreboard,
+  .feed-detail,
+  .activity-timeline .text-link {
+    grid-column: 1;
+  }
+  .feed-result {
+    font-size: 16px;
+  }
+  .feed-result > span {
+    grid-template-columns: minmax(0, 1fr) 64px;
+    padding-left: 12px;
+  }
+  .feed-shortcuts {
+    column-gap: 20px;
+  }
+}

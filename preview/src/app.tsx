@@ -325,8 +325,8 @@ function Home() {
     <div className="feed-home">
       <div className="feed-heading">
         <div>
-          <p className="eyebrow">2027 · REGULAR SEASON</p>
-          <h1>Live feed</h1>
+          <p className="feed-season">2027 regular season</p>
+          <h1>Results</h1>
           <p>{official.length} of 18 matches final</p>
         </div>
         <a
@@ -355,20 +355,36 @@ function Home() {
           return (
             <li key={m.id}>
               <div className="feed-meta">
-                <span>Final · Hole points</span>
                 <time dateTime={m.date}>{dateLabel(m.date)}</time>
+                <span>Final</span>
               </div>
-              <Link className="feed-result" href={`/matches/${m.id}`}>
-                <span>
-                  {nameOf(m.a)} <b>{r.aPoints}</b>
-                </span>
-                <span>
-                  {nameOf(m.b)} <b>{r.bPoints}</b>
-                </span>
-              </Link>
-              <p className="feed-detail">
-                Pod {m.pod} · {m.course}
-              </p>
+              <div className="feed-scoreboard">
+                <div className="feed-score-label">
+                  <span>Pod {m.pod}</span>
+                  <span>Hole points</span>
+                </div>
+                <Link className="feed-result" href={`/matches/${m.id}`}>
+                  {[
+                    { id: m.a, points: r.aPoints },
+                    { id: m.b, points: r.bPoints },
+                  ].map(({ id, points }) => (
+                    <span
+                      key={id}
+                      className={r.winner === id ? "feed-winner" : undefined}
+                    >
+                      <span className="feed-team">
+                        {nameOf(id)}
+                        {r.winner === id && <small>Won</small>}
+                      </span>
+                      <b>
+                        <span className="sr-only">Hole points: </span>
+                        {points}
+                      </b>
+                    </span>
+                  ))}
+                </Link>
+              </div>
+              <p className="feed-detail">{m.course}</p>
               <Link className="text-link" href={`/matches/${m.id}`}>
                 Scorecard <Icon name="arrow" size={14} />
               </Link>

@@ -66,3 +66,12 @@ The existing phone pass already provided readable bottom navigation, 44px hole c
 Validation on the matching local snapshot: 32 tests across 5 files pass; lint, typecheck and static build (131 pages) pass. Installed headless Chromium checked 320/390/768/1440px: no document overflow on home, standings, bracket or entry; all targeted actions are at least 44px; sticky names, Escape/focus and menu links pass. Existing draft/review regression passes, including reload recovery, validation, attestation, publication, correction and discard. No page errors. Desktop/phone home, standings and entry screenshots visually inspected. Physical devices and Safari were not tested. Vitest retains its existing non-blocking future config-loader warning.
 
 Evidence: `/home/jason/Documents/Codex/2026-11-03/task/unslop-evidence/` contains before/after screenshots, browser scripts/results, the preserved staged patch and this pass's separate patch.
+
+## Hallmark / Awesome DESIGN.md pass — November 4, 2026
+Baseline: clean `codex/season-2-polish-preview` at `2663e04df79125b11e30a5540930ad0ac9622bc4`, the deployed Season 2 mascot version. Reviewed both requested repositories and the available Awesome DESIGN.md skill/Nike study as text only. No installation or third-party scripts.
+
+Changed: results scorebook composition, semantic winner label and tabular score emphasis, desktop date rail/mobile stacking, literal Results heading, readable page labels and standings headers, and a consistent sticky-team hover surface. Existing fixtures, result calculation, draft storage, publication, archive snapshots, routes and controls remain intact.
+
+Verification on matching source snapshot: 32 tests across 5 files pass; lint, typecheck, formatting of changed code and static build (131 pages) pass. Chromium at 320/390/768/1440px shows no document overflow on home/standings/bracket/entry; existing 44px targets, More Escape/focus and sticky standings checks pass. Draft/review regression passes including save/reload, invalid inputs, attestation, publication, correction and discard. Desktop and phone results/standings/entry screenshots inspected. No browser errors. Physical Safari/iOS/Android remain untested; the pre-existing Vitest config-loader warning is non-blocking.
+
+Evidence and before/after comparison: `/home/jason/Documents/Codex/2026-11-03/task/design-study-evidence/`. This pass remains local and uncommitted; nothing pushed, deployed, merged or published.

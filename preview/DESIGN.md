@@ -77,3 +77,10 @@ Hole selection uses an adaptive grid with at least 44px targets rather than a fi
 
 ## Unslop polish — November 4, 2026
 Preserve the mascot, pine/cream palette, athletic headings and results-first timeline. Utility disclosure and result metadata use readable 12px sentence-case text; scores remain the visual priority. Feed shortcuts, scorecard links, reset and phone Rules controls have 44px minimum targets. More navigation supports Escape and returns focus to its trigger. Guidance: Unslop by Damir Sokolovsky, https://github.com/heydamir/unslop (CC BY 4.0); reviewed as text only, with no installation or scripts.
+
+## Scorebook refinement — November 4, 2026
+Design references: Hallmark (https://github.com/Nutlope/hallmark) and the Nike study bundled with Awesome DESIGN.md (https://github.com/VoltAgent/awesome-design-md). These are guidance and static design analysis, not copied branding or a claim about Nike's current site. Adapted: athletic hierarchy, quiet utility typography, flat content surfaces, consistent spacing and a single product-specific focal point. No external software, fonts or imagery added.
+
+The chronological results feed is a scorebook: date/status rail on desktop, stacked metadata on phones, two team rows with a fixed-width tabular points column. A textual Won label and tinted score cell identify the winner from the existing result calculation; ties have no winner label. Course and scorecard actions remain beside each result. The home title is Results rather than Live feed. The season label is sentence case; shared page labels are 14px and standings headers 12px. Mascot, pine/cream tokens, athletic headings, navigation and all existing destinations remain.
+
+The existing app contract takes precedence over Hallmark's marketing-page defaults: no hero, theme generator, photo placeholders, global overflow clipping, or removed table data. Tables still own horizontal scroll. Keep the scorebook in chronological order and avoid turning it into promotional tiles.
