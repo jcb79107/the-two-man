@@ -87,3 +87,10 @@ The existing app contract takes precedence over Hallmark's marketing-page defaul
 
 ## Earnings ledger — November 4, 2026
 Prize money uses a compact two-column summary for total sample purse and earned awards. A six-row pod ledger leads the page, with team names, explicit earned/pending status and right-aligned tabular amounts. Award breakdown is a single definition list beside the ledger on desktop and after it on phones. No oversized monetary hero, decorative award icons or repeated cards. Proposed amounts, stacking and untracked payment status remain visible above the summary.
+
+## Product-wide Unslop pass — November 5, 2026
+Product: local two-person golf results and commissioner score entry. Character: assured, readable, club-like. World: a printed golf scorebook. Moments: the supplied mascots and aligned score columns. Signature: a pine rule separating context from competition data.
+
+The audit found undersized tracked utility labels, inconsistent spacing, and a horizontally squeezed commissioner match picker. Shared utility type now uses readable body text, page headings repeat the scorebook rule, match cards align points in a fixed column, and standings use larger data type. Commissioner selection is a two-column desktop list and one-column phone list, with pod, partnership and action clearly separated. Round-view bracket links have comfortable targets without changing the connected bracket geometry. Rules have readable status labels and body copy. The earnings ledger and storage-recovery behavior are preserved.
+
+Guidance: Unslop by Damir Sokolovsky, https://github.com/heydamir/unslop (CC BY 4.0), reviewed as instructions. Installation deferred to Jason at his request. Ponytail informed the shared-selector changes; no new runtime dependency, external font, hook, telemetry or data integration.

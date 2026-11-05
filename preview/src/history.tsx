@@ -57,7 +57,7 @@ export function HistoryHome({ champions = false }: { champions?: boolean }) {
   return (
     <>
       <PageHeading
-        eyebrow="THE TWO-MAN / LEAGUE HISTORY"
+        eyebrow="The Two-Man / League history"
         title={champions ? "Champions" : "Season history"}
       />
       <ArchiveNav active={champions ? "champions" : "seasons"} />
@@ -431,7 +431,7 @@ export function RecordBook() {
   }
   return (
     <>
-      <PageHeading eyebrow="THE RECORD BOOK" title="All-time records" />
+      <PageHeading eyebrow="The record book" title="All-time records" />
       <ArchiveNav active="records" />
       <SampleHistory />
       <div className="record-controls">

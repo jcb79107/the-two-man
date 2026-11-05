@@ -17,7 +17,7 @@ export function Commissioner() {
   return (
     <>
       <PageHeading
-        eyebrow="COMMISSIONER WORKSPACE · DEMO"
+        eyebrow="Commissioner workspace · Demo"
         title="Commissioner desk"
       />
       <p className="notice">
@@ -34,13 +34,15 @@ export function Commissioner() {
       ) : (
         <>
           <p className="fine-note">Regular-season entry only.</p>
-          <div className="queue-nav" aria-label="Choose a match">
+          <nav className="queue-nav" aria-label="Choose a match">
             {store.matches.map((m) => (
               <Link href={`/review?match=${m.id}`} key={m.id}>
-                <span>
-                  {nameOf(m.a)} vs {nameOf(m.b)}
+                <span className="queue-pair">
+                  <small>Pod {m.pod}</small>
+                  <strong>{nameOf(m.a)}</strong>
+                  <span>vs {nameOf(m.b)}</span>
                 </span>
-                <span>
+                <span className="queue-action">
                   {store.drafts[m.id] ? "Draft saved · " : ""}
                   {m.status === "official"
                     ? "Correct published result"
@@ -48,7 +50,7 @@ export function Commissioner() {
                 </span>
               </Link>
             ))}
-          </div>
+          </nav>
         </>
       )}
     </>

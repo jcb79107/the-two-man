@@ -194,7 +194,7 @@ function App() {
       )}
       <div className="season-line">
         <span>
-          CHICAGOLAND <i /> EST. 2026
+          Chicagoland <i /> Est. 2026
         </span>
         <Link href="/rules">
           Regular season · 2027
@@ -554,7 +554,7 @@ function Standings() {
               <section className="pod-panel" key={pod}>
                 <div className="pod-heading">
                   <h2>
-                    <span>THE PODS</span>Pod {pod}
+                    <span>Regular season</span>Pod {pod}
                   </h2>
                   {winner ? (
                     <Badge status="Complete" />

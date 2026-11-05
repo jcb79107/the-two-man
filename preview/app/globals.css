@@ -158,12 +158,12 @@ textarea {
   top: 12px;
 }
 .eyebrow {
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 0.11em;
+  font-family: var(--body);
+  font-size: 12px;
+  letter-spacing: 0;
   font-weight: 600;
   line-height: 1.5;
-  text-transform: uppercase;
+  text-transform: none;
 }
 .muted {
   color: var(--muted);
@@ -225,7 +225,7 @@ textarea {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 21px 4%;
+  padding: 20px 4%;
   gap: 30px;
   min-height: 102px;
 }
@@ -255,8 +255,8 @@ textarea {
 }
 .desktop-nav {
   display: flex;
-  gap: 27px;
-  font-size: 13px;
+  gap: 24px;
+  font-size: 14px;
   font-weight: 650;
   align-items: center;
 }
@@ -276,9 +276,9 @@ textarea {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 20px;
+  gap: 16px;
   min-height: 48px;
-  padding: 13px 21px;
+  padding: 12px 20px;
   border: 1px solid var(--pine);
   border-radius: 4px;
   font-size: 13px;
@@ -311,7 +311,7 @@ textarea {
   text-underline-offset: 4px;
 }
 .button.small {
-  min-height: 40px;
+  min-height: 44px;
   padding: 10px 16px;
   font-size: 12px;
   gap: 13px;
@@ -330,13 +330,13 @@ textarea {
   margin: 0 4%;
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
-  padding: 13px 0;
+  padding: 8px 0;
   display: flex;
   justify-content: space-between;
   gap: 18px;
-  font-family: var(--mono);
-  font-size: 9px;
-  letter-spacing: 0.08em;
+  font-family: var(--body);
+  font-size: 12px;
+  letter-spacing: 0;
 }
 .season-line > span,
 .season-line a {
@@ -563,7 +563,7 @@ textarea {
 .match-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 18px;
+  gap: 16px;
 }
 .match-row {
   border: 1px solid var(--line);
@@ -591,7 +591,7 @@ textarea {
   padding: 4px 7px;
   background: var(--mist);
   color: var(--pine);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 650;
   white-space: nowrap;
 }
@@ -605,21 +605,27 @@ textarea {
   background: #e5eedb;
 }
 .match-pair {
-  margin: 24px 0;
+  margin: 16px 0;
   display: grid;
-  gap: 15px;
+  gap: 8px;
 }
 .match-pair > div {
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 650;
 }
 .match-pair strong {
   margin-left: auto;
   font-family: var(--mono);
-  font-size: 17px;
+  font-size: 20px;
+  font-variant-numeric: tabular-nums;
+  min-width: 48px;
+  min-height: 40px;
+  display: grid;
+  place-items: center;
+  border-left: 1px solid var(--line);
 }
 .team-avatar {
   width: 31px;
@@ -658,7 +664,7 @@ textarea {
   align-items: center;
   padding-top: 14px;
   border-top: 1px solid var(--line);
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
   gap: 12px;
 }
@@ -786,14 +792,14 @@ textarea {
   padding: 8px;
 }
 .result-count {
-  font: 10px var(--mono);
+  font: 12px var(--body);
   color: var(--muted);
   margin: -5px 0 20px;
 }
 .pods-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 25px;
+  gap: 24px;
 }
 .pod-panel {
   border: 1px solid var(--line);
@@ -805,7 +811,7 @@ textarea {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 23px 22px;
+  padding: 20px 24px;
   border-bottom: 1px solid var(--line);
 }
 .pod-heading h2 {
@@ -816,18 +822,19 @@ textarea {
 }
 .pod-heading h2 > span {
   display: block;
-  font: 8px var(--mono);
-  letter-spacing: 0.12em;
+  font: 12px var(--body);
+  letter-spacing: 0;
+  text-transform: none;
   margin-bottom: 5px;
   color: var(--muted);
 }
 .pod-heading > .muted {
-  font-size: 11px;
+  font-size: 12px;
 }
 .standings-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 12px;
+  font-size: 14px;
 }
 .table-scroll {
   overflow: auto;
@@ -881,7 +888,7 @@ textarea {
 }
 .pod-foot {
   background: var(--mist);
-  font-size: 11px;
+  font-size: 12px;
   padding: 13px 22px;
   display: flex;
   align-items: center;
@@ -1857,21 +1864,24 @@ summary {
   margin-right: 8px;
 }
 .queue-nav {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
-  overflow: auto;
+  overflow: visible;
   padding-bottom: 12px;
   margin-bottom: 20px;
 }
 .queue-nav > a {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  background: var(--paper);
   align-items: center;
   gap: 13px;
   border: 1px solid var(--line);
   padding: 12px 16px;
   border-radius: 4px;
-  font-size: 12px;
-  white-space: nowrap;
+  font-size: 14px;
+  white-space: normal;
 }
 .queue-nav [aria-current] {
   background: var(--mist);
@@ -4954,5 +4964,107 @@ details.fine-note > summary {
   }
   .ledger-amount {
     font-size: 20px;
+  }
+}
+
+/* Unslop: a consistent scorebook rule and readable utility layer. */
+.page-heading {
+  padding-bottom: 24px;
+  border-bottom: 2px solid var(--pine);
+}
+.page-heading .eyebrow {
+  margin-bottom: 12px;
+}
+.page-heading .intro {
+  margin-top: 16px;
+}
+.season-jump select {
+  min-height: 44px;
+}
+.queue-nav > a:hover {
+  border-color: var(--pine);
+}
+.queue-nav .queue-action {
+  color: var(--pine);
+  font-size: 12px;
+}
+.queue-nav .queue-pair {
+  display: grid;
+  gap: 4px;
+}
+.queue-nav .queue-pair small {
+  color: var(--muted);
+}
+.queue-nav .queue-pair strong {
+  font-weight: 600;
+}
+.tournament-round-list .tournament-match-footer a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+@media (max-width: 900px) {
+  .queue-nav {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 600px) {
+  .page-heading {
+    padding-bottom: 20px;
+  }
+  .season-line {
+    font-size: 12px;
+  }
+  .queue-nav > a {
+    padding: 16px;
+    gap: 16px;
+  }
+  .queue-nav .queue-action {
+    max-width: 112px;
+  }
+}
+
+.tournament-round-list .tournament-match {
+  height: auto;
+}
+.tournament-round-list .tournament-match-footer {
+  height: auto;
+  min-height: 44px;
+  font-size: 12px;
+}
+.tournament-round-list .tournament-match-meta {
+  font: 12px var(--body);
+  height: 32px;
+}
+.rules-list .eyebrow {
+  font-size: 12px;
+  color: var(--muted);
+}
+.rules-list p:not(.eyebrow) {
+  font-size: 15px;
+}
+.search input {
+  font-size: 16px;
+}
+.notice {
+  border-left: 3px solid var(--pine);
+  border-radius: 0;
+}
+
+@media (max-width: 600px) {
+  .season-line {
+    gap: 8px;
+  }
+  .season-line > span {
+    gap: 8px;
+  }
+  .season-jump {
+    min-width: 0;
+  }
+  .season-jump select {
+    width: 100%;
+    max-width: 160px;
+    font-size: 12px;
+    padding-right: 4px;
   }
 }
