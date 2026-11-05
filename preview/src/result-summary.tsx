@@ -8,7 +8,7 @@ export function ResultSummary({ match }: { match: Match }) {
   return (
     <section className="result-summary" aria-label="How the result was decided">
       <div>
-        <p className="eyebrow">18-HOLE RESULT</p>
+        <p className="eyebrow">18-hole result</p>
         <h2>
           {a} holes won · {tied} halved · {b} holes won
         </h2>

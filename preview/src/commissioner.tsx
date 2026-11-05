@@ -190,8 +190,8 @@ function Entry({ match: original }: { match: Match }) {
       <div className="review-top">
         <div>
           <p className="eyebrow">
-            POD {draft.pod} ·{" "}
-            {correcting ? "CORRECTION" : "REGULAR-SEASON ENTRY"}
+            Pod {draft.pod} ·{" "}
+            {correcting ? "Correction" : "Regular-season entry"}
           </p>
           <h2>
             {nameOf(draft.a)} vs {nameOf(draft.b)}
@@ -379,7 +379,7 @@ function Entry({ match: original }: { match: Match }) {
         </>
       ) : (
         <>
-          <p className="eyebrow">REVIEW BEFORE PUBLISHING</p>
+          <p className="eyebrow">Review before publishing</p>
           <h2>
             {r.winner ? `${nameOf(r.winner)} win` : "Match tied"} · {r.aPoints}{" "}
             – {r.bPoints}

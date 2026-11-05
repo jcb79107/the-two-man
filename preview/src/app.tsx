@@ -662,7 +662,7 @@ function TeamDetail({ id }: { id: string }) {
       <section className="team-hero">
         <TeamAvatar id={id} size="large" />
         <div>
-          <p className="eyebrow">POD {t.pod} · SEASON 02</p>
+          <p className="eyebrow">Pod {t.pod} · Season 02</p>
           <h1>
             {t.names[0]}
             <br />
@@ -677,7 +677,7 @@ function TeamDetail({ id }: { id: string }) {
           <strong>
             {row.won}–{row.lost}–{row.tied}
           </strong>
-          <span>REGULAR-SEASON RECORD</span>
+          <span>Regular-season record</span>
         </div>
       </section>
       <div className="season-stats">

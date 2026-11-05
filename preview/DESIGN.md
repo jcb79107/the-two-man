@@ -6,7 +6,7 @@ colors:
   background: '#f6f4eb'
   surface: '#fffef9'
   text: '#182d26'
-  muted: '#607068'
+  muted: '#56665e'
   border: '#d5dbd1'
   accent: '#dce8b3'
   attention: '#ac4d32'
@@ -93,4 +93,12 @@ Product: local two-person golf results and commissioner score entry. Character: 
 
 The audit found undersized tracked utility labels, inconsistent spacing, and a horizontally squeezed commissioner match picker. Shared utility type now uses readable body text, page headings repeat the scorebook rule, match cards align points in a fixed column, and standings use larger data type. Commissioner selection is a two-column desktop list and one-column phone list, with pod, partnership and action clearly separated. Round-view bracket links have comfortable targets without changing the connected bracket geometry. Rules have readable status labels and body copy. The earnings ledger and storage-recovery behavior are preserved.
 
-Guidance: Unslop by Damir Sokolovsky, https://github.com/heydamir/unslop (CC BY 4.0), reviewed as instructions. Installation deferred to Jason at his request. Ponytail informed the shared-selector changes; no new runtime dependency, external font, hook, telemetry or data integration.
+Guidance: Unslop by Damir Sokolovsky, https://github.com/heydamir/unslop (CC BY 4.0), reviewed as instructions. Installed in Codex at `/Users/jason/.codex/skills/unslop`; contents reviewed as text, no skill scripts or hooks executed. Ponytail informed the shared-selector changes; no new runtime dependency, external font, hook, telemetry or data integration.
+
+
+## Complete scorebook pass — November 4, 2026
+The existing brand and section order remain the direction. Athletic display headings and the original Season 2 mascot are deliberate brand exceptions to generic typography guidance. Use sentence case for operational labels, 600 for interface emphasis, tabular figures and a 12px minimum for secondary scorecard/history text. Team initials use one neutral treatment; their previous rotating colors carried no meaning. Scores and semantic outcome colors retain priority.
+
+History, record filters, career links, scorecard controls and commissioner entry now share comfortable targets and wrapping behavior. Inputs in record filters are 16px to avoid automatic phone zoom. Textareas can resize vertically. The shared muted ink is darker so small text on the mist surface exceeds 4.5:1. Color transitions share one 160ms easing curve and respect the existing reduced-motion rules. The browser icon reuses the supplied mascot asset. The loading state reserves a viewport of content height so the footer does not jump out of view when saved sample data becomes available.
+
+No earnings structure, calculations, fixture data, draft storage or publication recovery logic changed. No dependency, font download, image generation, hook or production integration was added. Verification and limitations: `docs/UNSLOP-VERIFICATION.md`.

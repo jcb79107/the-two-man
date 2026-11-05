@@ -31,7 +31,7 @@ export function FastScoreEntry({
     <section className="fast-entry form-panel" aria-label="Fast score entry">
       <div className="entry-heading">
         <div>
-          <p className="eyebrow">GROSS SCORES</p>
+          <p className="eyebrow">Gross scores</p>
           <h3>Enter scores</h3>
         </div>
         <span role="status">{completed} / 72 entered</span>

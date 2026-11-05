@@ -1,0 +1,27 @@
+{
+  "results": [
+    {
+      "path": "/history/2026",
+      "overflow": false
+    },
+    {
+      "path": "/history/2027",
+      "overflow": false
+    },
+    {
+      "path": "/records/teams/t1",
+      "overflow": false
+    },
+    {
+      "path": "/players/p1",
+      "overflow": false
+    },
+    {
+      "path": "/review",
+      "overflow": false
+    }
+  ],
+  "keyboardBracketScroll": true,
+  "archiveResultReload": "http://127.0.0.1:3037/history/2026/matches/final",
+  "backURL": "http://127.0.0.1:3037/history/2026?view=playoffs&round=final"
+}

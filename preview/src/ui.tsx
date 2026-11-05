@@ -3,7 +3,7 @@ import Image from "next/image";
 import { Fragment, type ReactNode } from "react";
 import { initials, nameOf, type Match } from "./data";
 import { result } from "./domain";
-export function Icon({ name, size = 20 }: { name: string; size?: number }) {
+export function Icon({ name, size = 18 }: { name: string; size?: number }) {
   const paths: Record<string, ReactNode> = {
     arrow: <path d="M5 12h14m-6-6 6 6-6 6" />,
     chevron: <path d="m9 5 7 7-7 7" />,
@@ -83,7 +83,7 @@ export function Icon({ name, size = 20 }: { name: string; size?: number }) {
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth="1.65"
+      strokeWidth="1.5"
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"
@@ -120,11 +120,7 @@ export function Badge({ status }: { status: string }) {
   );
 }
 export function TeamAvatar({ id, size = "" }: { id: string; size?: string }) {
-  return (
-    <span className={`team-avatar ${size} team-${Number(id.slice(1)) % 3}`}>
-      {initials(id)}
-    </span>
-  );
+  return <span className={`team-avatar ${size}`}>{initials(id)}</span>;
 }
 export function TeamName({ id }: { id: string }) {
   return (

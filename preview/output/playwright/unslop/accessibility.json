@@ -1,0 +1,149 @@
+{
+  "report": [
+    {
+      "path": "/",
+      "width": 390,
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "path": "/matches",
+      "width": 390,
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "path": "/standings",
+      "width": 390,
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "path": "/bracket",
+      "width": 390,
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "path": "/earnings",
+      "width": 390,
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "path": "/history",
+      "width": 390,
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "path": "/records",
+      "width": 390,
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "path": "/review?match=m1",
+      "width": 390,
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "path": "/rules",
+      "width": 390,
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "path": "/matches/m18",
+      "width": 390,
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "path": "/teams/t1",
+      "width": 390,
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "path": "/champions",
+      "width": 390,
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "path": "/",
+      "width": 1440,
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "path": "/matches",
+      "width": 1440,
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "path": "/standings",
+      "width": 1440,
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "path": "/bracket",
+      "width": 1440,
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "path": "/earnings",
+      "width": 1440,
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "path": "/history",
+      "width": 1440,
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "path": "/records",
+      "width": 1440,
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "path": "/review?match=m1",
+      "width": 1440,
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "path": "/rules",
+      "width": 1440,
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "path": "/matches/m18",
+      "width": 1440,
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "path": "/teams/t1",
+      "width": 1440,
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "path": "/champions",
+      "width": 1440,
+      "overflow": false,
+      "violations": []
+    }
+  ],
+  "errors": []
+}

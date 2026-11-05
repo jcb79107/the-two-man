@@ -80,8 +80,8 @@ export function HistoryHome({ champions = false }: { champions?: boolean }) {
                 <span className="archive-year">{s.year}</span>
                 <div>
                   <p className="eyebrow">
-                    SEASON {String(s.number).padStart(2, "0")} ·{" "}
-                    {s.complete ? "COMPLETE" : "IN PROGRESS"}
+                    Season {String(s.number).padStart(2, "0")} ·{" "}
+                    {s.complete ? "Complete" : "In progress"}
                   </p>
                   <h2>
                     {s.champion ? entryName(s, s.champion) : "Current season"}
@@ -115,13 +115,13 @@ function Champion({ season: s }: { season: SeasonRecord }) {
   return (
     <article className="champion-plaque">
       <div className="champion-year">
-        <span>CHAMPIONS</span>
+        <span>Champions</span>
         <strong>{s.year}</strong>
         <Icon name="cup" size={36} />
       </div>
       <div className="champion-copy">
         <p className="eyebrow">
-          SEASON {String(s.number).padStart(2, "0")} / THE TWO-MAN
+          Season {String(s.number).padStart(2, "0")} / THE TWO-MAN
         </p>
         <h2>
           <Link href={`/records/teams/${team.teamId}`}>{team.name}</Link>
@@ -209,7 +209,7 @@ export function SeasonArchive({ year }: { year: number }) {
             <Champion season={s} />
           ) : (
             <div className="archive-live">
-              <p className="eyebrow">CURRENT SEASON</p>
+              <p className="eyebrow">Current season</p>
               <h2>Season in progress</h2>
               <p>
                 {s.games.length} regular-season results are official. Pending

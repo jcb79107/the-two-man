@@ -36,7 +36,7 @@ export function MatchDetail({ id }: { id: string }) {
         All matches
       </Link>
       <div className="match-detail-kicker">
-        <span className="eyebrow">REGULAR SEASON · POD {m.pod}</span>
+        <span className="eyebrow">Regular season · Pod {m.pod}</span>
         <Badge status={m.status} />
       </div>
       <section className="match-hero">
@@ -237,19 +237,19 @@ export function Scorecard({
           </caption>
           <thead>
             <tr>
-              <th scope="col">HOLE</th>
+              <th scope="col">Hole</th>
               {holes.map((h) => (
                 <th key={h} scope="col">
                   {h + 1}
                 </th>
               ))}
-              <th scope="col">{nine === 0 ? "OUT" : "IN"}</th>
-              <th scope="col">TOTAL</th>
+              <th scope="col">{nine === 0 ? "Out" : "In"}</th>
+              <th scope="col">Total</th>
             </tr>
           </thead>
           <tbody>
             <tr className="par-row">
-              <th scope="row">PAR</th>
+              <th scope="row">Par</th>
               {holes.map((h) => (
                 <td key={h}>{pars[h]}</td>
               ))}
@@ -257,7 +257,7 @@ export function Scorecard({
               <td>{sum(pars)}</td>
             </tr>
             <tr className="index-row">
-              <th scope="row">STROKE INDEX</th>
+              <th scope="row">Stroke index</th>
               {holes.map((h) => (
                 <td key={h}>{strokeIndex[h]}</td>
               ))}
@@ -269,7 +269,7 @@ export function Scorecard({
                 <th scope="row">
                   <span>{name}</span>
                   <small>
-                    {p < 2 ? "TEAM A" : "TEAM B"} · {sum(m.strokes[p])} strokes
+                    {p < 2 ? "Team A" : "Team B"} · {sum(m.strokes[p])} strokes
                   </small>
                 </th>
                 {holes.map((h) => (
@@ -334,7 +334,7 @@ export function Scorecard({
                   </tr>
                 ))}
                 <tr className="hole-result">
-                  <th scope="row">HOLE POINT</th>
+                  <th scope="row">Hole point</th>
                   {holes.map((h) => (
                     <td key={h}>
                       <span
