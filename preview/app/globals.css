@@ -1256,6 +1256,7 @@ textarea {
 .match-hero h1,
 .match-hero h2 {
   font-family: var(--body);
+  font-weight: 600;
   font-size: 25px;
   text-transform: none;
   letter-spacing: -0.04em;
