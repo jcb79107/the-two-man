@@ -5,6 +5,19 @@ import { initials, nameOf, type Match } from "./data";
 import { result } from "./domain";
 export function Icon({ name, size = 18 }: { name: string; size?: number }) {
   const paths: Record<string, ReactNode> = {
+    instagram: (
+      <>
+        <rect x="3" y="3" width="18" height="18" rx="5" />
+        <circle cx="12" cy="12" r="4" />
+        <circle cx="17.5" cy="6.5" r=".75" fill="currentColor" stroke="none" />
+      </>
+    ),
+    judge: (
+      <>
+        <path d="m8 3 7 7-4 4-7-7 4-4Zm5 9 7 7M3 20h11M5 17h7v3" />
+      </>
+    ),
+    sort: <path d="m8 4-3 3m3-3 3 3M8 4v16m8 0-3-3m3 3 3-3m-3 3V4" />,
     arrow: <path d="M5 12h14m-6-6 6 6-6 6" />,
     chevron: <path d="m9 5 7 7-7 7" />,
     check: <path d="m5 12 4 4L19 6" />,
@@ -106,14 +119,16 @@ export function Mark({ className = "" }: { className?: string }) {
 }
 export function Badge({ status }: { status: string }) {
   const labels: Record<string, string> = {
-    official: "Official",
-    review: "Awaiting result",
-    scheduled: "Scheduled",
-    unbooked: "Date needed",
-    correction: "Awaiting result",
+    official: "Completed",
+    review: "Pre-match",
+    scheduled: "Pre-match",
+    unbooked: "Pre-match",
+    correction: "Pre-match",
   };
   return (
-    <span className={`badge ${status}`}>
+    <span
+      className={`badge ${status in labels && status !== "official" ? "scheduled" : status}`}
+    >
       {status === "official" && <Icon name="check" size={12} />}
       <span>{labels[status] ?? status}</span>
     </span>

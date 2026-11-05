@@ -24,7 +24,7 @@ export function ConnectedBracket({
   label?: string;
 }) {
   const params = useSearchParams();
-  const selected = params.get("round") ?? "quarters";
+  const selected = params.get("round") ?? "all";
   const round = Object.hasOwn(roundLabels, selected)
     ? (selected as keyof typeof roundLabels)
     : "overview";
@@ -49,7 +49,7 @@ export function ConnectedBracket({
       id={`${mobile ? "mobile-" : ""}bracket-${m.id}`}
       key={m.id}
       className={`tournament-match match-${m.id}${m.winner ? " decided" : ""}${route.includes(m.id) ? " on-path" : ""}${selectedTeam && !route.includes(m.id) ? " off-path" : ""}`}
-      aria-label={`${m.label} ${m.winner ? "completed" : "awaiting result"}`}
+      aria-label={`${m.label} ${m.winner ? "completed" : "not played"}`}
     >
       <div className="tournament-match-meta">
         <strong>{m.label}</strong>
@@ -57,8 +57,8 @@ export function ConnectedBracket({
           {m.winner
             ? `${m.score} · Final`
             : m.round === "quarters"
-              ? "Awaiting result"
-              : "Awaiting winners"}
+              ? "Pre-match"
+              : "TBD"}
         </span>
       </div>
       {m.slots.map((s, i) => (
@@ -88,7 +88,7 @@ export function ConnectedBracket({
             View result <Icon name="arrow" size={13} />
           </Link>
         ) : (
-          <span>No result yet</span>
+          <span>Not played</span>
         )}
         {m.next ? (
           <Link
@@ -115,7 +115,7 @@ export function ConnectedBracket({
       <nav className="tabs bracket-view-tabs" aria-label="Bracket view">
         {Object.entries(roundLabels)
           .filter(([r]) => r !== "overview")
-          .sort(([a], [b]) => (a === "all" ? 1 : b === "all" ? -1 : 0))
+          .sort(([a], [b]) => (a === "all" ? -1 : b === "all" ? 1 : 0))
           .map(([r, title]) => (
             <Link
               key={r}
@@ -177,11 +177,12 @@ export function ConnectedBracket({
               <svg
                 className="tournament-lines"
                 viewBox="0 0 1200 600"
+                preserveAspectRatio="none"
                 aria-hidden="true"
               >
-                <path d="M220 168 H232.5 V318 H245 M220 468 H232.5 V318" />
-                <path d="M980 168 H967.5 V318 H955 M980 468 H967.5 V318" />
-                <path d="M465 318 H490 M735 318 H710" />
+                <path d="M220 180 H232.5 V330 H245 M220 480 H232.5 V330" />
+                <path d="M980 180 H967.5 V330 H955 M980 480 H967.5 V330" />
+                <path d="M465 330 H490 M735 330 H710" />
               </svg>
               {nodes.map((m) => card(m))}
               <p className="tournament-path-note">

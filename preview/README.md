@@ -17,15 +17,15 @@ Open http://127.0.0.1:3027. No .env file is required. Do not copy production env
 
 ## Review tour
 
-1. Clubhouse: new identity, next action, fixtures, season roadmap.
+1. Clubhouse: Season 2 mascot and official-results timeline.
 2. Matches: filter/search, view an official scorecard, switch gross/net and nines.
-3. Standings: pods/full field/playoff picture; team pages and earned pod awards.
+3. Standings: sortable pods/full field, projected playoff field and single-match calculator.
 4. The purse: illustrative, reconciled prize distribution; earned is not paid.
-5. Commissioner demo (footer): choose a match, record course/tees and agreed timestamps, enter all 18 gross scores and supplied strokes, then review and publish.
+5. Commissioner demo (footer): choose a match, record course/tees, match time and GHIN strokes, enter all 18 gross scores and supplied strokes, then review and publish.
 6. Save or navigate away from a draft; return or refresh to resume. Official standings remain unchanged until publication. Discard asks before removing a draft.
 7. Select an official match to correct it. A reason and fresh evidence confirmation are required; the previous published score remains visible until the correction is published.
 8. Bracket: follow connected quarterfinals and semifinals into the central final, or choose a round for mobile. Open the completed sample archive and follow each match to its saved result. No advancing seeds are assumed.
-9. Brand direction: mascot/wordmark concept and rationale. Reset demo restores original fixtures.
+9. Reset demo restores original fixtures.
 
 ## Honest boundaries
 

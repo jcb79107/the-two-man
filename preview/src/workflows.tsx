@@ -59,11 +59,7 @@ export function MatchDetail({ id }: { id: string }) {
           ) : (
             <>
               <strong>vs</strong>
-              <small>
-                {m.status === "review"
-                  ? "Awaiting result"
-                  : dateLabel(m.date, true)}
-              </small>
+              <small>Pre-match</small>
             </>
           )}
         </div>
@@ -86,8 +82,11 @@ export function MatchDetail({ id }: { id: string }) {
         <div className="notice">
           <Icon name="clock" />
           <div>
-            <strong>Awaiting result</strong>
-            <p>Send your scorecard and GHIN screenshots to the commissioner.</p>
+            <strong>Pre-match</strong>
+            <p>
+              After the match, send the full regular-season card to the
+              commissioner.
+            </p>
           </div>
         </div>
       ) : (
@@ -132,11 +131,10 @@ function StrokeSummary({ match: m }: { match: Match }) {
     <section className="stroke-summary">
       <div>
         <Icon name="lock" size={28} />
-        <h2>{m.lockedAt ? "Agreed strokes" : "Strokes not locked"}</h2>
+        <h2>{"GHIN strokes"}</h2>
         <p>
-          {m.lockedAt
-            ? `Locked ${dateLabel(m.lockedAt, true)} CT · ${m.course}`
-            : "Players must agree on GHIN-based strokes at least 24 hours before tee time."}
+          Confirm the GHIN match-play strokes together before the first tee
+          shot. Use the 90% allowance, playing off the lowest player.
         </p>
       </div>
       <div className="stroke-players">
@@ -273,7 +271,17 @@ export function Scorecard({
                   </small>
                 </th>
                 {holes.map((h) => (
-                  <td key={h}>
+                  <td
+                    key={h}
+                    className={
+                      complete && r.net[p][h] === (p < 2 ? r.a[h] : r.b[h])
+                        ? "best-ball-cell"
+                        : undefined
+                    }
+                  >
+                    {complete && r.net[p][h] === (p < 2 ? r.a[h] : r.b[h]) && (
+                      <span className="sr-only">Team best ball: </span>
+                    )}
                     {editable && mode === "gross" ? (
                       <input
                         aria-label={`${name} hole ${h + 1} gross score`}
@@ -325,7 +333,7 @@ export function Scorecard({
               <>
                 {[r.a, r.b].map((row, i) => (
                   <tr className="net-row" key={i}>
-                    <th scope="row">TEAM {i === 0 ? "A" : "B"} · BEST NET</th>
+                    <th scope="row">Team {i === 0 ? "A" : "B"} · Best net</th>
                     {holes.map((h) => (
                       <td key={h}>{row[h]}</td>
                     ))}
@@ -366,6 +374,10 @@ export function Scorecard({
           <i className="legend-square" /> Bogey or worse
         </span>
         <span>• Agreed stroke</span>
+        <span>
+          <i className="legend-best-ball" /> Team best ball (both marked when
+          tied)
+        </span>
         <span>
           A = {teamLabels[0]} · B = {teamLabels[1]}
         </span>

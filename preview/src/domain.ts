@@ -20,7 +20,7 @@ export function validateCard(
     strokes.some(
       (r) =>
         r.length !== 18 ||
-        r.some((s) => !Number.isInteger(s) || s < 0 || s > 3),
+        r.some((s) => !Number.isInteger(s) || s < 0 || s > 1),
     )
   )
     return "Check the agreed stroke allocation for each player.";
@@ -119,12 +119,6 @@ export function qualified(ms: Match[]) {
     return [];
   return [...podRows, ...rest.slice(0, 2)];
 }
-export function lockAllowed(teeTime: string, now: string) {
-  return (
-    Number.isFinite(Date.parse(teeTime)) &&
-    Date.parse(teeTime) - Date.parse(now) >= 24 * 60 * 60 * 1000
-  );
-}
 export function approvalError(m: Match): string | null {
   if (
     !m.date ||
@@ -132,8 +126,6 @@ export function approvalError(m: Match): string | null {
     Date.parse(m.date) > Date.parse(PREVIEW_NOW)
   )
     return "This match has not been played yet in the sample season.";
-  if (!m.lockedAt || !lockAllowed(m.date, m.lockedAt))
-    return "Strokes must be locked at least 24 hours before tee time. This match needs commissioner resolution.";
   if (!m.evidence) return "A scorecard is required before approval.";
   return validateCard(m.scores, m.strokes);
 }

@@ -7,16 +7,14 @@ import {
   podWinner,
   approveMatch,
   approvalError,
-  lockAllowed,
   validateCard,
   validSnapshot,
 } from "../src/domain";
 describe("staged tournament integrity", () => {
-  it("blocks approval of future, unlocked, or unsupported cards", () => {
+  it("blocks approval of future or unsupported cards", () => {
     expect(approvalError(matches[0])).toBeNull();
     for (const changed of [
       { date: "2027-06-29T09:00:00-05:00" },
-      { lockedAt: null },
       { evidence: false },
     ]) {
       const candidate = { ...matches[0], ...changed };
@@ -73,14 +71,16 @@ describe("staged tournament integrity", () => {
     rows[0][0] = 4.5;
     expect(validateCard(rows, matches[0].strokes)).not.toBeNull();
   });
-  it("accepts exactly 24 hours, rejects one second inside cutoff", () => {
+  it("allows strokes agreed at the tee box without a timestamp", () => {
     expect(
-      lockAllowed("2027-06-25T12:00:00-05:00", "2027-06-24T12:00:00-05:00"),
-    ).toBe(true);
-    expect(
-      lockAllowed("2027-06-25T11:59:59-05:00", "2027-06-24T12:00:00-05:00"),
-    ).toBe(false);
-    expect(lockAllowed("", "2027-06-24T12:00:00-05:00")).toBe(false);
+      approvalError({ ...matches[0], lockedAt: matches[0].date }),
+    ).toBeNull();
+    expect(approvalError({ ...matches[0], lockedAt: null })).toBeNull();
+  });
+  it("rejects more than one stroke per hole under the Season 1 allowance", () => {
+    const strokes = matches[0].strokes.map((row) => [...row]);
+    strokes[0][0] = 2;
+    expect(validateCard(matches[0].scores, strokes)).not.toBeNull();
   });
   it("accepts the fixture snapshot and rejects unrelated data", () => {
     expect(validSnapshot(matches)).toBe(true);

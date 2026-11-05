@@ -102,3 +102,8 @@ The existing brand and section order remain the direction. Athletic display head
 History, record filters, career links, scorecard controls and commissioner entry now share comfortable targets and wrapping behavior. Inputs in record filters are 16px to avoid automatic phone zoom. Textareas can resize vertically. The shared muted ink is darker so small text on the mist surface exceeds 4.5:1. Color transitions share one 160ms easing curve and respect the existing reduced-motion rules. The browser icon reuses the supplied mascot asset. The loading state reserves a viewport of content height so the footer does not jump out of view when saved sample data becomes available.
 
 No earnings structure, calculations, fixture data, draft storage or publication recovery logic changed. No dependency, font download, image generation, hook or production integration was added. Verification and limitations: `docs/UNSLOP-VERIFICATION.md`.
+
+
+## November 5 feedback
+
+Keep the Season 2 mascot, earnings design and reliability flows. Remove the locality label and repetitive footer copy. Use a gavel for the rules judge and the camera mark for Instagram. Standings use operable column headings; playoff field and bubble lists lead into a clearly labeled scenario calculator. The default bracket uses connecting lines across seven matches, with local horizontal scrolling on phones and optional round views. Best-ball scorecard cells use a quiet green fill and underline with a text legend and accessible labels.

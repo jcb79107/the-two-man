@@ -27,6 +27,8 @@ import {
   CareerProfile,
   ArchivedMatch,
 } from "./history";
+import { StandingsTable } from "./standings-table";
+import { PlayoffPicture } from "./playoff-picture";
 import { RULES_JUDGE_URL } from "./rules-judge";
 const nav = [
   ["/", "Home", "home"],
@@ -157,7 +159,7 @@ function App() {
             rel="noreferrer"
             aria-label="The Two-Man on Instagram"
           >
-            Instagram ↗
+            <Icon name="instagram" size={18} /> Instagram
           </a>
           <button
             ref={menuButton}
@@ -193,9 +195,6 @@ function App() {
         </nav>
       )}
       <div className="season-line">
-        <span>
-          Chicagoland <i /> Est. 2026
-        </span>
         <Link href="/rules">
           Regular season · 2027
           <Icon name="arrow" size={14} />
@@ -280,15 +279,10 @@ function App() {
             target="_blank"
             rel="noreferrer"
           >
-            Instagram ↗
+            <Icon name="instagram" size={18} /> Instagram
           </a>
           <Link href="/review">Commissioner demo</Link>
         </nav>
-        <p>
-          Season 02 preview · Local sample data only.
-          <br />
-          No real scores, payments or messages are sent.
-        </p>
       </footer>
       <nav className="mobile-nav" aria-label="Mobile navigation">
         {nav.map(([href, label, icon]) => (
@@ -335,7 +329,7 @@ function Home() {
           target="_blank"
           rel="noreferrer"
         >
-          AI rules judge <Icon name="arrow" size={16} />
+          <Icon name="judge" size={20} /> AI rules judge
         </a>
       </div>
       <nav className="feed-shortcuts" aria-label="Season shortcuts">
@@ -409,15 +403,15 @@ function Matches() {
   const { matches } = usePreview();
   const query = useSearchParams();
   const router = useRouter();
-  const filter = query.get("filter") ?? "all";
+  const requestedFilter = query.get("filter");
+  const filter =
+    requestedFilter === "review" ? "upcoming" : (requestedFilter ?? "all");
   const search = query.get("q") ?? "";
   const filtered = matches.filter(
     (m) =>
       (filter === "all" ||
-        (filter === "upcoming" &&
-          ["scheduled", "unbooked"].includes(m.status)) ||
-        (filter === "official" && m.status === "official") ||
-        (filter === "review" && ["review", "correction"].includes(m.status))) &&
+        (filter === "upcoming" && m.status !== "official") ||
+        (filter === "official" && m.status === "official")) &&
       `${nameOf(m.a)} ${nameOf(m.b)} ${m.course}`
         .toLowerCase()
         .includes(search.toLowerCase()),
@@ -435,9 +429,8 @@ function Matches() {
         <nav className="tabs" aria-label="Match status">
           {[
             ["all", "All matches"],
-            ["upcoming", "Upcoming"],
-            ["review", "Awaiting result"],
-            ["official", "Official"],
+            ["upcoming", "Pre-match"],
+            ["official", "Completed"],
           ].map(([v, l]) => (
             <Link
               key={v}
@@ -493,7 +486,6 @@ function Standings() {
   const query = useSearchParams();
   const view = query.get("view") ?? "pods";
   const rows = standings(matches);
-  const seeds = qualified(matches);
   return (
     <>
       <PageHeading eyebrow="The regular season" title="Standings" />
@@ -519,31 +511,7 @@ function Standings() {
         </span>
       </div>
       {view === "qualification" ? (
-        <>
-          <div className="notice">
-            <Icon name="lock" />
-            <div>
-              <strong>
-                {seeds.length
-                  ? "The field is set."
-                  : "The field is still open."}
-              </strong>
-              <p>
-                {seeds.length
-                  ? "All regular-season cards are official and qualifying ties are resolved."
-                  : "Seeds stay provisional until every regular-season result is official and qualifying ties are resolved."}
-              </p>
-            </div>
-          </div>
-          <StandingsTable
-            rows={seeds.length ? seeds : rows}
-            label={
-              seeds.length
-                ? "Official playoff seeds"
-                : "Current records — not locked seeds"
-            }
-          />
-        </>
+        <PlayoffPicture matches={matches} />
       ) : view === "field" ? (
         <StandingsTable rows={rows} label="Full field" />
       ) : (
@@ -590,56 +558,6 @@ function Standings() {
         </p>
       </div>
     </>
-  );
-}
-function StandingsTable({
-  rows,
-  label,
-}: {
-  rows: ReturnType<typeof standings>;
-  label: string;
-}) {
-  return (
-    <div
-      className="table-scroll"
-      tabIndex={0}
-      role="region"
-      aria-label={`${label}, scroll for all columns`}
-    >
-      <table className="standings-table">
-        <caption className="sr-only">{label}</caption>
-        <thead>
-          <tr>
-            <th scope="col">Team</th>
-            <th scope="col">W–L–T</th>
-            <th scope="col">Hole pts</th>
-            <th scope="col">Holes won</th>
-            <th scope="col">Net BB</th>
-            <th scope="col">Played</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((r, i) => (
-            <tr key={r.team.id}>
-              <th scope="row">
-                <span className="rank">{i + 1}</span>
-                <TeamAvatar id={r.team.id} />
-                <TeamName id={r.team.id} />
-              </th>
-              <td>
-                {r.won}–{r.lost}–{r.tied}
-              </td>
-              <td>
-                <strong>{r.points.toFixed(1)}</strong>
-              </td>
-              <td>{r.holesWon}</td>
-              <td>{r.net}</td>
-              <td>{r.played}/2</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
   );
 }
 function TeamDetail({ id }: { id: string }) {
@@ -764,15 +682,12 @@ function Bracket() {
         </div>
       ) : (
         !seeds.length && (
-          <div className="notice">
-            <Icon name="lock" />
-            <div>
-              <strong>Waiting for the regular season.</strong>
-              <p>
-                Seeds lock once all results and qualifying ties are settled.
-              </p>
-            </div>
-          </div>
+          <p className="bracket-intro">
+            Seeds are confirmed after regular-season play.{" "}
+            <Link href="/standings?view=qualification">
+              See the playoff picture <Icon name="arrow" size={16} />
+            </Link>
+          </p>
         )
       )}
       <ConnectedBracket
@@ -912,7 +827,7 @@ function Rules() {
             target="_blank"
             rel="noreferrer"
           >
-            AI rules judge <Icon name="arrow" size={16} />
+            <Icon name="judge" size={20} /> AI rules judge
           </a>
         }
       />
@@ -927,30 +842,36 @@ function Rules() {
             },
             {
               n: "02",
-              title: "Lock strokes at least 24 hours before tee time",
+              title: "Set strokes in GHIN before you tee off",
               tag: "Confirmed rule",
-              body: "Use GHIN for the correct course and tees. All four players agree on strokes no later than 24 hours before tee time. Preserve those values for the match, even if an index changes later. Course, tee or date changes after locking need commissioner guidance.",
+              body: "GHIN is the source of truth. Select the course and each player’s tees, using the four-ball match-play setup with a 90% Course Handicap allowance. The lowest player plays off zero; the others receive the difference, allocated by the scorecard handicap row, with a maximum of one stroke per hole. Confirm the strokes together before the first tee shot—even at the tee box.",
             },
             {
               n: "03",
-              title: "After your match",
+              title: "Regular season: turn in the full card",
               tag: "Confirmed workflow",
-              body: "Text or email the commissioner your completed 18-hole card with names, date and agreed strokes, plus GHIN screenshots for all four players showing course and tees. The commissioner posts the result. Playoff card requirements are still to be confirmed.",
+              body: "Play and record all 18 holes. Turn in gross scores for all four players, with each player’s strokes clearly labeled and the best ball used by each team clearly marked on every hole. Include names, date, course, tees and GHIN evidence. These full cards determine hole points and tiebreakers, including cumulative net better-ball. Text or email the card to the commissioner.",
             },
             {
               n: "04",
+              title: "Playoffs: report the winner and result",
+              tag: "Confirmed workflow",
+              body: "Report which team won and the match-play result, such as 2 & 1 or 1 up. No scorecard or hole-by-hole scores are required for the bracket. Playoff matches cannot finish tied; settle the winner on the course and report the final result.",
+            },
+            {
+              n: "05",
               title: "Scheduling",
               tag: "Proposed scheduling policy",
               body: "Optional April early play. May and June for regular-season matches. Contact opponents early. Request any extension before the deadline with a new date both sides accept. Penalties and exception rules are not finalized.",
             },
             {
-              n: "05",
+              n: "06",
               title: "Scoring & seeding",
               tag: "Sample competition format",
               body: "Net better-ball on each hole. Win a hole for one point; halve it for half a point each. Regular-season ranking uses match record, hole points, holes won and cumulative net better-ball. Remaining ties need a recorded decision.",
             },
             {
-              n: "06",
+              n: "07",
               title: "Prize money",
               tag: "Amounts still to be decided",
               body: "Pod winners, champions and runners-up have their awards displayed. Earned money and paid money are different. Sample amounts shown in this preview are per team and stack.",

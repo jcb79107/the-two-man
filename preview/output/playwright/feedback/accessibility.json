@@ -1,0 +1,149 @@
+{
+  "report": [
+    {
+      "width": 320,
+      "path": "/",
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "width": 320,
+      "path": "/matches?filter=review",
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "width": 320,
+      "path": "/standings?view=field",
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "width": 320,
+      "path": "/standings?view=qualification",
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "width": 320,
+      "path": "/bracket",
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "width": 320,
+      "path": "/rules",
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "width": 320,
+      "path": "/review?match=m1",
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "width": 320,
+      "path": "/matches/m18",
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "width": 1093,
+      "path": "/",
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "width": 1093,
+      "path": "/matches?filter=review",
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "width": 1093,
+      "path": "/standings?view=field",
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "width": 1093,
+      "path": "/standings?view=qualification",
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "width": 1093,
+      "path": "/bracket",
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "width": 1093,
+      "path": "/rules",
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "width": 1093,
+      "path": "/review?match=m1",
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "width": 1093,
+      "path": "/matches/m18",
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "width": 1440,
+      "path": "/",
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "width": 1440,
+      "path": "/matches?filter=review",
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "width": 1440,
+      "path": "/standings?view=field",
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "width": 1440,
+      "path": "/standings?view=qualification",
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "width": 1440,
+      "path": "/bracket",
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "width": 1440,
+      "path": "/rules",
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "width": 1440,
+      "path": "/review?match=m1",
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "width": 1440,
+      "path": "/matches/m18",
+      "overflow": false,
+      "violations": []
+    }
+  ],
+  "errors": []
+}

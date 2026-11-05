@@ -241,21 +241,6 @@ function Entry({ match: original }: { match: Match }) {
                   }
                 />
               </label>
-              <label>
-                Strokes agreed at (CDT)
-                <input
-                  type="datetime-local"
-                  value={draft.lockedAt?.slice(0, 16) ?? ""}
-                  onChange={(e) =>
-                    update({
-                      ...draft,
-                      lockedAt: e.target.value
-                        ? `${e.target.value}:00-05:00`
-                        : null,
-                    })
-                  }
-                />
-              </label>
             </div>
             <label className="check-field">
               <input
@@ -266,7 +251,8 @@ function Entry({ match: original }: { match: Match }) {
                 }
               />
               Sample card and GHIN screenshots received for all four players,
-              showing course and tees.
+              showing course, tees and GHIN strokes. The card includes all four
+              players’ scores and marks each team’s best ball.
             </label>
             <p className="field-help">
               Keep evidence outside this demo. No uploads or GHIN connection.
@@ -275,8 +261,8 @@ function Entry({ match: original }: { match: Match }) {
           <details className="agreed-details">
             <summary>Enter agreed strokes by hole</summary>
             <p>
-              Copy the agreed allocation; no handicap calculation is performed
-              here.
+              Copy the GHIN match-play allocation: 90% allowance, playing off
+              the lowest player, maximum one stroke per hole.
             </p>
             <div className="segmented">
               <button
@@ -319,7 +305,7 @@ function Entry({ match: original }: { match: Match }) {
                               aria-label={`${name} hole ${h + 1} agreed strokes`}
                               type="number"
                               min={0}
-                              max={3}
+                              max={1}
                               value={draft.strokes[p][h]}
                               onChange={(e) => {
                                 const strokes = draft.strokes.map((row) => [

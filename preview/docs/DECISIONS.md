@@ -23,3 +23,10 @@ The static commissioner demo is openly accessible, has no authentication, and br
 ## Connected bracket slice
 
 Current and archived brackets now share the existing eight-slot mirrored path. Later rounds resolve only from feeder winners. No new field, tie or playoff reporting rules were adopted; current unplayed rounds remain placeholders. Legacy completed-scenario links use the existing fictional 2026 archive instead of claiming a Season 02 champion. See BRACKET-VERIFICATION.md for checks and delivery limits.
+
+
+## November 5, 2026 — direct browser feedback supersedes earlier rules
+
+Jason removed the 24-hour stroke agreement requirement. GHIN is the source of truth; apply the prior-season 90% match-play allowance, lowest player at zero and one-stroke-per-hole maximum. Agreement can happen at the tee. Regular-season cards must show full scores for all four players, labeled strokes and marked team best ball. Playoffs need only winner and match result (such as 2&1 or 1 up), with no card requirement. Earlier timestamp/lock and undecided playoff-card notes above are superseded.
+
+Public match states are Pre-match and Completed. Add sortable standings, a meaningful projected playoff field and scenario calculator, and open the full connected bracket by default. Remove locality filler and repetitive footer disclaimers; retain the visible preview disclosure. Use contextual judge and Instagram icons.

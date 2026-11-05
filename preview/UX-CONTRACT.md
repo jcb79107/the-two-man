@@ -4,9 +4,9 @@ This contract applies only to the standalone `preview` app. Visual intent is in 
 
 ## Current workflow
 
-Public browsing is identical for everyone. No role switch, player account, submission or scheduling form. Legacy /submit is an informational page explaining text/email evidence. Unpublished matches show Awaiting result and do not expose draft scorecards.
+Public browsing is identical for everyone. No role switch, player account, submission or scheduling form. Legacy /submit is an informational page explaining text/email evidence. Unpublished matches show Pre-match and do not expose draft scorecards.
 
-The commissioner demo at /review is openly accessible and explicitly has no authentication or private storage. Use fictional data only. Select a regular-season match, copy course/tees, match time and the externally agreed stroke timestamp, enter four players’ 18 gross scores and hole strokes, confirm evidence receipt, review the calculated outcome, attest and publish. Native date controls record the fictional June CDT times; they are not a production timezone implementation.
+The commissioner demo at /review is openly accessible and explicitly has no authentication or private storage. Use fictional data only. Select a regular-season match, copy course/tees, match time and GHIN strokes, enter four players’ 18 gross scores and hole strokes, confirm evidence receipt, review the calculated outcome, attest and publish. Native date controls record the fictional June CDT times; they are not a production timezone implementation.
 
 Drafts use a separate browser storage key and survive navigation/reload. They never replace published matches. A correction requires a note, preserves the official result until publication and then recalculates current-season results. Original source fixtures and past seasons are immutable. Publishing replaces one fixture, not appends it. Back to editing clears attestation. Discard asks for confirmation and changes no published result. Storage failures are reported as visit-only persistence. No cross-tab concurrency guarantees.
 
@@ -19,7 +19,7 @@ History navigation, the record book and career pages are owned by `src/history.t
 
 ## Connected bracket
 
-Overview is the default: desktop shows the full bracket; phones show the first unfinished round (or the final for completed seasons). Full bracket is available explicitly on every screen size: all seven matches are visible in a horizontally scrollable region, with SVG connections and textual feeder labels. Round views use the URL round parameter and preserve archive view=playoffs. Progression links identify and target the next round. Current unresolved fields show seed placeholders; downstream slots show Winner QF/SF labels until official source winners exist. Archived result links remain season-scoped. The bracket is read-only and does not mutate scores or history.
+Full bracket is the default on every screen size: all seven matches are visible in a horizontally scrollable region, with SVG connections and textual feeder labels. Round views use the URL round parameter and preserve archive view=playoffs. Progression links identify and target the next round. Current unresolved fields show seed placeholders; downstream slots show Winner QF/SF labels until official source winners exist. Archived result links remain season-scoped. The bracket is read-only and does not mutate scores or history.
 
 
 ## Canonical UI Map
@@ -38,9 +38,18 @@ Overview is the default: desktop shows the full bracket; phones show the first u
 Results lead the clubhouse. ResultSummary explains the 18 hole points without changing scoring rules. FastScoreEntry edits the same draft as the full-card editor; paste accepts exactly 18 whole-number scores and never publishes. Head-to-head records aggregate official games by stable partnership identity and link to season-specific results. Bracket team selection and round selection persist in the URL; highlighting stops at an elimination and never predicts a winner.
 
 ## October 19 focus revision
-Home is a chronological official-results timeline. Keep the existing rules judge and Instagram links. No brand-direction page, promotional homepage panels, or slogan headings. Standings retain ranking statistics; playoffs default to round view with full bracket optional. Preview sample disclosure remains visible on mobile.
+Home is a chronological official-results timeline. Keep the existing rules judge and Instagram links. No brand-direction page, promotional homepage panels, or slogan headings. Standings retain ranking statistics; playoffs default to the full connected bracket with round views optional. Preview sample disclosure remains visible on mobile.
 
 Site-wide follow-up: compact page headings; literal scorecard/history/rules labels; statistical definitions available on demand. Preserve validation errors, publishing attestation, sample/privacy warnings and confirmed versus proposed rules.
 
 ## Publication persistence recovery
 A browser storage failure leaves the published result available for the current visit, but it must not claim durable saving or delete the draft. The completion screen keeps an explicit warning and Retry saving action. Only a successful retry clears the draft. Reload still uses the last durably saved season. Saved season snapshots must preserve each fixture's original ordered team pairing and pod. This is validation of fictional local data, not authentication or a cross-tab concurrency guarantee.
+
+
+## November 5 feedback revision
+
+Public matches have two states: Pre-match and Completed. Internal draft/review states remain private to the commissioner workflow. Legacy review filter URLs resolve to Pre-match.
+
+Standings columns sort in either direction with URL state; displayed rank remains the competition rank. Playoff picture projects six pod leaders and two wildcards from published results, lists the next four, and flags unresolved pod, seed and wildcard ties. The single-match calculator adds hypothetical points, holes won and net totals without changing scores or browser storage. Other pending matches remain unplayed. This is a scenario, not a probability forecast.
+
+GHIN is the stroke source: 90% Course Handicap, lowest player at zero, others receive the difference, capped at one stroke per hole. Players may agree at the tee. There is no required agreement timestamp. Regular-season evidence includes all four full scores, labeled strokes and marked team best ball; displayed cards mark both players when tied. Playoffs require only the winning team and match result, not a card. Playoff result entry remains outside this local preview's administration scope.
