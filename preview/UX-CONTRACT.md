@@ -53,3 +53,10 @@ Public matches have two states: Pre-match and Completed. Internal draft/review s
 Standings columns sort in either direction with URL state; displayed rank remains the competition rank. Playoff picture projects six pod leaders and two wildcards from published results, lists the next four, and flags unresolved pod, seed and wildcard ties. The single-match calculator adds hypothetical points, holes won and net totals without changing scores or browser storage. Other pending matches remain unplayed. This is a scenario, not a probability forecast.
 
 GHIN is the stroke source: 90% Course Handicap, lowest player at zero, others receive the difference, capped at one stroke per hole. Players may agree at the tee. There is no required agreement timestamp. Regular-season evidence includes all four full scores, labeled strokes and marked team best ball; displayed cards mark both players when tied. Playoffs require only the winning team and match result, not a card. Playoff result entry remains outside this local preview's administration scope.
+
+
+## Simplified commissioner workspace
+
+`/review` opens Results: pending matches, published results, correction links and saved-draft resume links. Manual regular-season entry is collapsed behind Enter a result manually. Existing match deep links, editor, draft persistence, validation, correction reasons, attestation and failed-publication retry behavior remain unchanged.
+
+Instagram graphics is the second tab. Result, standings and bracket templates generate local 1080 × 1350 PNGs with the Season 2 mascot. Selections persist in the URL. Only published results feed graphics; drafts and calculator scenarios are excluded. Current bracket seeds remain placeholders until qualification resolves. All exports retain a sample-data label. The preview and download share the same PNG; generation errors allow retry and no data writes occur. This does not connect the browser-local preview to an agent, production data or Instagram posting.

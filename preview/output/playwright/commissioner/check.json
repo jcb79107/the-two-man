@@ -1,0 +1,79 @@
+{
+  "checks": [
+    "Manual entry is collapsed by default",
+    "Pending and published results are separated",
+    "Manual entry still opens the existing editor",
+    "Result action selects the matching graphic",
+    "result preview is a full-resolution PNG",
+    "result downloads a PNG",
+    "standings preview is a full-resolution PNG",
+    "standings downloads a PNG",
+    "bracket preview is a full-resolution PNG",
+    "bracket downloads a PNG",
+    "Graphic selection survives reload",
+    "Graphics leave published results and drafts unchanged"
+  ],
+  "audits": [
+    {
+      "width": 320,
+      "path": "/review",
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "width": 320,
+      "path": "/review?tab=graphics",
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "width": 320,
+      "path": "/review?tab=graphics&graphic=standings",
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "width": 320,
+      "path": "/review?tab=graphics&graphic=bracket",
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "width": 320,
+      "path": "/review?match=m1",
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "width": 1093,
+      "path": "/review",
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "width": 1093,
+      "path": "/review?tab=graphics",
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "width": 1093,
+      "path": "/review?tab=graphics&graphic=standings",
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "width": 1093,
+      "path": "/review?tab=graphics&graphic=bracket",
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "width": 1093,
+      "path": "/review?match=m1",
+      "overflow": false,
+      "violations": []
+    }
+  ],
+  "errors": []
+}

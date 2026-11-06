@@ -8,54 +8,141 @@ import { approvalError, publishDraft, result } from "./domain";
 import { Scorecard } from "./workflows";
 import { PageHeading } from "./ui";
 import { FastScoreEntry } from "./score-entry";
+import { CommissionerGraphics } from "./commissioner-graphics";
 
 export function Commissioner() {
   const store = usePreview();
   const params = useSearchParams();
   const id = params.get("match");
   const match = store.matches.find((m) => m.id === id);
+  const graphics = params.get("tab") === "graphics";
+  const published = store.matches
+    .filter((m) => m.status === "official")
+    .sort((a, b) => b.date.localeCompare(a.date));
+  const pending = store.matches.filter((m) => m.status !== "official");
+  function matchRow(m: Match) {
+    const score = m.status === "official" ? result(m) : null;
+    return (
+      <li key={m.id} className="desk-result">
+        <div>
+          <small>Pod {m.pod}</small>
+          <Link href={`/matches/${m.id}`}>
+            <strong>
+              {nameOf(m.a)} <span>vs</span> {nameOf(m.b)}
+            </strong>
+          </Link>
+          <p>
+            {score
+              ? `${score.aPoints}–${score.bPoints} · Completed`
+              : "Pre-match"}
+            {store.drafts[m.id] ? " · Draft saved" : ""}
+          </p>
+        </div>
+        <div className="desk-row-actions">
+          {score && (
+            <Link
+              className="text-link"
+              href={`/review?tab=graphics&result=${m.id}`}
+            >
+              Make graphic
+            </Link>
+          )}
+          {(score || store.drafts[m.id]) && (
+            <Link className="text-link" href={`/review?match=${m.id}`}>
+              {store.drafts[m.id] ? "Resume draft" : "Correct result"}
+            </Link>
+          )}
+        </div>
+      </li>
+    );
+  }
   return (
     <>
-      <PageHeading
-        eyebrow="Commissioner workspace · Demo"
-        title="Commissioner desk"
-      />
-      <p className="notice">
-        Public demo · Saved in this browser only. No login or privacy
-        protection. Use fictional data only; do not enter real cards, GHIN
-        evidence or personal information.
+      <PageHeading eyebrow="Season 2" title="Commissioner" />
+      <p className="fine-note">
+        Sample workspace · Saved in this browser only. No login or private
+        storage; use fictional data only.
       </p>
-      {id && !match ? (
+      <nav className="tabs" aria-label="Commissioner sections">
+        <Link href="/review" aria-current={!graphics ? "page" : undefined}>
+          Results
+        </Link>
+        <Link
+          href="/review?tab=graphics"
+          aria-current={graphics ? "page" : undefined}
+        >
+          Instagram graphics
+        </Link>
+      </nav>
+      {graphics ? (
+        <CommissionerGraphics matches={store.matches} />
+      ) : id && !match ? (
         <p>
-          Match not found. <Link href="/review">Choose a match</Link>
+          Match not found. <Link href="/review">Back to results</Link>
         </p>
       ) : match ? (
         <Entry key={match.id} match={match} />
       ) : (
-        <>
-          <p className="fine-note">Regular-season entry only.</p>
-          <nav className="queue-nav" aria-label="Choose a match">
-            {store.matches.map((m) => (
-              <Link href={`/review?match=${m.id}`} key={m.id}>
-                <span className="queue-pair">
-                  <small>Pod {m.pod}</small>
-                  <strong>{nameOf(m.a)}</strong>
-                  <span>vs {nameOf(m.b)}</span>
-                </span>
-                <span className="queue-action">
-                  {store.drafts[m.id] ? "Draft saved · " : ""}
-                  {m.status === "official"
-                    ? "Correct published result"
-                    : "Enter result"}
-                </span>
-              </Link>
-            ))}
-          </nav>
-        </>
+        <div className="commissioner-results">
+          <details className="desk-manual">
+            <summary>Enter a result manually</summary>
+            <p className="field-help">
+              Regular-season cards: all four players, all 18 holes. Published
+              results stay unchanged until you review and publish.
+            </p>
+            <nav
+              className="queue-nav"
+              aria-label="Choose a match for manual entry"
+            >
+              {pending.map((m) => (
+                <Link href={`/review?match=${m.id}`} key={m.id}>
+                  <span>
+                    {nameOf(m.a)} vs {nameOf(m.b)}
+                  </span>
+                  <span>
+                    {store.drafts[m.id] ? "Resume draft" : "Enter card"}
+                  </span>
+                </Link>
+              ))}
+            </nav>
+            {!pending.length && (
+              <p>
+                All regular-season results are published. Use Correct result
+                below for changes.
+              </p>
+            )}
+          </details>
+          <section>
+            <h2>
+              Still to report{" "}
+              <span className="desk-count">{pending.length}</span>
+            </h2>
+            {pending.length ? (
+              <ul className="desk-results">{pending.map(matchRow)}</ul>
+            ) : (
+              <p>All regular-season results are in.</p>
+            )}
+          </section>
+          <section>
+            <h2>
+              Published results{" "}
+              <span className="desk-count">{published.length}</span>
+            </h2>
+            {published.length ? (
+              <ul className="desk-results">{published.map(matchRow)}</ul>
+            ) : (
+              <p>
+                No published results yet. Enter a card when the first match is
+                complete.
+              </p>
+            )}
+          </section>
+        </div>
       )}
     </>
   );
 }
+
 function startingDraft(m: Match): Match {
   // A new correction needs its own explanation; a saved draft is restored
   // separately and keeps the reason already entered for that correction.

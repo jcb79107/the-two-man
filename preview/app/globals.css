@@ -5530,3 +5530,120 @@ main :where(a, button, input, select, textarea, summary) {
     grid-template-columns: 1fr;
   }
 }
+
+/* Commissioner: two daily tasks, manual entry on demand. */
+.commissioner-results {
+  display: grid;
+  gap: 40px;
+  margin-top: 24px;
+}
+.desk-manual {
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 20px;
+}
+.desk-manual summary {
+  font-weight: 650;
+  padding: 12px 0;
+}
+.desk-count {
+  color: var(--muted);
+  font-size: 16px;
+  margin-left: 8px;
+}
+.desk-results {
+  list-style: none;
+  padding: 0;
+  margin: 16px 0 0;
+}
+.desk-result {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 20px 0;
+  border-top: 1px solid var(--line);
+}
+.desk-result small {
+  display: block;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.desk-result strong span {
+  font-weight: 400;
+  color: var(--muted);
+}
+.desk-result p {
+  margin: 6px 0 0;
+  font-size: 14px;
+  color: var(--muted);
+}
+.desk-row-actions {
+  display: flex;
+  gap: 20px;
+  flex-shrink: 0;
+}
+.desk-row-actions a {
+  padding: 12px 0;
+}
+.graphics-workspace {
+  display: grid;
+  grid-template-columns: minmax(240px, 0.8fr) minmax(0, 1.2fr);
+  gap: 48px;
+  margin-top: 32px;
+  align-items: start;
+}
+.graphics-controls {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+.graphics-controls h2,
+.graphics-controls p {
+  margin: 0;
+}
+.graphics-controls label {
+  display: grid;
+  gap: 8px;
+  font-weight: 600;
+}
+.graphics-controls select {
+  width: 100%;
+  min-width: 0;
+  min-height: 48px;
+  padding: 12px;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+}
+.graphics-controls .button {
+  justify-self: start;
+}
+.graphic-preview {
+  background: var(--mist);
+  border: 1px solid var(--line);
+  padding: 16px;
+  min-width: 0;
+}
+.graphic-preview img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+@media (max-width: 700px) {
+  .desk-result {
+    align-items: start;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .desk-row-actions {
+    flex-wrap: wrap;
+  }
+  .graphics-workspace {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  .graphic-preview {
+    padding: 8px;
+  }
+}

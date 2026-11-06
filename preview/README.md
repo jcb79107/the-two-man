@@ -21,7 +21,7 @@ Open http://127.0.0.1:3027. No .env file is required. Do not copy production env
 2. Matches: filter/search, view an official scorecard, switch gross/net and nines.
 3. Standings: sortable pods/full field, projected playoff field and single-match calculator.
 4. The purse: illustrative, reconciled prize distribution; earned is not paid.
-5. Commissioner demo (footer): choose a match, record course/tees, match time and GHIN strokes, enter all 18 gross scores and supplied strokes, then review and publish.
+5. Commissioner (footer): Results shows pending and published matches. Expand manual entry to use the existing full-card editor; Instagram graphics previews and downloads result, standings and bracket PNGs.
 6. Save or navigate away from a draft; return or refresh to resume. Official standings remain unchanged until publication. Discard asks before removing a draft.
 7. Select an official match to correct it. A reason and fresh evidence confirmation are required; the previous published score remains visible until the correction is published.
 8. Bracket: follow connected quarterfinals and semifinals into the central final, or choose a round for mobile. Open the completed sample archive and follow each match to its saved result. No advancing seeds are assumed.
