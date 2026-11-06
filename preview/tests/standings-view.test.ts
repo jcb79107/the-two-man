@@ -99,6 +99,8 @@ describe("hypothetical match scores", () => {
         ...score,
         points,
         holesWon: Math.floor(points),
+        aNet: 72 + 18 - Math.ceil(points),
+        bNet: 72 + Math.floor(points),
       });
       expect(next.reduce((n, r) => n + r.points, 0) - before).toBe(18);
       if (points === 9)
@@ -116,7 +118,7 @@ describe("hypothetical match scores", () => {
       { points: NaN },
       { points: 12, holesWon: 0 },
       { holesWon: 13 },
-      { aNet: 0 },
+      { aNet: -1 },
       { bNet: Infinity },
       { aNet: 72.5 },
     ])
@@ -126,4 +128,39 @@ describe("hypothetical match scores", () => {
     expect(() => simulateMatch(matches, "m2", score)).toThrow();
     expect(() => simulateMatch(matches, "missing", score)).toThrow();
   });
+});
+
+it("rejects contradictory sweep and all-halved totals, but allows mixed-result upsets", () => {
+  for (const score of [
+    { points: 18, holesWon: 18, aNet: 72, bNet: 72 },
+    { points: 0, holesWon: 0, aNet: 72, bNet: 72 },
+    { points: 9, holesWon: 0, aNet: 72, bNet: 73 },
+    { points: 10, holesWon: 10, aNet: 0, bNet: 18 },
+  ])
+    expect(scenarioError(score)).not.toBeNull();
+  expect(
+    scenarioError({ points: 10, holesWon: 10, aNet: 90, bNet: 72 }),
+  ).toBeNull();
+  expect(
+    scenarioError({ points: 9, holesWon: 0, aNet: 0, bNet: 0 }),
+  ).toBeNull();
+});
+it("accepts generated feasible net cards including boundary scores", () => {
+  let seed = 123;
+  const next = () => (seed = (seed * 1664525 + 1013904223) >>> 0) % 21;
+  for (let i = 0; i < 2000; i++) {
+    let points = 0,
+      holesWon = 0,
+      aNet = 0,
+      bNet = 0;
+    for (let h = 0; h < 18; h++) {
+      const a = next(),
+        b = next();
+      aNet += a;
+      bNet += b;
+      points += a < b ? 1 : a === b ? 0.5 : 0;
+      holesWon += Number(a < b);
+    }
+    expect(scenarioError({ points, holesWon, aNet, bNet })).toBeNull();
+  }
 });

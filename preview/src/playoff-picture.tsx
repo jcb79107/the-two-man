@@ -39,6 +39,11 @@ export function PlayoffPicture({ matches }: { matches: Match[] }) {
   }
   function apply() {
     if (!match) return;
+    if (!aNet.trim() || !bNet.trim()) {
+      setError("Enter both net better-ball totals.");
+      setApplied(null);
+      return;
+    }
     const score = { points, holesWon, aNet: Number(aNet), bNet: Number(bNet) };
     try {
       simulateMatch(matches, match.id, score);
@@ -237,11 +242,12 @@ export function PlayoffPicture({ matches }: { matches: Match[] }) {
               </button>
             ))}
           </div>
-          <details className="scenario-details">
+          <details className="scenario-details" open={error ? true : undefined}>
             <summary>Tiebreak details</summary>
             <p>
               Starting assumptions: all holes decided and net 72 per team.
-              Adjust these for a closer projection.
+              Adjust the totals to fit your result; a sweep requires at least an
+              18-stroke difference.
             </p>
             <div className="scenario-fields">
               <label>
@@ -264,7 +270,7 @@ export function PlayoffPicture({ matches }: { matches: Match[] }) {
                 {nameOf(match.a)} net BB
                 <input
                   type="number"
-                  min="18"
+                  min="0"
                   max="360"
                   value={aNet}
                   onChange={(e) => {
@@ -277,7 +283,7 @@ export function PlayoffPicture({ matches }: { matches: Match[] }) {
                 {nameOf(match.b)} net BB
                 <input
                   type="number"
-                  min="18"
+                  min="0"
                   max="360"
                   value={bNet}
                   onChange={(e) => {

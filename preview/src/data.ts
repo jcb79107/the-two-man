@@ -66,12 +66,13 @@ export const pars = [4, 4, 3, 5, 4, 4, 3, 5, 4, 4, 3, 5, 4, 4, 3, 4, 5, 4];
 export const strokeIndex = [
   5, 13, 17, 1, 7, 11, 15, 3, 9, 6, 18, 2, 12, 8, 16, 14, 4, 10,
 ];
-// Fictional, explicitly supplied per-hole strokes. No GHIN/course-handicap calculation.
+// Fictional allowances 4, 8, 6, 10 play off the lowest: 0, 4, 2, 6.
+// Explicitly supplied per-hole strokes. No GHIN/course-handicap calculation.
 export const agreedStrokes = [
+  strokeIndex.map((n) => (n <= 0 ? 1 : 0)),
   strokeIndex.map((n) => (n <= 4 ? 1 : 0)),
-  strokeIndex.map((n) => (n <= 8 ? 1 : 0)),
+  strokeIndex.map((n) => (n <= 2 ? 1 : 0)),
   strokeIndex.map((n) => (n <= 6 ? 1 : 0)),
-  strokeIndex.map((n) => (n <= 10 ? 1 : 0)),
 ];
 const scoreRows = (variant: number) =>
   [0, 1, 2, 3].map((p) =>
