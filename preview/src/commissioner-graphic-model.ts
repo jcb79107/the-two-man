@@ -50,7 +50,12 @@ export function graphicSvg(
       "#073e2f",
       700,
     );
-    body += text(m.course, 64, 1130, 28);
+    // Keep user-entered course labels inside the 64px margins. A conservative
+    // character limit fits even wide glyphs at 28px; retain the full accessible title.
+    const course = Array.from(m.course);
+    const label =
+      course.length > 32 ? course.slice(0, 31).join("") + "…" : m.course;
+    body += `<g><title>${escape(m.course)}</title>${text(label, 64, 1130, 28)}</g>`;
     body += text(
       new Intl.DateTimeFormat("en-US", {
         month: "long",
