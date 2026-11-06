@@ -21,6 +21,8 @@ Use one of these prefixes:
 - `chore/<short-name>`
 - `docs/<short-name>`
 
+Local setup is documented in [Development](docs/development.md). Use fictional or disposable development data; never include credentials, private match links or personal data in a pull request.
+
 ## Local Verification
 
 Run these before opening or merging a PR:
