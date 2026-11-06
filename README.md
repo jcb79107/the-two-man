@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/assets/two-man-mark.png" width="300" alt="The Two Man: two golf balls in sunglasses, wearing a flat cap and a bucket hat">
+  <img src="docs/assets/two-man-banner.png" width="100%" alt="The Two-Man: sunglasses golf-ball mascots beside a golf course and two golf bags">
 </p>
 
 # The Two Man
@@ -32,7 +32,7 @@ The website is built with Next.js, React and TypeScript. Server-side code reads 
 
 `main` contains the existing database-backed website. Season 2 work is being developed separately in [`preview/` on the Season 2 branch](https://github.com/jcb79107/the-two-man/tree/codex/season-2-unslop-complete/preview): a static, fictional-data preview with browser-local commissioner workflows. It is not connected to the production database.
 
-The mascot above is the current Season 2 identity. Repository presentation uses it while the existing website assets remain with their respective app versions. [Asset provenance](docs/assets/README.md) records its source.
+The banner above uses the current Season 2 identity. Repository presentation uses it while the existing website assets remain with their respective app versions. [Asset provenance](docs/assets/README.md) records its source.
 
 ## Working on the website
 
