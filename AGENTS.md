@@ -11,6 +11,14 @@ Canonical repo:
 
 These rules apply to Codex, OpenClaw, Claude, Telegram-driven agents, and any other automated coding path.
 
+## Isolated Season 2 preview work
+
+- When the task explicitly targets Season 2, verify and use `codex/season-2-preview`, not the older root app. Explicit task restrictions override the main/push/deploy workflow below.
+- Work in `preview/`; read its `DESIGN.md` and `UX-CONTRACT.md`. Trace fixtures, separate drafts, publication and derived views before changing them.
+- Reuse existing components and browser features. Simplify demonstrated duplication without removing validation, accessibility, storage-failure handling or tests.
+- Keep this fictional, browser-local demo free of real data, credentials and integrations. Do not infer recovery of uncommitted work from another machine.
+- From `preview/`, run tests, lint, typecheck and build; inspect changed UI at desktop and narrow phone widths, including draft/review navigation.
+
 ## Shared AI Agent Rules
 
 - Prefer the smallest correct change that fully solves the task.

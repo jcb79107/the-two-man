@@ -1,0 +1,63 @@
+{
+  "report": [
+    {
+      "path": "/",
+      "width": 1440,
+      "metrics": {
+        "lcp": 44,
+        "cls": 0
+      },
+      "overflow": false
+    },
+    {
+      "path": "/matches/m18",
+      "width": 390,
+      "metrics": {
+        "lcp": 36,
+        "cls": 0
+      },
+      "overflow": false
+    },
+    {
+      "path": "/earnings",
+      "width": 1440,
+      "metrics": {
+        "lcp": 64,
+        "cls": 0
+      },
+      "overflow": false
+    },
+    {
+      "path": "/review?match=m1",
+      "width": 390,
+      "metrics": {
+        "lcp": 28,
+        "cls": 0
+      },
+      "overflow": false
+    },
+    {
+      "path": "/history",
+      "width": 1440,
+      "metrics": {
+        "lcp": 56,
+        "cls": 0
+      },
+      "overflow": false
+    },
+    {
+      "path": "/records",
+      "width": 390,
+      "metrics": {
+        "lcp": 32,
+        "cls": 0
+      },
+      "overflow": false
+    }
+  ],
+  "keyboard": {
+    "skip": true,
+    "main": true
+  },
+  "reducedMotionTransition": "0s"
+}

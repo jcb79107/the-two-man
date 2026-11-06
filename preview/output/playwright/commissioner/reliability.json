@@ -1,0 +1,18 @@
+[
+  "Empty search is reflected in URL",
+  "Clear search restores input",
+  "Match filter survives reload",
+  "Escape closes More and returns keyboard focus",
+  "Record filters survive reload",
+  "Net scorecard toggles",
+  "Back-nine scorecard shows hole 10",
+  "Draft survives reload",
+  "Invalid paste preserves input and shows error",
+  "Publication requires explicit attestation",
+  "Storage failure retains draft and exposes retry",
+  "Successful retry clears retained draft",
+  "Published scorecard survives reload",
+  "Correction still requires a reason",
+  "Discard can be canceled",
+  "Reset restores fixtures after local-only interaction checks"
+]
