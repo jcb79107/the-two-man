@@ -22,7 +22,7 @@ Use an isolated checkout when the canonical checkout contains unrelated user edi
 
 ## Isolated Season 2 preview work
 
-- When the task explicitly targets Season 2, verify and use `codex/season-2-preview`, not the older root app. Explicit task restrictions override the main/push/deploy workflow below.
+- For Season 2 work, use the current branch based on `origin/main` and the app in `preview/`, not the retained database app.
 - Work in `preview/`; read its `DESIGN.md` and `UX-CONTRACT.md`. Trace fixtures, separate drafts, publication and derived views before changing them.
 - Reuse existing components and browser features. Simplify demonstrated duplication without removing validation, accessibility, storage-failure handling or tests.
 - Keep this fictional, browser-local demo free of real data, credentials and integrations. Do not infer recovery of uncommitted work from another machine.
@@ -42,11 +42,8 @@ Use an isolated checkout when the canonical checkout contains unrelated user edi
 - If broader cleanup is useful but unrelated, mention it separately instead of
   doing it.
 
-- Start every task from the canonical repo path above. Do not use the old `fairway-match` path for this project.
-- Before editing, run `git fetch origin main`, confirm the current branch is `main`, and confirm the working tree is clean.
-- If local `main` is behind `origin/main`, run `git pull --ff-only origin main` before editing.
-- If local `main` has uncommitted changes or diverges from `origin/main`, stop and report that instead of stacking new work on top.
-- End every code/config change by committing the intended files and pushing `main` to GitHub with `git push origin main`.
+- Inspect the canonical checkout and fetch `origin/main` before editing. Preserve unrelated local changes by using an isolated checkout based on current main.
+- Commit only intended changes, push the task branch, and merge through a pull request after required checks pass. Do not bypass checks or force-push main.
 - Commit and push code changes to GitHub before any production deploy.
 - Do not deploy a dirty worktree directly to Vercel.
 - Use `npm run deploy:prod` for production deploys; it refuses to deploy unless the current branch is clean and synced with GitHub.

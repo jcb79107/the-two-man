@@ -102,15 +102,6 @@ function shouldResetMatch(input: {
     currentMatch.awayTeamId !== expected.awayTeamId ||
     currentMatch.homeSeedNumber !== expected.homeSeedNumber ||
     currentMatch.awaySeedNumber !== expected.awaySeedNumber;
-  const shellChanged =
-    currentMatch.homeSeedLabel !== expected.homeSeedLabel ||
-    currentMatch.awaySeedLabel !== expected.awaySeedLabel ||
-    currentMatch.bracketId !== expected.bracketId ||
-    currentMatch.bracketRoundId !== expected.bracketRoundId ||
-    currentMatch.advancesToMatchId !== expected.advancesToMatchId ||
-    currentMatch.advancesToSlot !== expected.advancesToSlot ||
-    currentMatch.roundLabel !== expected.roundLabel ||
-    currentMatch.stage !== expected.stage;
 
   return (
     participantsChanged ||

@@ -16,20 +16,10 @@ function requiredString(value: FormDataEntryValue | null, fieldName: string): st
 }
 
 function parseIntField(value: FormDataEntryValue | null, fieldName: string): number {
-  const parsed = Number.parseInt(requiredString(value, fieldName), 10);
+  const parsed = Number(requiredString(value, fieldName));
 
-  if (!Number.isFinite(parsed)) {
+  if (!Number.isSafeInteger(parsed)) {
     throw new Error(`${fieldName} must be a whole number.`);
-  }
-
-  return parsed;
-}
-
-function parseFloatField(value: FormDataEntryValue | null, fieldName: string): number {
-  const parsed = Number.parseFloat(requiredString(value, fieldName));
-
-  if (!Number.isFinite(parsed)) {
-    throw new Error(`${fieldName} must be a number.`);
   }
 
   return parsed;
@@ -42,7 +32,7 @@ function parseOptionalFloatField(value: FormDataEntryValue | null, fieldName: st
     return null;
   }
 
-  const parsed = Number.parseFloat(normalized);
+  const parsed = Number(normalized);
 
   if (!Number.isFinite(parsed)) {
     throw new Error(`${fieldName} must be a number.`);

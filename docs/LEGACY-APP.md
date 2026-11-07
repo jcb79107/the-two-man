@@ -1,10 +1,8 @@
-# The Two Man
+# Legacy Season 1 app
 
-Mobile-first tournament operations app for the 2026 Two Man golf tournament.
-
-The live production site is https://www.thetwoman.site. The source of truth is
-`origin/main` on https://github.com/jcb79107/the-two-man, deployed to the
-existing Vercel project `the_two_man`.
+Retained for recovery. The public site now builds from `preview/`; see the
+[root README](../README.md). Run these commands from the repository root and use
+a disposable local database.
 
 ## What The App Does
 
@@ -65,7 +63,7 @@ npm run prisma:seed
 Start the app:
 
 ```bash
-npm run dev
+npm run dev:legacy
 ```
 
 Open http://localhost:3000.
@@ -75,7 +73,7 @@ Open http://localhost:3000.
 ```bash
 npm run lint
 npm test
-npm run build
+npm run build:legacy
 npm run dry-run:tournament -- the-two-man-2026
 npm run tournament:reset:state -- the-two-man-2026
 npm run recap:export -- --slug the-two-man-2026
@@ -104,23 +102,11 @@ See `.env.example` for the full template. The important runtime variables are:
 - `THE_TWO_MAN_VALIDATE_PROD_DB`, `THE_TWO_MAN_ENV`, or `APP_ENV` for explicit production DB validation
 - `GOLF_COURSE_API_KEY` when live course lookup is enabled
 
-## Deployment
+## Recovery
 
-Production deploys go through Vercel and should start from a clean, synced `main`.
-
-```bash
-git fetch origin main
-git status --short
-git rev-list --left-right --count main...origin/main
-npm run lint
-npm test
-npm run build
-git push origin main
-npm run deploy:prod
-```
-
-`npm run deploy:prod` refuses to deploy unless the worktree is clean and synced with GitHub.
-Do not create a new Vercel project for this app.
+Follow the [launch and rollback guide](../preview/docs/OFFSEASON-LAUNCH.md).
+The normal production deploy command publishes the new static site, not this app.
+Do not reset, seed or migrate the production database for UI recovery.
 
 ## Documentation
 

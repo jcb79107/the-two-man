@@ -1,20 +1,11 @@
 import "server-only";
 
-import { Prisma } from "@prisma/client";
 import { buildMatchPlayerSnapshots, scoreMatch } from "@/lib/scoring/engine";
 import type { MatchPlayerInput } from "@/lib/scoring/types";
 import { normalizeKnownCourseHoles } from "@/lib/server/course-hole-corrections";
 import { getStoredCourseCatalog } from "@/lib/server/course-catalog";
 import { db } from "@/lib/server/db";
 import { getOfficialResultSnapshotForMatch } from "@/lib/server/official-result-snapshot";
-
-function decimalToNumber(value: Prisma.Decimal | number | null | undefined) {
-  if (value == null) {
-    return null;
-  }
-
-  return Number(value);
-}
 
 function formatStageLabel(stage: string) {
   switch (stage) {

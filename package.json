@@ -5,9 +5,9 @@
   "packageManager": "npm@11.6.2",
   "scripts": {
     "security:artifacts": "node scripts/check_tracked_artifacts.mjs",
-    "dev": "next dev",
+    "dev": "NEXT_PUBLIC_SITE_MODE=offseason npm run dev --prefix preview",
     "build": "npm run build:live --prefix preview",
-    "start": "next start",
+    "start": "npm run start --prefix preview",
     "postinstall": "prisma generate",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "test": "vitest run",
@@ -28,7 +28,9 @@
     "recap:export": "tsx scripts/export_pod_play_recap.ts",
     "results:backfill-snapshots": "tsx scripts/backfill_official_result_snapshots.ts",
     "deploy:prod": "node scripts/require_github_synced_before_deploy.mjs && npm run build && cd preview && node scripts/package-preview.mjs --live && npx --yes vercel deploy --prebuilt --prod --yes --scope jcb79107s-projects",
-    "build:legacy": "next build"
+    "build:legacy": "next build",
+    "dev:legacy": "next dev",
+    "start:legacy": "next start"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",

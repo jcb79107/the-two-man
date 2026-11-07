@@ -212,7 +212,6 @@ export function scoreMatch(input: MatchScoringInput): MatchScoringResult {
     maxStrokesPerHole: input.maxStrokesPerHole,
     players: input.players
   });
-  const allowancePct = preview.allowancePct;
   const teamIds = [...new Set(input.players.map((player) => player.teamId))];
   const players = preview.players;
   const snapshotsByPlayerId = Object.fromEntries(

@@ -129,13 +129,6 @@ export function approvalError(m: Match): string | null {
   if (!m.evidence) return "A scorecard is required before approval.";
   return validateCard(m.scores, m.strokes);
 }
-export function approveMatch(ms: Match[], id: string) {
-  return ms.map((m) =>
-    m.id === id && m.status === "review" && !approvalError(m)
-      ? { ...m, status: "official" as const }
-      : m,
-  );
-}
 export function validSnapshot(value: unknown): value is Match[] {
   if (!Array.isArray(value) || value.length !== 18) return false;
   return value.every((m, i) => {

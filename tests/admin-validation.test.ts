@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   parseAdminLoginForm,
   parseMatchForm,
+  parsePlayerForm,
   parsePodAssignmentForm,
   parsePlayoffResultForm,
   parseTeamForm,
@@ -19,6 +20,17 @@ function buildFormData(entries: Record<string, string>) {
 }
 
 describe("admin validation safeguards", () => {
+  it.each(["4junk", "4.5", "Infinity"])("rejects malformed seed %s instead of truncating it", (seedNumber) => {
+    expect(() => parseTeamSeedUpdateForm(buildFormData({ teamId: "team-1", seedNumber }))).toThrow();
+  });
+
+  it("rejects trailing text in a handicap while preserving valid decimals", () => {
+    const fields = { firstName: "Test", lastName: "Player", email: "test@example.com" };
+    expect(() => parsePlayerForm(buildFormData({ ...fields, handicapIndex: "12.5junk" }))).toThrow();
+    expect(parsePlayerForm(buildFormData({ ...fields, handicapIndex: "12.5" })).handicapIndex).toBe(12.5);
+    expect(parsePlayerForm(buildFormData({ ...fields, handicapIndex: "" })).handicapIndex).toBeNull();
+  });
+
   it("accepts configured admin passwords that are not four digit passcodes", () => {
     const formData = buildFormData({
       password: "password"

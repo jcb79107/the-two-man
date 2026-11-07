@@ -29,8 +29,6 @@ type CliOptions = {
 type TournamentRecord = NonNullable<Awaited<ReturnType<typeof loadTournament>>>;
 type MatchRecord = TournamentRecord["matches"][number];
 type TeamRecord = TournamentRecord["teams"][number];
-type PlayerRecord = TeamRecord["roster"][number]["player"];
-type PlayerSelection = MatchRecord["playerSelections"][number];
 
 type RecordSummary = {
   wins: number;

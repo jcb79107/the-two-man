@@ -1,34 +1,42 @@
 # The Two-Man
 
-Live site: https://www.thetwoman.site
-Source: `origin/main` · Vercel project: `the_two_man`
+[thetwoman.site](https://www.thetwoman.site)
 
-The live offseason site uses the new UI in `preview/`. It presents the official
-2026 results, standings, bracket and player records while the Season 2 field and
-format are undecided. It is a static, read-only site with no database connection.
+The offseason site shows Season 1 results, standings, the playoff bracket and
+player records. Season 2 details will follow once the field and format are set.
 
-## Develop and verify
+## Run locally
+
+From the repository root:
 
 ```sh
 npm ci --prefix preview
-cd preview
-NEXT_PUBLIC_SITE_MODE=offseason npm run dev
-npm run typecheck
-npm run lint
-npm test
-npm run build:live
-npm run test:offseason
+npm run dev
 ```
 
-`npm run build` inside `preview/` builds the separate fictional Season 2 demo.
-At the repository root, `npm run build` builds the live offseason site.
+Open http://127.0.0.1:3027. `npm run build` exports the live offseason site;
+`npm start` serves that export. The site uses the read-only Season 1 archive and
+needs no database or credentials.
 
-## Release
+## Check changes
 
-Read [the launch and rollback guide](preview/docs/OFFSEASON-LAUNCH.md).
-Commit and push main before `npm run deploy:prod`. Git deployments use the root
-`vercel.json` to install and build only the new public site.
+```sh
+npm test --prefix preview
+npm run lint --prefix preview
+npm run typecheck --prefix preview
+npm run build
+npm run test:offseason --prefix preview
+```
 
-The Season 1 database app remains in the repository for recovery, not as the
-public entry point. Its setup documentation is in [Legacy app](docs/LEGACY-APP.md).
-Do not run database reset, seed or migration commands for this static site.
+The fictional Season 2 demo has separate [development instructions](preview/README.md).
+The retained database app uses `dev:legacy`, `build:legacy` and `start:legacy`;
+see [legacy setup](docs/LEGACY-APP.md). Root `npm test` and `npm run lint` check that app.
+
+## Deploy
+
+Merge verified changes to `main`, then run `npm run deploy:prod` from a clean,
+synced checkout. It deploys to the existing Vercel project, `the_two_man`.
+See [release checks and rollback](preview/docs/OFFSEASON-LAUNCH.md).
+
+Do not edit the Season 1 archive or run database resets, seeds or migrations for
+public-site work.

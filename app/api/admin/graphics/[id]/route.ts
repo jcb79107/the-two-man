@@ -3,7 +3,7 @@ import path from "node:path";
 import { NextResponse } from "next/server";
 import type { AdminGraphicRecap } from "@/lib/server/admin-graphics";
 import { getAdminGraphicRecaps } from "@/lib/server/admin-graphics";
-import { isAdminAuthConfigured, isAdminAuthenticated } from "@/lib/server/admin-auth";
+import { isAdminAuthenticated } from "@/lib/server/admin-auth";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -819,7 +819,7 @@ export async function GET(
   request: Request,
   context: { params: Promise<{ id: string }> }
 ) {
-  if (isAdminAuthConfigured() && !(await isAdminAuthenticated())) {
+  if (!(await isAdminAuthenticated())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

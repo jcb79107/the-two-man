@@ -108,18 +108,6 @@ export interface AdminDashboardData {
   }>;
 }
 
-function decimalToNumber(value: unknown): number | null {
-  if (value == null) {
-    return null;
-  }
-
-  if (typeof value === "number") {
-    return value;
-  }
-
-  return Number(value);
-}
-
 export async function getAdminDashboardData(): Promise<AdminDashboardData> {
   try {
     const tournament = await db.tournament.findFirst({

@@ -49,7 +49,6 @@ async function main() {
     .slice(0, 2);
 
   const seededTeams = [...podWinners, ...wildCards].slice(0, 8);
-  const seedIds = new Set(seededTeams.map((team) => team.id));
 
   await db.$transaction(async (tx) => {
     const allTeams = await tx.team.findMany({

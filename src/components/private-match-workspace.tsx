@@ -285,7 +285,6 @@ export function PrivateMatchWorkspace({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [draftStatus, setDraftStatus] = useState<string | null>(null);
   const [scoreSegment, setScoreSegment] = useState<"front" | "back">("front");
-  const [selectedHoleNumber, setSelectedHoleNumber] = useState(1);
   const [isScoringFieldActive, setIsScoringFieldActive] = useState(false);
   const [setupConfirmationChecked, setSetupConfirmationChecked] = useState(false);
   const [playerEndorsements, setPlayerEndorsements] = useState<Record<string, boolean>>(() =>
@@ -1322,8 +1321,7 @@ export function PrivateMatchWorkspace({
     });
   }
 
-  function handleScoreFieldFocus(holeNumber: number) {
-    setSelectedHoleNumber(holeNumber);
+  function handleScoreFieldFocus() {
     setIsScoringFieldActive(true);
   }
 
@@ -2065,10 +2063,7 @@ export function PrivateMatchWorkspace({
                   <div className="flex flex-wrap items-center gap-2">
                     <button
                       type="button"
-                      onClick={() => {
-                        setScoreSegment("front");
-                        setSelectedHoleNumber((current) => (current > 9 ? 1 : current));
-                      }}
+                      onClick={() => setScoreSegment("front")}
                       className={`rounded-full px-4 py-2 text-sm font-medium transition ${
                         scoreSegment === "front"
                           ? "bg-pine text-white"
@@ -2079,10 +2074,7 @@ export function PrivateMatchWorkspace({
                     </button>
                     <button
                       type="button"
-                      onClick={() => {
-                        setScoreSegment("back");
-                        setSelectedHoleNumber((current) => (current < 10 ? 10 : current));
-                      }}
+                      onClick={() => setScoreSegment("back")}
                       className={`rounded-full px-4 py-2 text-sm font-medium transition ${
                         scoreSegment === "back"
                           ? "bg-pine text-white"
@@ -2107,16 +2099,14 @@ export function PrivateMatchWorkspace({
                       Hole
                     </div>
                     {visibleHoleNumbers.map((holeNumber) => (
-                      <button
+                      <div
                         key={`hole-heading-${holeNumber}`}
-                        type="button"
-                        onClick={() => setSelectedHoleNumber(holeNumber)}
                         className={`border-b border-r border-[#c8b77f] bg-[#f2ead9] transition ${scorecardHeaderCellClass}`}
                       >
                         <span className="mx-auto flex h-8 w-8 items-center justify-center rounded-full bg-pine/10 text-sm font-semibold text-ink">
                           {holeNumber}
                         </span>
-                      </button>
+                      </div>
                     ))}
                     {scoreSegment === "front" ? (
                       <div className={`border-b border-r border-[#c8b77f] bg-[#f2ead9] text-ink ${scorecardHeaderCellClass}`}>
@@ -2184,14 +2174,12 @@ export function PrivateMatchWorkspace({
                           ) : null}
                         </div>
                         {values.map((value, index) => (
-                          <button
+                          <div
                             key={`meta-${label}-${visibleHoleNumbers[index]}`}
-                            type="button"
-                            onClick={() => setSelectedHoleNumber(visibleHoleNumbers[index] ?? 1)}
                             className={`border-b border-r border-[#c8b77f] px-1 py-3 text-center text-sm font-semibold text-ink/72 ${rowSurface}`}
                           >
                             {value}
-                          </button>
+                          </div>
                         ))}
                         <div className={`border-b border-r border-[#c8b77f] px-2 py-3 text-center text-sm font-semibold text-ink ${totalSurface}`}>
                           {segmentTotal}
@@ -2249,7 +2237,7 @@ export function PrivateMatchWorkspace({
                                       aria-label={`${scorecardDisplayName(
                                         playerCard.player.playerName
                                       )} gross score on hole ${holeNumber}`}
-                                      onFocus={() => handleScoreFieldFocus(holeNumber)}
+                                      onFocus={handleScoreFieldFocus}
                                       onBlur={handleScoreFieldBlur}
                                       onChange={(event) =>
                                         handleScoreChange(holeNumber, playerCard.player.playerId, event.target.value)
