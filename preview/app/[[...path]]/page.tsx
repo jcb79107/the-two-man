@@ -18,7 +18,10 @@ export function generateStaticParams() {
       "records",
     ].map((p) => ({ path: [p] })),
     ...teams.map((t) => ({ path: ["teams", t.id] })),
-    ...teams.map((t) => ({ path: ["records", "teams", t.id] })),
+    ...[
+      ...teams.map((t) => t.id),
+      ...archive2026.entries.map((e) => e.teamId),
+    ].map((id) => ({ path: ["records", "teams", id] })),
     ...players.map((p) => ({ path: ["players", p.id] })),
     ...["2026", "2027"].map((y) => ({ path: ["history", y] })),
     ...archive2026.games.map((g) => ({

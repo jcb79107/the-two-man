@@ -7,6 +7,7 @@ import {
   seasons,
   entryName,
   careerRows,
+  seasonStandings,
   careerGames,
   headToHead,
   players,
@@ -42,11 +43,12 @@ function ArchiveNav({ active }: { active: string }) {
     </nav>
   );
 }
-function SampleHistory() {
+function HistoryDisclosure() {
   return (
     <p className="archive-disclosure">
-      <strong>Sample archive.</strong> Fictional winners, results and awards.
-      Season 1 data has not been imported.
+      <strong>Season 1 official archive.</strong> Preserved 2026 results. Season
+      2 is a separate fictional demo; sample results are excluded from all-time
+      records.
     </p>
   );
 }
@@ -61,7 +63,7 @@ export function HistoryHome({ champions = false }: { champions?: boolean }) {
         title={champions ? "Champions" : "Season history"}
       />
       <ArchiveNav active={champions ? "champions" : "seasons"} />
-      <SampleHistory />
+      <HistoryDisclosure />
       {champions ? (
         <div className="champions-roll">
           {completed.map((s) => (
@@ -162,10 +164,7 @@ export function SeasonArchive({ year }: { year: number }) {
         <Link href="/history">Browse seasons</Link>
       </Empty>
     );
-  const regularRows = careerRows([s], "teams", "regular").sort(
-    (a, b) =>
-      b.won - a.won || b.points - a.points || a.name.localeCompare(b.name),
-  );
+  const regularRows = seasonStandings(s);
   return (
     <>
       <Link href="/history" className="back-link">
@@ -185,7 +184,7 @@ export function SeasonArchive({ year }: { year: number }) {
                 router.push(`/history/${e.target.value}?view=${view}`)
               }
             >
-              <option value="2027">2027 · In progress</option>
+              <option value="2027">2027 · Sample season</option>
               <option value="2026">2026 · Complete</option>
             </select>
           </label>
@@ -202,7 +201,7 @@ export function SeasonArchive({ year }: { year: number }) {
           </Link>
         ))}
       </nav>
-      <SampleHistory />
+      <HistoryDisclosure />
       {view === "overview" && (
         <>
           {s.champion ? (
@@ -230,7 +229,7 @@ export function SeasonArchive({ year }: { year: number }) {
               <strong>{s.games.length}</strong>
             </div>
             <div>
-              <span className="eyebrow">Sample prize pool</span>
+              <span className="eyebrow">Prize pool</span>
               <strong>{money(s.prizePool)}</strong>
             </div>
             <div>
@@ -240,6 +239,12 @@ export function SeasonArchive({ year }: { year: number }) {
           </div>
           <section className="section">
             <SectionTitle title="Season honors" />
+            {s.champion && (
+              <p>
+                Champion: {entryName(s, s.champion)} · Runner-up:{" "}
+                {entryName(s, s.runnerUp!)}
+              </p>
+            )}
             <div className="archive-honors">
               {s.awards.map((a) => (
                 <div key={`${a.teamId}-${a.kind}`}>
@@ -247,7 +252,11 @@ export function SeasonArchive({ year }: { year: number }) {
                   <Link href={`/records/teams/${a.teamId}`}>
                     {entryName(s, a.teamId)}
                   </Link>
-                  <span>{money(a.amount)} earned</span>
+                  <span>
+                    {a.amount === null
+                      ? "Prize amount not recorded"
+                      : `${money(a.amount)} earned`}
+                  </span>
                 </div>
               ))}
             </div>
@@ -256,6 +265,12 @@ export function SeasonArchive({ year }: { year: number }) {
               splits are not recorded.
             </p>
           </section>
+          {s.prizePool === null && (
+            <p className="fine-note">
+              Season 1 prize amounts and payment status are not recorded in the
+              preserved source.
+            </p>
+          )}
           <div className="fine-note">
             <strong>Season record</strong>
             <p>Three-team pods · Two matches per team · Eight-team playoffs.</p>
@@ -265,7 +280,8 @@ export function SeasonArchive({ year }: { year: number }) {
       {view === "standings" && (
         <>
           <p className="muted">
-            Regular season only · W–L–T and hole points. Playoff results are
+            Regular season only. Ranked by match record, hole points, holes won,
+            then lowest cumulative net better-ball. Playoff results are
             separate.
           </p>
           <div className="archive-pods">
@@ -287,6 +303,8 @@ export function SeasonArchive({ year }: { year: number }) {
                         <th scope="col">Team</th>
                         <th scope="col">W–L–T</th>
                         <th scope="col">Pts</th>
+                        <th scope="col">Holes won</th>
+                        <th scope="col">Net BB</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -305,6 +323,8 @@ export function SeasonArchive({ year }: { year: number }) {
                             </th>
                             <td>{recordLabel(r)}</td>
                             <td>{r.points}</td>
+                            <td>{r.holesWon}</td>
+                            <td>{r.netTotal}</td>
                           </tr>
                         ))}
                     </tbody>
@@ -402,8 +422,8 @@ export function RecordBook() {
     ? params.get("season")!
     : "all";
   const q = params.get("q") ?? "";
-  const records = seasons(matches).filter(
-    (s) => year === "all" || String(s.year) === year,
+  const records = seasons(matches).filter((s) =>
+    year === "all" ? !s.sample : String(s.year) === year,
   );
   const metric = (r: CareerRow) =>
     sort === "titles"
@@ -433,7 +453,7 @@ export function RecordBook() {
     <>
       <PageHeading eyebrow="The record book" title="All-time records" />
       <ArchiveNav active="records" />
-      <SampleHistory />
+      <HistoryDisclosure />
       <div className="record-controls">
         <label>
           Records for
@@ -449,7 +469,7 @@ export function RecordBook() {
             onChange={(e) => change("season", e.target.value)}
           >
             <option value="all">All seasons</option>
-            <option value="2027">2027 · In progress</option>
+            <option value="2027">2027 · Sample season</option>
             <option value="2026">2026 · Complete</option>
           </select>
         </label>
@@ -569,7 +589,8 @@ export function RecordBook() {
           W–L–T and win percentage; seasons, titles and team awards cover the
           selected seasons. Titles require a completed season. Player records
           reflect their team’s match outcomes, not individual stroke-play wins.
-          No prize split is assumed.
+          No prize split is assumed. All seasons excludes the fictional Season 2
+          demo.
         </p>
       </details>
     </>
@@ -616,7 +637,7 @@ export function CareerProfile({
             : "The record follows the player, even when the partner changes."
         }
       />
-      <SampleHistory />
+      <HistoryDisclosure />
       {row.titles > 0 && (
         <div className="career-honors">
           <Icon name="cup" size={26} />
@@ -838,7 +859,7 @@ export function ArchivedMatch({ year, id }: { year: number; id: string }) {
         title={`${entryName(s, g.a)}<br/>vs ${entryName(s, g.b)}`}
         description={`${dateLabel(g.date)} · ${g.course}`}
       />
-      <SampleHistory />
+      <HistoryDisclosure />
       <div className="archived-result">
         <Icon name="cup" size={30} />
         <div>
@@ -868,7 +889,9 @@ export function ArchivedMatch({ year, id }: { year: number; id: string }) {
       ) : (
         <div className="fine-note">
           <strong>Hole data not recorded</strong>
-          <p>No scorecard is available for this sample match.</p>
+          <p>
+            Individual hole scores were not recorded in this archived result.
+          </p>
         </div>
       )}
       <div className="archive-match-links">

@@ -50,31 +50,42 @@ export function bracketMatches(
   const nodes: BracketMatch[] = [];
   for (const p of path) {
     const game = games.find((g) => g.phase === "playoffs" && g.id === p.id);
-    const slots: BracketSlot[] =
-      "sources" in p
-        ? p.sources.map((source) => {
-            const node = nodes.find((n) => n.id === source)!;
-            const winner = node.winner
-              ? node.slots.find((s) => s.id === node.winner)
+    const recordedSources = games
+      .filter((g) => g.phase === "playoffs" && g.next === p.id)
+      .sort((a, b) => (a.slot === "HOME" ? 0 : 1) - (b.slot === "HOME" ? 0 : 1))
+      .map((g) => g.id);
+    const sources =
+      recordedSources.length === 2
+        ? recordedSources
+        : "sources" in p
+          ? [...p.sources]
+          : undefined;
+    const slots: BracketSlot[] = sources
+      ? sources.map((source) => {
+          const node = nodes.find((n) => n.id === source)!;
+          const winner = node.winner
+            ? node.slots.find((s) => s.id === node.winner)
+            : null;
+          return winner
+            ? { ...winner }
+            : { id: null, label: `Winner ${node.label}` };
+        })
+      : ("seeds" in p ? p.seeds : []).map((seed, i) => {
+          const id = game
+            ? i === 0
+              ? game.a
+              : game.b
+            : seedIds.length === 8
+              ? seedIds[seed]
               : null;
-            return winner
-              ? { ...winner }
-              : { id: null, label: `Winner ${node.label}` };
-          })
-        : p.seeds.map((seed, i) => {
-            const id = game
-              ? i === 0
-                ? game.a
-                : game.b
-              : seedIds.length === 8
-                ? seedIds[seed]
-                : null;
-            return {
-              id,
-              label: id ? nameOf(id) : `Seed ${seed + 1}`,
-              ...(!game ? { seed: seed + 1 } : {}),
-            };
-          });
+          return {
+            id,
+            label: id
+              ? (game?.teamNames?.[i] ?? nameOf(id))
+              : `Seed ${seed + 1}`,
+            ...(!game ? { seed: seed + 1 } : {}),
+          };
+        });
     const consistent =
       game &&
       slots.some((s) => s.id === game.a) &&
@@ -85,8 +96,8 @@ export function bracketMatches(
       label: p.label,
       round: p.round,
       slots: slots as [BracketSlot, BracketSlot],
-      sources: "sources" in p ? [...p.sources] : undefined,
-      next: p.next,
+      sources: sources as [string, string] | undefined,
+      next: game && "next" in game ? (game.next ?? null) : p.next,
       winner: consistent ? game.winner : null,
       score: consistent ? game.score : null,
       href: consistent ? game.href : null,

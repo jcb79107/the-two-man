@@ -25,6 +25,8 @@ export type Match = {
   strokes: number[][];
   evidence: boolean;
   note: string;
+  pars?: number[];
+  strokeIndexes?: number[];
 };
 export const PREVIEW_NOW = "2027-06-24T12:00:00-05:00";
 export const pods = ["A", "B", "C", "D", "E", "F"];
@@ -131,12 +133,14 @@ export const season = {
   deadline: "June 30",
   prizePool: 4500,
 };
-export const money = (n: number) =>
-  new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  }).format(n);
+export const money = (n: number | null) =>
+  n === null
+    ? "Not recorded"
+    : new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD",
+        maximumFractionDigits: 0,
+      }).format(n);
 export const dateLabel = (date: string, withTime = false) =>
   date
     ? new Intl.DateTimeFormat("en-US", {
@@ -145,4 +149,4 @@ export const dateLabel = (date: string, withTime = false) =>
         day: "numeric",
         ...(withTime ? { hour: "numeric", minute: "2-digit" } : {}),
       }).format(new Date(date))
-    : "Date needed";
+    : "Date not recorded";

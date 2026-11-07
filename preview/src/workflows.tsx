@@ -176,6 +176,8 @@ export function Scorecard({
   editable?: boolean;
   onChange?: (scores: number[][]) => void;
 }) {
+  const cardPars = m.pars ?? pars;
+  const cardIndexes = m.strokeIndexes ?? strokeIndex;
   const [nine, setNine] = useState(0);
   const [mode, setMode] = useState<"gross" | "net">("gross");
   const r = result(m);
@@ -249,15 +251,15 @@ export function Scorecard({
             <tr className="par-row">
               <th scope="row">Par</th>
               {holes.map((h) => (
-                <td key={h}>{pars[h]}</td>
+                <td key={h}>{cardPars[h]}</td>
               ))}
-              <td>{sum(holes.map((h) => pars[h]))}</td>
-              <td>{sum(pars)}</td>
+              <td>{sum(holes.map((h) => cardPars[h]))}</td>
+              <td>{sum(cardPars)}</td>
             </tr>
             <tr className="index-row">
               <th scope="row">Stroke index</th>
               {holes.map((h) => (
-                <td key={h}>{strokeIndex[h]}</td>
+                <td key={h}>{cardIndexes[h]}</td>
               ))}
               <td>—</td>
               <td>—</td>
@@ -298,7 +300,7 @@ export function Scorecard({
                       />
                     ) : (
                       <span
-                        className={`score-number ${(mode === "gross" ? m.scores[p][h] : r.net[p][h]) < pars[h] ? "birdie" : (mode === "gross" ? m.scores[p][h] : r.net[p][h]) > pars[h] ? "bogey" : ""}`}
+                        className={`score-number ${(mode === "gross" ? m.scores[p][h] : r.net[p][h]) < cardPars[h] ? "birdie" : (mode === "gross" ? m.scores[p][h] : r.net[p][h]) > cardPars[h] ? "bogey" : ""}`}
                       >
                         {mode === "gross" ? m.scores[p][h] : r.net[p][h]}
                       </span>

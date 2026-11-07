@@ -50,15 +50,16 @@ describe("season archive and career records", () => {
       careerRows([archive2026], "players").every((r) => r.earned === 0),
     ).toBe(true);
     expect(
-      careerRows([archive2026], "teams").reduce((n, r) => n + r.earned, 0),
-    ).toBe(archive2026.prizePool);
+      careerRows([archive2026], "teams").every((r) => r.earned === null),
+    ).toBe(true);
+    expect(archive2026.prizePool).toBeNull();
   });
   it("honors the champion from the recorded final", () => {
     const final = archive2026.games.find((g) => g.round === "Final")!;
     expect(final.winner).toBe(archive2026.champion);
     expect(
-      careerRows([archive2026], "teams").find((r) => r.id === "t7"),
-    ).toMatchObject({ won: 5, lost: 0, titles: 1 });
+      careerRows([archive2026], "teams").find((r) => r.id === "s1-team-09"),
+    ).toMatchObject({ won: 4, lost: 1, titles: 1 });
     expect(
       careerRows([archive2026], "players").filter((r) => r.titles === 1),
     ).toHaveLength(2);
@@ -85,9 +86,9 @@ describe("season archive and career records", () => {
       entries: [
         {
           teamId: "new-team",
-          playerIds: ["p1", "p3"],
-          playerNames: ["Bennett", "Sullivan"],
-          name: "Bennett & Sullivan",
+          playerIds: ["s1-team-09-player-1", "s1-team-01-player-1"],
+          playerNames: ["Barron", "New partner"],
+          name: "New partnership",
           pod: "A",
         },
       ],
@@ -102,14 +103,17 @@ describe("season archive and career records", () => {
       regularCards: [],
     };
     const row = careerRows([archive2026, s], "players").find(
-      (r) => r.id === "p1",
+      (r) => r.id === "s1-team-09-player-1",
     )!;
     expect(row.seasons).toBe(2);
     expect(row.played).toBe(6);
     expect(
-      careerRows([archive2026, s], "teams").find((r) => r.id === "t1")?.seasons,
+      careerRows([archive2026, s], "teams").find((r) => r.id === "s1-team-09")
+        ?.seasons,
     ).toBe(1);
-    expect(careerGames([archive2026, s], "players", "p1")).toHaveLength(6);
+    expect(
+      careerGames([archive2026, s], "players", "s1-team-09-player-1"),
+    ).toHaveLength(6);
   });
   it("gives every archived match a unique, season-scoped source link", () => {
     const links = archive2026.games.map((g) => g.href);

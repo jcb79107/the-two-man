@@ -1,8 +1,9 @@
-import { matches as fixtures, teams, season, type Match } from "./data";
+import source from "./season1-public.json";
+import { teams, season, type Match } from "./data";
 import { podWinner, result } from "./domain";
 
 // Stable identity is separate from a season entry. Names are never aggregation keys.
-export const players = teams.flatMap((team, i) =>
+const samplePlayers = teams.flatMap((team, i) =>
   team.names.map((name, j) => ({ id: `p${i * 2 + j + 1}`, name })),
 );
 export type SeasonEntry = {
@@ -33,12 +34,18 @@ export type HistoricalGame = {
   points: [number, number] | null;
   card: Match | null;
   href: string;
+  sourceId?: string;
+  next?: string | null;
+  slot?: string | null;
+  teamNames?: [string, string];
+  holesWon?: [number, number];
+  netTotals?: [number | null, number | null];
 };
 export type Award = {
   teamId: string;
   kind: "champion" | "runner-up" | "pod";
   label: string;
-  amount: number;
+  amount: number | null;
 };
 export type SeasonRecord = {
   year: number;
@@ -50,18 +57,9 @@ export type SeasonRecord = {
   regularCards: Match[];
   champion: string | null;
   runnerUp: string | null;
-  prizePool: number;
+  prizePool: number | null;
+  sample: boolean;
 };
-const archivedCards: Match[] = fixtures.map((m, i) => ({
-  ...m,
-  id: `s2026-${m.id}`,
-  status: "official",
-  date: `2026-06-${String(2 + i).padStart(2, "0")}T09:00:00-05:00`,
-  lockedAt: `2026-05-30T09:00:00-05:00`,
-  scores: m.scores.map((r) => [...r]),
-  strokes: m.strokes.map((r) => [...r]),
-  note: "Fictional archive fixture; not a real Season 1 result.",
-}));
 function regularGames(cards: Match[], year: number): HistoricalGame[] {
   return cards
     .filter((m) => m.status === "official")
@@ -87,57 +85,171 @@ function regularGames(cards: Match[], year: number): HistoricalGame[] {
       };
     });
 }
-const playoffFixtures = [
-  ["q1", "t1", "t5", "t1", "Quarterfinal", "2026-07-12", "3 & 2"],
-  ["q2", "t10", "t13", "t13", "Quarterfinal", "2026-07-18", "1 up"],
-  ["q3", "t4", "t2", "t4", "Quarterfinal", "2026-07-19", "2 & 1"],
-  ["q4", "t7", "t16", "t7", "Quarterfinal", "2026-07-25", "4 & 3"],
-  ["s1", "t1", "t13", "t1", "Semifinal", "2026-08-09", "2 up"],
-  ["s2", "t4", "t7", "t7", "Semifinal", "2026-08-16", "1 up"],
-  ["final", "t1", "t7", "t7", "Final", "2026-09-13", "2 & 1"],
+const archiveEntries: SeasonEntry[] = source.entries.map((e) => ({
+  teamId: `s1-${e.teamId}`,
+  name: e.name,
+  pod: e.pod.replace(/^Pod /, ""),
+  playerIds: e.players.map((p) => `s1-${p.id}`) as [string, string],
+  playerNames: e.players.map((p) => p.name) as [string, string],
+}));
+export const players = [
+  ...samplePlayers,
+  ...archiveEntries.flatMap((e) =>
+    e.playerIds.map((id, i) => ({ id, name: e.playerNames[i] })),
+  ),
 ];
-const archivedPlayoffs: HistoricalGame[] = playoffFixtures.map(
-  ([id, a, b, winner, round, date, score]) => ({
+const bracketId = (m: (typeof source.matches)[number]) =>
+  m.stage === "CHAMPIONSHIP"
+    ? "final"
+    : m.stage === "SEMIFINAL"
+      ? `s${m.round.match(/\d+/)![0]}`
+      : m.stage === "QUARTERFINAL"
+        ? `q${m.round.match(/\d+/)![0]}`
+        : m.id;
+const archiveGames: HistoricalGame[] = source.matches.map((m) => {
+  const a = `s1-${m.a}`,
+    b = `s1-${m.b}`;
+  const summaries = [m.a, m.b].map(
+    (id) => m.snapshot.summaries.find((s) => s.teamId === id)!,
+  );
+  const regular = m.stage === "POD_PLAY";
+  const entry = archiveEntries.find((e) => e.teamId === a)!;
+  const participants = [m.a, m.b].flatMap((id) =>
+    source.entries
+      .find((e) => e.teamId === id)!
+      .players.map((p) => m.snapshot.players?.find((s) => s.id === p.id)),
+  );
+  const rows = (key: "gross" | "strokes") =>
+    participants.map((p) =>
+      Array.from(
+        { length: 18 },
+        (_, h) => p?.[key]?.[String(h + 1) as keyof typeof p.gross],
+      ),
+    );
+  const gross = rows("gross"),
+    strokes = rows("strokes");
+  // Summary-only playoffs do not contain player scorecards; never synthesize one.
+  const hasCard =
+    regular &&
+    gross.every((row) =>
+      row.every((n) => Number.isInteger(n) && Number(n) > 0),
+    ) &&
+    strokes.every((row) => row.every((n) => Number.isInteger(n)));
+  const card: Match | null = hasCard
+    ? {
+        id: m.id,
+        a,
+        b,
+        pod: entry.pod,
+        status: "official",
+        course: m.course ?? "Course not recorded",
+        tees: [...new Set(participants.map((p) => p!.tees))].join(" / "),
+        date: m.date ?? "",
+        lockedAt: null,
+        scores: gross as number[][],
+        strokes: strokes as number[][],
+        evidence: true,
+        note: "",
+        pars: m.snapshot.holeMeta.map((h) => h.par),
+        strokeIndexes: m.snapshot.holeMeta.map((h) => h.strokeIndex),
+      }
+    : null;
+  const lead = Math.abs(summaries[0].holesWon - summaries[1].holesWon);
+  const remaining = Math.max(0, 18 - m.snapshot.playedHoles);
+  const id = bracketId(m);
+  return {
     id,
+    sourceId: m.id,
     year: 2026,
     a,
     b,
-    winner,
-    round,
-    date: `${date}T09:00:00-05:00`,
-    score,
-    phase: "playoffs",
-    course: "The Glen Club",
-    points: null,
-    card: null,
+    phase: regular ? "regular" : "playoffs",
+    round:
+      m.stage === "CHAMPIONSHIP"
+        ? "Final"
+        : m.stage === "QUARTERFINAL"
+          ? "Quarterfinal"
+          : m.stage === "SEMIFINAL"
+            ? "Semifinal"
+            : m.round,
+    date: m.date ?? "",
+    course: m.course ?? "Course not recorded",
+    winner: m.winner ? `s1-${m.winner}` : null,
+    score: regular
+      ? `${summaries[0].totalPoints} – ${summaries[1].totalPoints}`
+      : lead === 0
+        ? "Won in tiebreak"
+        : remaining
+          ? `${lead} & ${remaining}`
+          : `${lead} up`,
+    points: regular
+      ? [summaries[0].totalPoints, summaries[1].totalPoints]
+      : null,
+    holesWon: [summaries[0].holesWon, summaries[1].holesWon],
+    netTotals: [
+      summaries[0].betterBallNetTotal,
+      summaries[1].betterBallNetTotal,
+    ],
+    card,
     href: `/history/2026/matches/${id}`,
-  }),
-);
-export const archive2026: SeasonRecord = {
+    next: m.next
+      ? bracketId(source.matches.find((x) => x.id === m.next)!)
+      : null,
+    slot: m.slot,
+    teamNames: [entry.name, archiveEntries.find((e) => e.teamId === b)!.name],
+  };
+});
+const final = archiveGames.find((g) => g.round === "Final")!;
+const archiveBase: SeasonRecord = {
   year: 2026,
   number: 1,
-  complete: true,
-  entries: entries.map((e) => ({
-    ...e,
-    playerIds: [...e.playerIds],
-    playerNames: [...e.playerNames],
-  })),
-  regularCards: archivedCards,
-  games: [...regularGames(archivedCards, 2026), ...archivedPlayoffs],
-  champion: "t7",
-  runnerUp: "t1",
-  prizePool: 3600,
+  complete: Boolean(final.winner),
+  sample: false,
+  entries: archiveEntries,
+  regularCards: archiveGames.flatMap((g) => (g.card ? [g.card] : [])),
+  games: archiveGames,
+  champion: final.winner,
+  runnerUp: final.winner === final.a ? final.b : final.a,
+  prizePool: null,
+  awards: [],
+};
+const archiveStandings = seasonStandings(archiveBase);
+export const archive2026: SeasonRecord = {
+  ...archiveBase,
   awards: [
-    ...["t1", "t4", "t7", "t10", "t13", "t16"].map(
-      (teamId, i): Award => ({
-        teamId,
-        kind: "pod",
-        label: `Pod ${"ABCDEF"[i]} winner`,
-        amount: 200,
-      }),
-    ),
-    { teamId: "t7", kind: "champion", label: "Champion", amount: 1600 },
-    { teamId: "t1", kind: "runner-up", label: "Runner-up", amount: 800 },
+    {
+      teamId: archiveBase.champion!,
+      kind: "champion",
+      label: "Champion",
+      amount: null,
+    },
+    {
+      teamId: archiveBase.runnerUp!,
+      kind: "runner-up",
+      label: "Runner-up",
+      amount: null,
+    },
+    ...[...new Set(archiveBase.entries.map((e) => e.pod))].flatMap((pod) => {
+      const rows = archiveStandings.filter(
+        (r) => archiveBase.entries.find((e) => e.teamId === r.id)?.pod === pod,
+      );
+      const [first, second] = rows;
+      const tied =
+        first.won + first.tied / 2 === second.won + second.tied / 2 &&
+        first.points === second.points &&
+        first.holesWon === second.holesWon &&
+        first.netTotal === second.netTotal;
+      return tied
+        ? []
+        : [
+            {
+              teamId: first.id,
+              kind: "pod" as const,
+              label: `Pod ${pod} winner`,
+              amount: null,
+            },
+          ];
+    }),
   ],
 };
 export function seasons(current: Match[]): SeasonRecord[] {
@@ -145,6 +257,7 @@ export function seasons(current: Match[]): SeasonRecord[] {
     {
       year: 2027,
       number: 2,
+      sample: true,
       complete: false,
       entries,
       games: regularGames(current, 2027),
@@ -181,9 +294,11 @@ export type CareerRow = {
   lost: number;
   tied: number;
   titles: number;
-  earned: number;
+  earned: number | null;
   points: number;
   regularPlayed: number;
+  holesWon: number;
+  netTotal: number;
 };
 export function careerRows(
   records: SeasonRecord[],
@@ -210,14 +325,20 @@ export function careerRows(
           earned: 0,
           points: 0,
           regularPlayed: 0,
+          holesWon: 0,
+          netTotal: 0,
         };
         row.seasons++;
         row.titles += s.complete && s.champion === entry.teamId ? 1 : 0;
         // Money belongs to the partnership; never infer an individual split.
         if (kind === "teams")
-          row.earned += s.awards
-            .filter((a) => a.teamId === entry.teamId)
-            .reduce((n, a) => n + a.amount, 0);
+          row.earned =
+            row.earned === null || s.prizePool === null
+              ? null
+              : row.earned +
+                s.awards
+                  .filter((a) => a.teamId === entry.teamId)
+                  .reduce((n, a) => n + (a.amount ?? 0), 0);
         for (const g of s.games.filter(
           (g) =>
             (g.a === entry.teamId || g.b === entry.teamId) &&
@@ -230,6 +351,17 @@ export function careerRows(
           if (g.points) {
             row.points += g.points[g.a === entry.teamId ? 0 : 1];
             row.regularPlayed++;
+            const side = g.a === entry.teamId ? 0 : 1;
+            const computed = g.card ? result(g.card) : null;
+            row.holesWon +=
+              g.holesWon?.[side] ??
+              computed?.holes.filter((h) => h === (side === 0 ? "a" : "b"))
+                .length ??
+              0;
+            row.netTotal +=
+              g.netTotals?.[side] ??
+              (side === 0 ? computed?.aNet : computed?.bNet) ??
+              0;
           }
         }
         rows.set(id, row);
@@ -293,5 +425,16 @@ export function headToHead(records: SeasonRecord[], teamId: string) {
     }
   return [...rows.values()].sort(
     (a, b) => b.games.length - a.games.length || a.name.localeCompare(b.name),
+  );
+}
+
+export function seasonStandings(s: SeasonRecord) {
+  return careerRows([s], "teams", "regular").sort(
+    (a, b) =>
+      b.won + b.tied / 2 - (a.won + a.tied / 2) ||
+      b.points - a.points ||
+      b.holesWon - a.holesWon ||
+      a.netTotal - b.netTotal ||
+      a.name.localeCompare(b.name),
   );
 }

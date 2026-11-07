@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useState,
+  useRef,
   useCallback,
   type ReactNode,
 } from "react";
@@ -27,7 +28,9 @@ export function PreviewProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
   const [notice, setNotice] = useState("");
   const [drafts, setDrafts] = useState<Record<string, ReviewDraft>>({});
+  const draftsEdited = useRef(false);
   const setDraft = useCallback((id: string, draft: ReviewDraft | null) => {
+    draftsEdited.current = true;
     setDrafts((current) => {
       const next = { ...current };
       if (draft) next[id] = draft;
@@ -102,7 +105,7 @@ export function PreviewProvider({ children }: { children: ReactNode }) {
     setReady(true);
   }, []);
   useEffect(() => {
-    if (!ready) return;
+    if (!ready || !draftsEdited.current) return;
     try {
       localStorage.setItem(DRAFT_KEY, JSON.stringify(drafts));
     } catch {
@@ -127,6 +130,7 @@ export function PreviewProvider({ children }: { children: ReactNode }) {
   }, []);
   const reset = () => {
     save(initial, "Sample season restored.");
+    draftsEdited.current = true;
     setDrafts({});
   };
   return (

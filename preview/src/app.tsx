@@ -73,8 +73,10 @@ function App() {
       </a>
       <div className="preview-strip">
         <span>
-          <span className="preview-dot" /> Preview · Sample data{" "}
-          <span className="strip-detail">· Fictional data · June 24, 2027</span>
+          <span className="preview-dot" /> Season 2 preview{" "}
+          <span className="strip-detail">
+            · Sample current season · Official 2026 archive
+          </span>
         </span>
         <div>
           <button
@@ -329,7 +331,7 @@ function Home() {
           target="_blank"
           rel="noreferrer"
         >
-          <Icon name="judge" size={20} /> AI rules judge
+          <Icon name="judge" size={20} /> AI rules helper
         </a>
       </div>
       <nav className="feed-shortcuts" aria-label="Season shortcuts">
@@ -673,10 +675,10 @@ function Bracket() {
         <div className="notice">
           <Icon name="image" />
           <div>
-            <strong>Completed 2026 sample archive</strong>
+            <strong>Official 2026 archive</strong>
             <p>
-              This is the existing fictional archive, separate from the active
-              season. No current-season champion is implied.
+              Preserved Season 1 results, separate from the sample current
+              season.
             </p>
           </div>
         </div>
@@ -827,7 +829,7 @@ function Rules() {
             target="_blank"
             rel="noreferrer"
           >
-            <Icon name="judge" size={20} /> AI rules judge
+            <Icon name="judge" size={20} /> AI rules helper
           </a>
         }
       />

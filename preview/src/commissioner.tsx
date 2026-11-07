@@ -47,11 +47,13 @@ export function Commissioner() {
               Make graphic
             </Link>
           )}
-          {(score || store.drafts[m.id]) && (
-            <Link className="text-link" href={`/review?match=${m.id}`}>
-              {store.drafts[m.id] ? "Resume draft" : "Correct result"}
-            </Link>
-          )}
+          <Link className="text-link" href={`/review?match=${m.id}`}>
+            {store.drafts[m.id]
+              ? "Resume draft"
+              : score
+                ? "Correct result"
+                : "Enter result"}
+          </Link>
         </div>
       </li>
     );

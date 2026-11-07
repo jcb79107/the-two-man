@@ -39,7 +39,7 @@ describe("connected bracket path", () => {
     expect(nodes.find((n) => n.id === "final")?.winner).toBe(
       archive2026.champion,
     );
-    expect(nodes.find((n) => n.id === "q2")?.winner).toBe("t13");
+    expect(nodes.find((n) => n.id === "q2")?.winner).toBe("s1-team-02");
     expect(archive2026).toEqual(before);
   });
   it("does not invent a result when a downstream record contradicts its feeder winners", () => {
