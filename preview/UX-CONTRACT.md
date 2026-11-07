@@ -64,3 +64,7 @@ Instagram graphics is the second tab. Result, standings and bracket templates ge
 ## November 7 archive and audit update
 
 The user authorized importing public Season 1 results, superseding the earlier fictional-history-only restriction. Season 2 and commissioner entry remain a sample sandbox. The official archive is an allowlisted static snapshot, separate from browser storage; all-time records exclude sample seasons. Unknown dates, playoff cards and award amounts are shown honestly. See docs/SEASON-HISTORY.md for provenance and release limits. The AI rules helper never claims certification or assumes a local rule has been adopted.
+
+## Browser feedback — November 7
+
+The homepage omits the teams/pods/playoff-places sentence. The AI rules judge is available in the header and existing rules areas, using a sparkle icon; its prompt still identifies it as AI, not an official ruling. Public footer and More navigation omit commissioner access. The demo remains reachable directly at `/review`; this is unlisted, not authenticated or secret. Production requires authenticated commissioner access even if its URL is not advertised.

@@ -4330,10 +4330,6 @@ main :where(a, button, input, select, textarea, summary) {
   margin: 12px 0 16px;
   overflow-wrap: break-word;
 }
-.clubhouse-description {
-  font-size: 18px;
-  color: var(--muted);
-}
 .clubhouse-mark {
   flex: 0 0 240px;
 }
@@ -4485,9 +4481,6 @@ main :where(a, button, input, select, textarea, summary) {
   .clubhouse-heading h1 {
     font-size: 52px;
   }
-  .clubhouse-description {
-    font-size: 16px;
-  }
 }
 @media (max-width: 600px) {
   .clubhouse-heading {
@@ -4518,5 +4511,31 @@ main :where(a, button, input, select, textarea, summary) {
   }
   .clubhouse-results .activity-timeline li {
     grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.header-ai {
+  white-space: nowrap;
+  gap: 8px;
+}
+@media (max-width: 1200px) {
+  .header-instagram {
+    display: none;
+  }
+  .desktop-nav {
+    gap: 16px;
+  }
+}
+@media (max-width: 600px) {
+  .header-end .header-rules,
+  .header-ai span {
+    display: none;
+  }
+  .header-end .header-ai {
+    width: 44px;
+    padding: 10px;
+  }
+  .header-end .header-ai svg {
+    width: 18px;
   }
 }

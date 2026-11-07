@@ -151,11 +151,21 @@ function App() {
           </Link>
         </nav>
         <div className="header-end">
-          <Link className="button small outline" href="/rules">
+          <Link className="button small outline header-rules" href="/rules">
             Rules
           </Link>
           <a
-            className="text-link"
+            className="button small outline header-ai"
+            href={RULES_JUDGE_URL}
+            target="_blank"
+            rel="noreferrer"
+            aria-label="AI rules judge (opens in a new tab)"
+          >
+            <Icon name="ai" size={18} />
+            <span>AI rules judge</span>
+          </a>
+          <a
+            className="text-link header-instagram"
             href="https://www.instagram.com/twomantournament/"
             target="_blank"
             rel="noreferrer"
@@ -187,7 +197,6 @@ function App() {
             ["/champions", "Champions"],
             ["/earnings", "The purse"],
             ["/rules", "Format & rules"],
-            ["/review", "Commissioner demo"],
           ].map(([href, label]) => (
             <Link key={href} href={href} onClick={() => setMenu(false)}>
               {label}
@@ -283,7 +292,6 @@ function App() {
           >
             <Icon name="instagram" size={18} /> Instagram
           </a>
-          <Link href="/review">Commissioner demo</Link>
         </nav>
       </footer>
       <nav className="mobile-nav" aria-label="Mobile navigation">
@@ -326,9 +334,6 @@ function Home() {
             Season 02 / {season.year} / Sample season
           </p>
           <h1>The Two-Man</h1>
-          <p className="clubhouse-description">
-            {teams.length} teams. {pods.length} pods. Eight playoff places.
-          </p>
         </div>
         <div className="clubhouse-mark" aria-hidden="true">
           <Mark />
@@ -476,7 +481,7 @@ function Home() {
               target="_blank"
               rel="noreferrer"
             >
-              <Icon name="judge" size={18} /> AI rules helper
+              <Icon name="ai" size={18} /> AI rules judge
             </a>
           </section>
         </aside>
@@ -912,7 +917,7 @@ function Rules() {
             target="_blank"
             rel="noreferrer"
           >
-            <Icon name="judge" size={20} /> AI rules helper
+            <Icon name="ai" size={20} /> AI rules judge
           </a>
         }
       />

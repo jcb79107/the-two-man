@@ -12,9 +12,9 @@ export function Icon({ name, size = 18 }: { name: string; size?: number }) {
         <circle cx="17.5" cy="6.5" r=".75" fill="currentColor" stroke="none" />
       </>
     ),
-    judge: (
+    ai: (
       <>
-        <path d="m8 3 7 7-4 4-7-7 4-4Zm5 9 7 7M3 20h11M5 17h7v3" />
+        <path d="m12 3 2.3 6.7L21 12l-6.7 2.3L12 21l-2.3-6.7L3 12l6.7-2.3L12 3ZM20 2v4m-2-2h4" />
       </>
     ),
     sort: <path d="m8 4-3 3m3-3 3 3M8 4v16m8 0-3-3m3 3 3-3m-3 3V4" />,
