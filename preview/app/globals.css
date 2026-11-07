@@ -4567,3 +4567,75 @@ main :where(a, button, input, select, textarea, summary) {
     padding: 0;
   }
 }
+
+/* Keep the commissioner’s graphic and download controls together. */
+.commissioner-main .page-heading {
+  padding: 12px 0 16px;
+  margin-bottom: 12px;
+}
+.commissioner-main .page-heading h1 {
+  font-size: 36px;
+}
+.commissioner-main .fine-note {
+  margin: 8px 0;
+  border: 0;
+  padding: 0;
+}
+.commissioner-main .tabs {
+  margin-bottom: 20px;
+}
+.commissioner-main .graphics-workspace {
+  grid-template-columns: minmax(230px, 1fr) minmax(280px, 520px);
+  gap: 32px;
+}
+.commissioner-main .graphics-controls {
+  gap: 16px;
+}
+.commissioner-main .graphic-preview {
+  padding: 0;
+  border: 0;
+}
+@media (max-width: 600px) {
+  .commissioner-main .page-heading h1 {
+    font-size: 30px;
+  }
+  .commissioner-main .graphics-workspace {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 12px;
+  }
+  .commissioner-main .graphics-controls {
+    display: contents;
+  }
+  .commissioner-main .graphics-controls label:first-child {
+    order: 0;
+    grid-column: 1;
+  }
+  .commissioner-main .graphics-controls label:nth-child(2) {
+    order: -1;
+    grid-column: 1 / -1;
+  }
+  .commissioner-main .graphics-controls select {
+    width: 100%;
+  }
+  .commissioner-main .graphics-controls > .button {
+    order: 0;
+    grid-column: 2;
+    align-self: end;
+    margin: 0;
+    width: 100%;
+  }
+  .commissioner-main .graphic-preview {
+    order: 1;
+    grid-column: 1 / -1;
+    width: min(100%, 260px);
+    justify-self: center;
+  }
+  .commissioner-main .graphics-controls > a:not(.button),
+  .commissioner-main .graphics-controls > p,
+  .commissioner-main .graphics-controls > div {
+    order: 2;
+    grid-column: 1 / -1;
+  }
+}

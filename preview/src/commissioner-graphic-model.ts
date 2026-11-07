@@ -1,7 +1,9 @@
-import { type Match, nameOf } from "./data";
+import { type Match, nameOf, teams, pars } from "./data";
 import { qualified, result, standings } from "./domain";
 import { bracketMatches } from "./bracket-model";
-export type GraphicKind = "result" | "standings" | "bracket";
+import { publication } from "./publication";
+import type { HistoricalGame } from "./history-data";
+export type GraphicKind = "result" | "scorecard" | "standings" | "bracket";
 const escape = (s: string) =>
   s.replace(
     /[&<>"']/g,
@@ -18,6 +20,8 @@ export function graphicSvg(
   matches: Match[],
   kind: GraphicKind,
   matchId: string,
+  games: HistoricalGame[] = publication.games,
+  seedIds: string[] = publication.seeds,
 ) {
   const text = (
     s: string,
@@ -31,7 +35,80 @@ export function graphicSvg(
   const line = (y: number) => `<path d="M64 ${y}H1016" stroke="#c5cec2"/>`;
   let body = "";
   let subtitle = "";
-  if (kind === "result") {
+  const playoff = games.find((g) => g.id === matchId);
+  if (kind === "result" && playoff) {
+    subtitle = playoff.round;
+    body = `<rect x="0" y="360" width="1080" height="600" fill="#073e2f"/>`;
+    body += text(nameOf(playoff.winner!), 64, 465, 52, "#f6f4eb", 700);
+    body += text(playoff.score, 64, 650, 130, "#dce8b3", 700);
+    body += text(
+      `defeated ${nameOf(playoff.winner === playoff.a ? playoff.b : playoff.a)}`,
+      64,
+      760,
+      36,
+      "#f6f4eb",
+    );
+    body += text(
+      playoff.next ? "ADVANCES" : "CHAMPIONS",
+      64,
+      870,
+      48,
+      "#f6f4eb",
+      700,
+    );
+    body += text(playoff.course.slice(0, 45), 64, 1060, 28);
+    body += text(playoff.date, 64, 1110, 28);
+  } else if (kind === "scorecard") {
+    const m = matches.find((m) => m.id === matchId && m.status === "official");
+    if (!m)
+      throw new Error(
+        "A full published regular-season card is required. Playoffs use a result graphic.",
+      );
+    const r = result(m);
+    subtitle = `Pod ${m.pod} · ${nameOf(m.a)} vs ${nameOf(m.b)}`;
+    const names = [
+      ...teams.find((t) => t.id === m.a)!.names,
+      ...teams.find((t) => t.id === m.b)!.names,
+    ];
+    body += text(
+      names.map((n, i) => `P${i + 1}: ${n}`).join("    "),
+      64,
+      378,
+      24,
+    );
+    body += text(
+      "Gross scores · • = one stroke · A/B = team best net",
+      64,
+      418,
+      24,
+    );
+    const xs = [64, 145, 250, 360, 470, 580, 760, 925];
+    ["Hole", "Par", "P1", "P2", "P3", "P4", "A", "B"].forEach(
+      (v, i) => (body += text(v, xs[i], 468, 24, "#073e2f", 700)),
+    );
+    for (let h = 0; h < 18; h++) {
+      const y = 508 + h * 31;
+      const cells = [
+        String(h + 1),
+        String((m.pars ?? pars)[h]),
+        ...m.scores.map((row, p) => `${row[h]}${m.strokes[p][h] ? "•" : ""}`),
+        String(r.a[h]),
+        String(r.b[h]),
+      ];
+      cells.forEach((v, i) => (body += text(v, xs[i], y, 24)));
+      body += line(y + 10);
+    }
+    body += text(
+      `Hole points: ${r.aPoints} – ${r.bPoints}`,
+      64,
+      1120,
+      34,
+      "#073e2f",
+      700,
+    );
+    body += text(m.course.slice(0, 45), 64, 1170, 24);
+    body += text(m.date.slice(0, 10), 64, 1208, 22);
+  } else if (kind === "result") {
     const m = matches.find((m) => m.id === matchId && m.status === "official");
     if (!m) throw new Error("Choose a published result to make a graphic.");
     const r = result(m);
@@ -62,7 +139,9 @@ export function graphicSvg(
         day: "numeric",
         year: "numeric",
         timeZone: "America/Chicago",
-      }).format(new Date(m.date)),
+      }).format(
+        new Date(m.date.length === 10 ? `${m.date}T12:00:00Z` : m.date),
+      ),
       64,
       1172,
       26,
@@ -85,10 +164,14 @@ export function graphicSvg(
     });
   } else {
     const seeds = qualified(matches);
-    subtitle = seeds.length
-      ? "Confirmed field · Playoffs"
-      : "Seeds pending · Playoffs";
-    const nodes = bracketMatches(seeds.map((r) => r.team.id));
+    subtitle =
+      seedIds.length || seeds.length
+        ? "Confirmed field · Playoffs"
+        : "Seeds pending · Playoffs";
+    const nodes = bracketMatches(
+      seedIds.length ? seedIds : seeds.map((r) => r.team.id),
+      games,
+    );
     const positions = [
       [64, 400],
       [64, 600],
@@ -113,9 +196,16 @@ export function graphicSvg(
         `<rect x="${x}" y="${y}" width="280" height="130" fill="#e8ede4" stroke="#c5cec2"/>` +
         text(n.label, x + 16, y + 28, 20, "#56665e", 600);
       n.slots.forEach((s, k) => {
-        body += text(s.label, x + 16, y + 68 + k * 38, 21, "#182d26", 600);
+        body += text(
+          `${s.label}${s.id && s.id === n.winner ? " ✓" : ""}`,
+          x + 16,
+          y + 68 + k * 38,
+          20,
+          "#182d26",
+          600,
+        );
       });
     });
   }
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1350" viewBox="0 0 1080 1350"><rect width="1080" height="1350" fill="#f6f4eb"/><g font-family="Arial, Helvetica, sans-serif">${text("THE TWO-MAN", 64, 108, 52, "#073e2f", 900)}${text("SEASON 02 / 2027", 64, 160, 24)}${line(202)}${text(kind === "result" ? "MATCH RESULT" : kind === "standings" ? "STANDINGS" : "THE BRACKET", 64, 282, 64, "#073e2f", 900)}${text(subtitle, 64, 322, 26)}${body}${line(1246)}${text("THE TWO-MAN", 64, 1300, 26, "#073e2f", 700)}${text("PREVIEW · SAMPLE DATA", 710, 1300, 22, "#56665e")}</g></svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1350" viewBox="0 0 1080 1350"><rect width="1080" height="1350" fill="#f6f4eb"/><g font-family="Arial, Helvetica, sans-serif">${text("THE TWO-MAN", 64, 108, 52, "#073e2f", 900)}${text("SEASON 02 / 2027", 64, 160, 24)}${line(202)}${text(kind === "result" ? "MATCH RESULT" : kind === "scorecard" ? "SCORECARD" : kind === "standings" ? "STANDINGS" : "THE BRACKET", 64, 282, 64, "#073e2f", 900)}${text(subtitle, 64, 322, 26)}${body}${line(1246)}${text("THE TWO-MAN", 64, 1300, 26, "#073e2f", 700)}${text("PREVIEW · SAMPLE DATA", 710, 1300, 22, "#56665e")}</g></svg>`;
 }

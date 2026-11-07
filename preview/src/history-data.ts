@@ -1,3 +1,4 @@
+import { publication } from "./publication";
 import source from "./season1-public.json";
 import { teams, season, type Match } from "./data";
 import { podWinner, result } from "./domain";
@@ -253,31 +254,50 @@ export const archive2026: SeasonRecord = {
   ],
 };
 export function seasons(current: Match[]): SeasonRecord[] {
+  const final = publication.games.find((g) => g.id === "final");
   return [
     {
       year: 2027,
       number: 2,
       sample: true,
-      complete: false,
+      complete: !!final,
       entries,
-      games: regularGames(current, 2027),
+      games: [...regularGames(current, 2027), ...publication.games],
       regularCards: current,
-      champion: null,
-      runnerUp: null,
+      champion: final?.winner ?? null,
+      runnerUp: final ? (final.a === final.winner ? final.b : final.a) : null,
       prizePool: season.prizePool,
-      awards: ["A", "B", "C", "D", "E", "F"].flatMap((pod) => {
-        const teamId = podWinner(current, pod);
-        return teamId
+      awards: [
+        ...(final
           ? [
               {
-                teamId,
-                kind: "pod" as const,
-                label: `Pod ${pod} winner`,
-                amount: season.podAward,
+                teamId: final.winner!,
+                kind: "champion" as const,
+                label: "Champions",
+                amount: season.championAward,
+              },
+              {
+                teamId: final.a === final.winner ? final.b : final.a,
+                kind: "runner-up" as const,
+                label: "Runners-up",
+                amount: season.runnerUpAward,
               },
             ]
-          : [];
-      }),
+          : []),
+        ...["A", "B", "C", "D", "E", "F"].flatMap((pod) => {
+          const teamId = podWinner(current, pod);
+          return teamId
+            ? [
+                {
+                  teamId,
+                  kind: "pod" as const,
+                  label: `Pod ${pod} winner`,
+                  amount: season.podAward,
+                },
+              ]
+            : [];
+        }),
+      ],
     },
     archive2026,
   ];

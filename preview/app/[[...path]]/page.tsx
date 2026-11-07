@@ -27,6 +27,9 @@ export function generateStaticParams() {
     ...archive2026.games.map((g) => ({
       path: ["history", "2026", "matches", g.id],
     })),
+    ...["q1", "q2", "q3", "q4", "s1", "s2", "final"].map((id) => ({
+      path: ["playoffs", id],
+    })),
     ...matches.map((m) => ({ path: ["matches", m.id] })),
   ];
 }

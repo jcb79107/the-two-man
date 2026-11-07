@@ -57,3 +57,5 @@ After a successful build, run `node scripts/package-preview.mjs` to prepare Verc
 ## Season history
 
 Open **History** for season archives, past champions and the all-time record book. Try **2026 → Playoffs → Final → team career → player career**, or filter the record book to **Players / 2026 / Playoffs**. Current-season approval updates career stats, while the official Season 1 archive stays unchanged. [History architecture and acceptance notes](docs/SEASON-HISTORY.md) explain the stable identity model, metric definitions and the work required to import real seasons safely.
+
+Commissioner preview: `/review` opens the graphic desk. Codex result updates use `npm run results -- /path/candidate.json` (validation only), then `--write`, checks and preview deployment. See [Codex result workflow](docs/CODEX-RESULTS.md). This is versioned static preview publication, not an online production write service.

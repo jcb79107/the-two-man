@@ -180,7 +180,7 @@ test("all main journeys render without page errors or document overflow", async 
 });
 
 test("all graphic templates produce downloadable images", async ({ page }) => {
-  for (const graphic of ["result", "standings", "bracket"]) {
+  for (const graphic of ["result", "scorecard", "standings", "bracket"]) {
     await page.goto(`/review?tab=graphics&graphic=${graphic}`);
     await expect(
       page.getByRole("link", { name: "Download PNG" }),
@@ -279,7 +279,7 @@ test("failed publication keeps draft and supports retry without duplicate result
 test("commissioner can enter a pending result directly from the results desk", async ({
   page,
 }) => {
-  await page.goto("/review");
+  await page.goto("/review?tab=results");
   await page
     .getByRole("link", { name: "Enter result", exact: true })
     .first()
@@ -376,4 +376,26 @@ test("clubhouse connects results, pending matches and the official archive", asy
       ).toBe(true);
     }
   }
+});
+
+test("commissioner opens graphics and never substitutes a different requested result", async ({
+  page,
+}) => {
+  await page.goto("/review");
+  await expect(
+    page.getByRole("heading", { name: "Match graphics", exact: true }),
+  ).toBeVisible();
+  await expect(page.getByRole("link", { name: "Download PNG" })).toBeVisible();
+  await page.goto("/review?result=m1");
+  await expect(page.locator("main").getByRole("alert")).toContainText(
+    "no published result",
+  );
+  await expect(page.getByRole("link", { name: "Download PNG" })).toHaveCount(0);
+  await page.getByLabel("Published result").selectOption("m18");
+  await expect(
+    page.getByRole("link", { name: "Download PNG" }),
+  ).toHaveAttribute("download", /mason-banks-vs-palmer-west/);
+  await page.goto("/review?match=m18");
+  await expect(page.getByLabel("Date played")).toHaveAttribute("type", "date");
+  await expect(page.getByLabel("Tee time (CDT)")).toHaveCount(0);
 });

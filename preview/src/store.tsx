@@ -8,10 +8,13 @@ import {
   useCallback,
   type ReactNode,
 } from "react";
-import { matches as initial, type Match } from "./data";
+import { type Match } from "./data";
+import { publication } from "./publication";
+const initial = publication.matches;
 import { validSnapshot } from "./domain";
-const DRAFT_KEY = "two-man-commissioner-drafts-v1";
-const KEY = "two-man-season2-preview-v1";
+const revisionSuffix = publication.revision ? `-r${publication.revision}` : "";
+const DRAFT_KEY = "two-man-commissioner-drafts-v1" + revisionSuffix;
+const KEY = "two-man-season2-preview-v1" + revisionSuffix;
 export type ReviewDraft = { match: Match; note: string };
 type Store = {
   matches: Match[];

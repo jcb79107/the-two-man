@@ -147,6 +147,8 @@ export const dateLabel = (date: string, withTime = false) =>
         timeZone: "America/Chicago",
         month: "short",
         day: "numeric",
-        ...(withTime ? { hour: "numeric", minute: "2-digit" } : {}),
-      }).format(new Date(date))
+        ...(withTime && date.includes("T")
+          ? { hour: "numeric", minute: "2-digit" }
+          : {}),
+      }).format(new Date(date.length === 10 ? `${date}T12:00:00Z` : date))
     : "Date not recorded";

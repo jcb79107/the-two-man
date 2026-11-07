@@ -2,6 +2,8 @@
 import { useEffect, useState } from "react";
 import NextImage from "next/image";
 import { useSearchParams, useRouter } from "next/navigation";
+import Link from "next/link";
+import { publication } from "./publication";
 import { type Match, nameOf } from "./data";
 import { graphicSvg, type GraphicKind } from "./commissioner-graphic-model";
 export function CommissionerGraphics({ matches }: { matches: Match[] }) {
@@ -9,22 +11,28 @@ export function CommissionerGraphics({ matches }: { matches: Match[] }) {
   const router = useRouter();
   const requestedKind = params.get("graphic");
   const kind: GraphicKind =
-    requestedKind === "standings" || requestedKind === "bracket"
+    requestedKind === "standings" ||
+    requestedKind === "bracket" ||
+    requestedKind === "scorecard"
       ? requestedKind
       : "result";
-  const published = matches
-    .filter((m) => m.status === "official")
-    .sort((a, b) => b.date.localeCompare(a.date));
-  const matchId =
-    published.find((m) => m.id === params.get("result"))?.id ??
-    published[0]?.id ??
-    "";
+  const published = [
+    ...matches
+      .filter((m) => m.status === "official")
+      .map((m) => ({ id: m.id, a: m.a, b: m.b, date: m.date, playoff: false })),
+    ...publication.games.map((g) => ({ ...g, playoff: true })),
+  ].sort((a, b) => b.date.localeCompare(a.date));
+  const requestedId = params.get("result");
+  const matchId = requestedId ?? published[0]?.id ?? "";
+  const selected = published.find((m) => m.id === matchId);
+  const needsResult = kind === "result" || kind === "scorecard";
+  const invalid = needsResult && !!requestedId && !selected;
   const [retry, setRetry] = useState(0);
   const [rendered, setRendered] = useState({ key: "", url: "", error: "" });
   const key = JSON.stringify([kind, matchId, matches]);
   const current = rendered.key === key;
   function select(nextKind: GraphicKind, id = matchId) {
-    const query = new URLSearchParams({ tab: "graphics", graphic: nextKind });
+    const query = new URLSearchParams({ graphic: nextKind });
     if (id) query.set("result", id);
     router.replace(`/review?${query}`, { scroll: false });
   }
@@ -80,14 +88,13 @@ export function CommissionerGraphics({ matches }: { matches: Match[] }) {
       cancelled = true;
     };
   }, [key, kind, matchId, matches, retry]);
-  const empty = kind === "result" && !published.length;
+  const empty = needsResult && !published.length;
   return (
     <section
       className="graphics-workspace"
       aria-label="Instagram graphic generator"
     >
       <div className="graphics-controls">
-        <h2>Instagram graphics</h2>
         <label>
           Graphic
           <select
@@ -96,11 +103,12 @@ export function CommissionerGraphics({ matches }: { matches: Match[] }) {
             onChange={(e) => select(e.target.value as GraphicKind)}
           >
             <option value="result">Match result</option>
+            <option value="scorecard">Full scorecard</option>
             <option value="standings">Standings</option>
             <option value="bracket">Bracket</option>
           </select>
         </label>
-        {kind === "result" && published.length > 0 && (
+        {needsResult && published.length > 0 && (
           <label>
             Published result
             <select
@@ -108,38 +116,54 @@ export function CommissionerGraphics({ matches }: { matches: Match[] }) {
               value={matchId}
               onChange={(e) => select(kind, e.target.value)}
             >
+              {invalid && <option value={matchId}>Result unavailable</option>}
               {published.map((m) => (
                 <option key={m.id} value={m.id}>
                   {nameOf(m.a)} vs {nameOf(m.b)}
+                  {m.playoff ? " · Playoffs" : ""}
                 </option>
               ))}
             </select>
           </label>
         )}
-        <p className="field-help">Portrait PNG · 1080 × 1350</p>
-        <p className="field-help">
-          Uses published results. Drafts and calculator scenarios are excluded.
-          Download the image to post on Instagram.
-        </p>
-        {current && rendered.url && (
+        {invalid && (
+          <p role="alert">
+            This match has no published result. Choose a completed match above.
+          </p>
+        )}
+        {selected && needsResult && (
+          <Link
+            className="text-link"
+            href={
+              selected.playoff
+                ? `/playoffs/${selected.id}`
+                : `/matches/${selected.id}`
+            }
+          >
+            View published result →
+          </Link>
+        )}
+        {!invalid && current && rendered.url && (
           <a
             className="button primary"
             href={rendered.url}
-            download={`two-man-${kind}${kind === "result" ? "-" + matchId : ""}.png`}
+            download={`two-man-${kind}${needsResult && selected ? "-" + nameOf(selected.a).replaceAll(" & ", "-").toLowerCase() + "-vs-" + nameOf(selected.b).replaceAll(" & ", "-").toLowerCase() + "-" + selected.date.slice(0, 10) : ""}.png`}
           >
             Download PNG
           </a>
         )}
         <p role="status">
-          {empty
-            ? "Publish a result to make a match graphic. Standings and bracket graphics are available now."
-            : !current
-              ? "Generating preview…"
-              : rendered.url
-                ? "Ready to download."
-                : ""}
+          {invalid
+            ? ""
+            : empty
+              ? "Publish a result to make a match graphic. Standings and bracket graphics are available now."
+              : !current
+                ? "Generating preview…"
+                : rendered.url
+                  ? "Ready to download."
+                  : ""}
         </p>
-        {!empty && current && rendered.error && (
+        {!invalid && !empty && current && rendered.error && (
           <div role="alert">
             <p>{rendered.error}</p>
             <button
@@ -152,21 +176,23 @@ export function CommissionerGraphics({ matches }: { matches: Match[] }) {
         )}
       </div>
       <div className="graphic-preview">
-        {current && rendered.url ? (
+        {!invalid && current && rendered.url ? (
           <NextImage
             unoptimized
             src={rendered.url}
             width={1080}
             height={1350}
-            alt={`${kind === "result" ? "Match result" : kind === "standings" ? "Standings" : "Bracket"} Instagram graphic preview. Sample season data.`}
+            alt={`${kind === "result" ? "Match result" : kind === "scorecard" ? "Scorecard" : kind === "standings" ? "Standings" : "Bracket"} Instagram graphic preview. Sample season data.`}
           />
         ) : (
           <p>
-            {empty
-              ? "No published match to preview."
-              : current && rendered.error
-                ? "Preview unavailable."
-                : "Preparing graphic…"}
+            {invalid
+              ? "No graphic for this match."
+              : empty
+                ? "No published match to preview."
+                : current && rendered.error
+                  ? "Preview unavailable."
+                  : "Preparing graphic…"}
           </p>
         )}
       </div>

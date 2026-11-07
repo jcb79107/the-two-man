@@ -1,4 +1,5 @@
 "use client";
+import { publication } from "./publication";
 import Link from "next/link";
 import { usePathname, useSearchParams, useRouter } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
@@ -200,7 +201,11 @@ function App() {
           ))}
         </nav>
       )}
-      <main id="main" className="main" tabIndex={-1}>
+      <main
+        id="main"
+        className={path === "/review" ? "main commissioner-main" : "main"}
+        tabIndex={-1}
+      >
         {!store.ready ? (
           <div className="loading" role="status">
             Loading your sample season…
@@ -226,6 +231,8 @@ function App() {
           <Standings />
         ) : path === "/matches" ? (
           <Matches />
+        ) : path.startsWith("/playoffs/") ? (
+          <PlayoffDetail id={path.split("/")[2]} />
         ) : path.startsWith("/matches/") ? (
           <MatchDetail id={path.split("/")[2]} />
         ) : path.startsWith("/teams/") ? (
@@ -729,8 +736,12 @@ function Bracket() {
         )
       )}
       <ConnectedBracket
-        seedIds={seeds.map((r) => r.team.id)}
-        games={scenario ? archive2026.games : []}
+        seedIds={
+          publication.seeds.length
+            ? publication.seeds
+            : seeds.map((r) => r.team.id)
+        }
+        games={scenario ? archive2026.games : publication.games}
         baseHref={scenario ? "/bracket?scenario=final" : "/bracket"}
         label={scenario ? "2026 sample archive" : "Current season"}
       />
@@ -741,7 +752,10 @@ function Earnings() {
   const { matches } = usePreview();
   const winners = pods.map((p) => ({ pod: p, team: podWinner(matches, p) }));
   const earnedCount = winners.filter((w) => w.team).length;
-  const earned = earnedCount * season.podAward;
+  const final = publication.games.find((g) => g.id === "final");
+  const earned =
+    earnedCount * season.podAward +
+    (final ? season.championAward + season.runnerUpAward : 0);
   return (
     <div className="earnings-page">
       <PageHeading eyebrow="2027 season" title="Prize money" />
@@ -764,7 +778,7 @@ function Earnings() {
           <dt>Earned so far</dt>
           <dd>
             {money(earned)}
-            <span>Official pod outcomes only</span>
+            <span>Published outcomes only</span>
           </dd>
         </div>
       </dl>
@@ -821,7 +835,7 @@ function Earnings() {
               </dt>
               <dd>
                 {money(season.championAward)}
-                <span>Not yet earned</span>
+                <span>{final ? nameOf(final.winner!) : "Not yet earned"}</span>
               </dd>
             </div>
             <div>
@@ -830,7 +844,11 @@ function Earnings() {
               </dt>
               <dd>
                 {money(season.runnerUpAward)}
-                <span>Not yet earned</span>
+                <span>
+                  {final
+                    ? nameOf(final.a === final.winner ? final.b : final.a)
+                    : "Not yet earned"}
+                </span>
               </dd>
             </div>
             <div>
@@ -916,6 +934,35 @@ function Rules() {
           ))}
         </div>
       </div>
+    </>
+  );
+}
+
+function PlayoffDetail({ id }: { id: string }) {
+  const game = publication.games.find((g) => g.id === id);
+  if (!game)
+    return (
+      <Empty title="Result not published">
+        <Link href="/bracket">View bracket</Link>
+      </Empty>
+    );
+  return (
+    <>
+      <PageHeading
+        eyebrow={game.round}
+        title={`${nameOf(game.winner!)} win`}
+        description={game.score}
+      />
+      <p>
+        {nameOf(game.a)} vs {nameOf(game.b)}
+      </p>
+      <p>
+        {game.course} · {game.date}
+      </p>
+      <p>{game.next ? "Advances to the next round." : "Season 2 champions."}</p>
+      <Link className="text-link" href="/bracket">
+        View bracket <Icon name="arrow" />
+      </Link>
     </>
   );
 }

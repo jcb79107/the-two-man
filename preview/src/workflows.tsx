@@ -89,7 +89,8 @@ export function MatchDetail({ id }: { id: string }) {
         </span>
         <span>
           <Icon name="calendar" size={17} />
-          {dateLabel(m.date, true)} CT
+          {dateLabel(m.date, true)}
+          {m.date.includes("T") ? " CT" : ""}
         </span>
       </div>
       {m.status !== "official" ? (
