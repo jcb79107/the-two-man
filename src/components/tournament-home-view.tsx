@@ -1,6 +1,5 @@
 import { ActivityFeed } from "@/components/activity-feed";
 import { PublicNav } from "@/components/public-nav";
-import { RulesJudgeIcon } from "@/components/rules-judge-icon";
 import { SectionCard } from "@/components/section-card";
 import { TwoManLogo } from "@/components/two-man-logo";
 import { ROUTES } from "@/lib/api/routes";
@@ -27,40 +26,37 @@ export function TournamentHomeView({
     <>
       <PublicNav slug={slug} seasonIsLive={seasonIsLive} />
 
-      <main className="mx-auto flex min-h-screen w-full max-w-[620px] flex-col gap-4 px-4 py-5 pb-24 sm:px-6">
+      <main className="mx-auto flex min-h-screen w-full max-w-[760px] flex-col gap-6 px-4 py-6 pb-24 sm:px-6">
         <div className="grid gap-4">
-          <section className="relative flex min-h-[270px] items-center justify-center overflow-hidden px-4 py-2 text-ink md:min-h-[360px]">
+          <h1 className="sr-only">{tournamentName}</h1>
+          <section className="relative flex min-h-[192px] items-center justify-center overflow-hidden px-4 py-2 text-ink md:min-h-[224px]">
             <div className="relative flex items-center justify-center text-center">
               <TwoManLogo
-                className="h-64 w-64 shrink-0 md:h-80 md:w-80"
-                imageClassName="drop-shadow-[0_18px_34px_rgba(17,32,23,0.2)]"
+                className="h-48 w-48 shrink-0 md:h-56 md:w-56"
                 priority
               />
             </div>
           </section>
 
-          <section className="rounded-[22px] border border-mist bg-white px-4 py-3 shadow-[0_10px_24px_rgba(17,32,23,0.08)] md:px-5 md:py-5">
+          <section className="rounded-2xl border border-mist bg-[#fffcf7] p-4 md:p-5">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-fairway/70">
+              <p className="text-xs font-medium text-[#526057]">
                 Need a ruling?
               </p>
               <a
                 href={RULES_JUDGE_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label="Open the rules judge"
-                className="mt-3 flex w-full items-center justify-between rounded-[22px] bg-pine px-4 py-3 text-left text-white shadow-[0_14px_28px_rgba(17,32,23,0.18)] transition hover:bg-[#103126] md:min-h-20"
+                aria-label="Open the rules judge in a new tab"
+                className="focus-ring mt-2 flex min-h-12 w-full items-center justify-between gap-4 rounded-lg border border-mist bg-white px-4 py-3 text-left text-ink transition-colors hover:bg-[#f4f5f1]"
               >
                 <span className="flex items-center gap-4">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/18 bg-white/10 text-white md:h-12 md:w-12">
-                    <RulesJudgeIcon className="h-5 w-5 md:h-6 md:w-6" />
-                  </span>
                   <span className="block">
-                    <span className="block text-sm font-semibold sm:text-base">Launch rules judge</span>
-                    <span className="mt-0.5 block text-xs text-white/70 sm:text-sm">{RULES_JUDGE_LABEL}</span>
+                    <span className="block text-sm font-semibold sm:text-base">Open rules judge</span>
+                    <span className="mt-0.5 block text-xs text-[#526057] sm:text-sm">{RULES_JUDGE_LABEL}</span>
                   </span>
                 </span>
-                <span className="text-xs font-semibold uppercase tracking-[0.18em] text-white/78 sm:text-sm">Open</span>
+                <span className="shrink-0 text-xs text-[#526057]">New tab <span aria-hidden="true">↗</span></span>
               </a>
             </div>
           </section>

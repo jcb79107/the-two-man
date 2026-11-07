@@ -100,51 +100,6 @@ function getBracketCtaLabel(round: BracketShortcutRound) {
   }
 }
 
-function getFeedEventStyles(type: ActivityFeedEvent["type"]) {
-  switch (type) {
-    case "MATCH_COMPLETED":
-      return {
-        chipClassName:
-          "bg-[linear-gradient(135deg,#143d2d_0%,#1f6b4f_100%)] text-white",
-        timestampClassName: "bg-[rgba(31,107,79,0.12)] text-fairway/90",
-        ctaClassName:
-          "border-fairway/18 bg-[rgba(31,107,79,0.09)] text-fairway hover:bg-[rgba(31,107,79,0.14)]",
-        railClassName: "from-fairway/35 to-transparent"
-      };
-    case "MATCH_IN_PROGRESS":
-      return {
-        chipClassName:
-          "bg-[linear-gradient(135deg,#8f6b00_0%,#d1a01a_100%)] text-white",
-        timestampClassName: "bg-[rgba(217,184,108,0.22)] text-[#916b00]",
-        ctaClassName:
-          "border-[#d7c28d] bg-[rgba(217,184,108,0.18)] text-[#7a5a00] hover:bg-[rgba(217,184,108,0.26)]",
-        railClassName: "from-[#d9b86c]/45 to-transparent"
-      };
-    case "BRACKET_UPDATED":
-    case "SEMIFINAL_LOCKED":
-    case "CHAMPIONSHIP_SET":
-    case "PLAYOFFS_SET":
-      return {
-        chipClassName:
-          "bg-[linear-gradient(135deg,#56408c_0%,#7c5cc4_100%)] text-white",
-        timestampClassName: "bg-[rgba(124,92,196,0.14)] text-[#5d46a0]",
-        ctaClassName:
-          "border-[#cabaf3] bg-[rgba(124,92,196,0.1)] text-[#5d46a0] hover:bg-[rgba(124,92,196,0.16)]",
-        railClassName: "from-[#7c5cc4]/35 to-transparent"
-      };
-    case "MATCH_SCHEDULED":
-    default:
-      return {
-        chipClassName:
-          "bg-[linear-gradient(135deg,#365f7c_0%,#5d95c2_100%)] text-white",
-        timestampClassName: "bg-[rgba(93,149,194,0.12)] text-[#365f7c]",
-        ctaClassName:
-          "border-[#bfd5e7] bg-[rgba(93,149,194,0.1)] text-[#365f7c] hover:bg-[rgba(93,149,194,0.16)]",
-        railClassName: "from-[#5d95c2]/35 to-transparent"
-      };
-  }
-}
-
 export function ActivityFeed({ events, linkForMatch, linkForBracket }: ActivityFeedProps) {
   const visibleEvents = events.reduce<ActivityFeedEvent[]>((items, event) => {
     const previous = items[items.length - 1];
@@ -162,7 +117,7 @@ export function ActivityFeed({ events, linkForMatch, linkForBracket }: ActivityF
   }, []);
   if (events.length === 0) {
     return (
-      <div className="rounded-[26px] border border-dashed border-mist bg-sand px-4 py-6 text-sm leading-6 text-ink/72">
+      <div className="rounded-lg border border-dashed border-mist bg-[#f4f5f1] px-4 py-6 text-sm leading-6 text-ink/72">
         No tournament activity has been published yet. Once scorecards are finalized, match results
         and bracket movement will show up here.
       </div>
@@ -170,7 +125,6 @@ export function ActivityFeed({ events, linkForMatch, linkForBracket }: ActivityF
   }
 
   const renderEvent = (event: ActivityFeedEvent, index: number, isLast: boolean) => {
-    const styles = getFeedEventStyles(event.type);
     const bracketShortcutRound = getMatchBracketShortcutRound(event) ?? getBracketShortcutRound(event.type);
     const bracketHref =
       bracketShortcutRound && linkForBracket ? linkForBracket(bracketShortcutRound) : null;
@@ -178,12 +132,12 @@ export function ActivityFeed({ events, linkForMatch, linkForBracket }: ActivityF
     return (
       <div
         key={event.id}
-        className="grid grid-cols-[auto_1fr] gap-3 border-b border-mist/75 px-3 py-3.5 last:border-b-0 sm:px-4"
+        className="grid grid-cols-[auto_1fr] gap-3 border-b border-mist/75 px-3 py-4 last:border-b-0 sm:px-4"
       >
         <div className="flex flex-col items-center">
-          <span className={`mt-1 h-2.5 w-2.5 rounded-full ${getFeedEventAccent(event.type)}`} />
+          <span className={`mt-1 h-2 w-2 rounded-full ${getFeedEventAccent(event.type)}`} />
           {!isLast ? (
-            <span className={`mt-2 h-full min-h-10 w-px bg-gradient-to-b ${styles.railClassName}`} />
+            <span className="mt-2 h-full min-h-10 w-px bg-mist" />
           ) : null}
         </div>
         <article className="min-w-0">
@@ -191,11 +145,11 @@ export function ActivityFeed({ events, linkForMatch, linkForBracket }: ActivityF
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
                 <span
-                  className={`rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] ${styles.timestampClassName}`}
+                  className="text-xs font-medium text-pine"
                 >
                   {getFeedEventLabel(event.type)}
                 </span>
-                <span className="text-[10px] uppercase tracking-[0.16em] text-fairway/58">
+                <span className="text-xs tabular-nums text-[#526057]">
                   {formatDateTimeLabel(event.occurredAt)}
                 </span>
               </div>
@@ -204,25 +158,25 @@ export function ActivityFeed({ events, linkForMatch, linkForBracket }: ActivityF
               </h3>
             </div>
           </div>
-          <p className="mt-1.5 text-sm leading-6 text-ink/70">{event.body}</p>
+          <p className="mt-2 text-sm leading-6 text-[#526057]">{event.body}</p>
           {event.matchId && event.type === "MATCH_COMPLETED" && bracketHref && bracketShortcutRound ? (
             <Link
               href={bracketHref}
-              className={`mt-3 inline-flex rounded-full border px-3 py-1.5 text-xs font-semibold transition ${styles.ctaClassName}`}
+              className="focus-ring mt-2 inline-flex min-h-11 items-center rounded-lg border border-mist px-3 py-2 text-sm font-medium text-pine transition-colors hover:bg-[#eef1ec]"
             >
               {getBracketCtaLabel(bracketShortcutRound)}
             </Link>
           ) : event.matchId && event.type === "MATCH_COMPLETED" ? (
             <Link
               href={linkForMatch(event.matchId)}
-              className={`mt-3 inline-flex rounded-full border px-3 py-1.5 text-xs font-semibold transition ${styles.ctaClassName}`}
+              className="focus-ring mt-2 inline-flex min-h-11 items-center rounded-lg border border-mist px-3 py-2 text-sm font-medium text-pine transition-colors hover:bg-[#eef1ec]"
             >
               {getFeedCtaLabel(event.type)}
             </Link>
           ) : bracketHref && bracketShortcutRound ? (
             <Link
               href={bracketHref}
-              className={`mt-3 inline-flex rounded-full border px-3 py-1.5 text-xs font-semibold transition ${styles.ctaClassName}`}
+              className="focus-ring mt-2 inline-flex min-h-11 items-center rounded-lg border border-mist px-3 py-2 text-sm font-medium text-pine transition-colors hover:bg-[#eef1ec]"
             >
               {getBracketCtaLabel(bracketShortcutRound)}
             </Link>
@@ -233,9 +187,9 @@ export function ActivityFeed({ events, linkForMatch, linkForBracket }: ActivityF
   };
 
   return (
-    <div className="overflow-hidden rounded-[22px] border border-mist bg-white">
+    <div className="overflow-hidden rounded-lg border border-mist bg-white">
       <div className="border-b border-mist/75 bg-white px-3 py-3 sm:px-4">
-        <p className="text-xs font-medium text-ink/62">
+        <p className="text-xs tabular-nums text-[#526057]">
           Showing all {visibleEvents.length} tournament updates
         </p>
       </div>
