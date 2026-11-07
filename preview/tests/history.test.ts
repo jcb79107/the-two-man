@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { matches } from "../src/data";
-import { approveMatch } from "../src/domain";
+import { publishDraft } from "../src/domain";
 import {
   archive2026,
   seasons,
@@ -14,7 +14,7 @@ describe("season archive and career records", () => {
     const before = JSON.stringify(archive2026);
     const edited = structuredClone(matches);
     edited[0].scores[0][0] = 2;
-    seasons(approveMatch(edited, "m1"));
+    seasons(publishDraft(edited, edited[0]));
     expect(JSON.stringify(archive2026)).toBe(before);
     expect(archive2026.regularCards[0].scores).not.toBe(matches[0].scores);
   });
@@ -23,7 +23,7 @@ describe("season archive and career records", () => {
       (r) => r.id === "t1",
     )!;
     const after = careerRows(
-      seasons(approveMatch(matches, "m1")),
+      seasons(publishDraft(matches, matches[0])),
       "teams",
     ).find((r) => r.id === "t1")!;
     expect(after.played).toBe(before.played + 1);

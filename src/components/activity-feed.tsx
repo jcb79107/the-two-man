@@ -124,7 +124,7 @@ export function ActivityFeed({ events, linkForMatch, linkForBracket }: ActivityF
     );
   }
 
-  const renderEvent = (event: ActivityFeedEvent, index: number, isLast: boolean) => {
+  const renderEvent = (event: ActivityFeedEvent, isLast: boolean) => {
     const bracketShortcutRound = getMatchBracketShortcutRound(event) ?? getBracketShortcutRound(event.type);
     const bracketHref =
       bracketShortcutRound && linkForBracket ? linkForBracket(bracketShortcutRound) : null;
@@ -194,7 +194,7 @@ export function ActivityFeed({ events, linkForMatch, linkForBracket }: ActivityF
         </p>
       </div>
 
-      {visibleEvents.map((event, index) => renderEvent(event, index, index === visibleEvents.length - 1))}
+      {visibleEvents.map((event, index) => renderEvent(event, index === visibleEvents.length - 1))}
     </div>
   );
 }
