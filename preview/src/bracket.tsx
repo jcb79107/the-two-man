@@ -159,6 +159,9 @@ export function ConnectedBracket({
       )}
       {round === "all" || round === "overview" ? (
         <>
+          <p className="table-hint">
+            Swipe to follow the bracket, or choose a round above.
+          </p>
           <div
             className={`tournament-scroll${round === "overview" ? " responsive-board" : ""}`}
             role="region"

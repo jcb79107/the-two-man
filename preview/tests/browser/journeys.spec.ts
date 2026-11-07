@@ -53,7 +53,16 @@ test("archive scorecard uses recorded course pars and genuine participants", asy
   await expect(
     page.getByRole("row", { name: /^Par / }).locator("td").first(),
   ).toHaveText(String(game.card!.pars![0]));
+  const scoreScroll = page.getByRole("region", {
+    name: "Hole-by-hole scores, horizontally scrollable",
+  });
+  await scoreScroll.evaluate((element) => {
+    element.scrollLeft = element.scrollWidth;
+  });
   await page.getByRole("button", { name: "Back 9", exact: true }).click();
+  await expect
+    .poll(() => scoreScroll.evaluate((element) => element.scrollLeft))
+    .toBe(0);
   await expect(
     page.getByRole("row", { name: /^Par / }).locator("td").first(),
   ).toHaveText(String(game.card!.pars![9]));
@@ -135,6 +144,9 @@ test("commissioner correction persists a draft and requires review before public
 test("all main journeys render without page errors or document overflow", async ({
   page,
 }) => {
+  if (test.info().project.name === "mobile") {
+    await page.setViewportSize({ width: 320, height: 740 });
+  }
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
   for (const path of [
@@ -152,6 +164,11 @@ test("all main journeys render without page errors or document overflow", async 
   ]) {
     await page.goto(path);
     await expect(page.locator("main h1").first()).toBeVisible();
+    if (test.info().project.name === "mobile") {
+      await expect(
+        page.getByRole("combobox", { name: "Browse season" }),
+      ).toHaveCSS("font-size", "16px");
+    }
     expect(
       await page.evaluate(
         () => document.documentElement.scrollWidth <= window.innerWidth + 1,

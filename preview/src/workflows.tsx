@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { usePreview } from "./store";
 import {
   teams,
@@ -179,6 +179,11 @@ export function Scorecard({
   const cardPars = m.pars ?? pars;
   const cardIndexes = m.strokeIndexes ?? strokeIndex;
   const [nine, setNine] = useState(0);
+  const scroll = useRef<HTMLDivElement>(null);
+  function changeNine(value: number) {
+    setNine(value);
+    if (scroll.current) scroll.current.scrollLeft = 0;
+  }
   const [mode, setMode] = useState<"gross" | "net">("gross");
   const r = result(m);
   const complete = validateCard(m.scores, m.strokes) === null;
@@ -209,10 +214,10 @@ export function Scorecard({
             </button>
           </div>
           <div className="segmented" role="group" aria-label="Scorecard nine">
-            <button aria-pressed={nine === 0} onClick={() => setNine(0)}>
+            <button aria-pressed={nine === 0} onClick={() => changeNine(0)}>
               Front 9
             </button>
-            <button aria-pressed={nine === 1} onClick={() => setNine(1)}>
+            <button aria-pressed={nine === 1} onClick={() => changeNine(1)}>
               Back 9
             </button>
           </div>
@@ -224,7 +229,11 @@ export function Scorecard({
           strokes are valid.
         </p>
       )}
+      <p className="table-hint">
+        Swipe the scorecard for all nine holes and totals.
+      </p>
       <div
+        ref={scroll}
         className="score-scroll"
         role="region"
         aria-label="Hole-by-hole scores, horizontally scrollable"

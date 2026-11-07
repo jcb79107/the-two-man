@@ -210,8 +210,8 @@ function App() {
             <option value="" disabled>
               Browse seasons
             </option>
-            <option value="2027">2027 · Current season</option>
-            <option value="2026">2026 · Season archive</option>
+            <option value="2027">2027 · Season 2</option>
+            <option value="2026">2026 · Season 1</option>
           </select>
         </label>
       </div>
