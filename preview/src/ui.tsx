@@ -198,6 +198,18 @@ export function SectionTitle({
   );
 }
 export function MatchRow({ match: m }: { match: Match }) {
+  if (m.status !== "official")
+    return (
+      <Link className="match-row pending-match" href={`/matches/${m.id}`}>
+        <span className="eyebrow">Pod {m.pod}</span>
+        <span className="pending-pair">
+          <strong>{nameOf(m.a)}</strong>
+          <span>vs</span>
+          <strong>{nameOf(m.b)}</strong>
+        </span>
+        <Icon name="arrow" size={16} />
+      </Link>
+    );
   const r = result(m);
   return (
     <Link className="match-row" href={`/matches/${m.id}`}>

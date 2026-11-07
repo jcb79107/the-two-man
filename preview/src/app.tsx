@@ -311,9 +311,6 @@ function Home() {
     <div className="feed-home">
       <header className="clubhouse-heading">
         <div>
-          <p className="feed-season">
-            Season 02 / {season.year} / Sample season
-          </p>
           <h1>The Two-Man</h1>
         </div>
         <div className="clubhouse-mark" aria-hidden="true">

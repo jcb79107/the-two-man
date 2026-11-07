@@ -74,25 +74,27 @@ export function MatchDetail({ id }: { id: string }) {
           <h2>{nameOf(m.b)}</h2>
         </div>
       </section>
-      <div className="match-location">
-        <span>
-          <Icon name="flag" size={17} />
-          <a
-            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(courseLocations[m.course] ?? m.course)}`}
-            target="_blank"
-            rel="noreferrer"
-            aria-label={`${m.course} on Google Maps (opens in a new tab)`}
-          >
-            {m.course}
-          </a>{" "}
-          · {m.tees}
-        </span>
-        <span>
-          <Icon name="calendar" size={17} />
-          {dateLabel(m.date, true)}
-          {m.date.includes("T") ? " CT" : ""}
-        </span>
-      </div>
+      {m.status === "official" && (
+        <div className="match-location">
+          <span>
+            <Icon name="flag" size={17} />
+            <a
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(courseLocations[m.course] ?? m.course)}`}
+              target="_blank"
+              rel="noreferrer"
+              aria-label={`${m.course} on Google Maps (opens in a new tab)`}
+            >
+              {m.course}
+            </a>{" "}
+            · {m.tees}
+          </span>
+          <span>
+            <Icon name="calendar" size={17} />
+            {dateLabel(m.date, true)}
+            {m.date.includes("T") ? " CT" : ""}
+          </span>
+        </div>
+      )}
       {m.status !== "official" ? (
         <div className="notice">
           <Icon name="clock" />

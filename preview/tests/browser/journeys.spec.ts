@@ -351,7 +351,7 @@ test("clubhouse connects results, pending matches and the official archive", asy
   await expect(page).toHaveURL(/\/matches\/m1$/);
   await page.goto("/");
   await expect(page.locator(".clubhouse-champion")).toHaveCount(0);
-  await page.goto("/matches/m1");
+  await page.goto("/matches/m4");
   await expect(
     page.getByRole("link", { name: /The Glen Club on Google Maps/ }),
   ).toHaveAttribute("href", /google.com\/maps\/search.*2901/);
@@ -398,4 +398,29 @@ test("commissioner opens graphics and never substitutes a different requested re
   await page.goto("/review?match=m18");
   await expect(page.getByLabel("Date played")).toHaveAttribute("type", "date");
   await expect(page.getByLabel("Tee time (CDT)")).toHaveCount(0);
+});
+
+test("pending matches omit unconfirmed details and history links open the archive", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await expect(page.locator(".feed-season")).toHaveCount(0);
+  const pending = page.locator(".clubhouse-fixtures .pending-match");
+  await expect(pending).toHaveCount(3);
+  await expect(pending.first()).toContainText("Pod A");
+  await expect(pending.first()).not.toContainText("The Glen Club");
+  await pending.first().click();
+  await expect(page.locator(".match-location")).toHaveCount(0);
+  await page.goto("/history");
+  await expect(page.locator(".history-season")).toHaveCount(1);
+  await expect(page.locator(".history-season")).toContainText("2026");
+  for (const [name, view] of [
+    ["Match results", "results"],
+    ["Final standings", "standings"],
+    ["Playoff bracket", "playoffs"],
+  ]) {
+    await page.getByRole("link", { name, exact: true }).click();
+    await expect(page).toHaveURL(new RegExp("/history/2026\\?view=" + view));
+    await page.goto("/history");
+  }
 });

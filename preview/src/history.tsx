@@ -62,50 +62,80 @@ export function HistoryHome({ champions = false }: { champions?: boolean }) {
         eyebrow="The Two-Man / League history"
         title={champions ? "Champions" : "Season history"}
       />
-      <ArchiveNav active={champions ? "champions" : "seasons"} />
-      <HistoryDisclosure />
       {champions ? (
-        <div className="champions-roll">
-          {completed.map((s) => (
-            <Champion key={s.year} season={s} />
-          ))}
-        </div>
-      ) : (
         <>
-          <div className="archive-season-list">
-            {records.map((s) => (
-              <Link
-                key={s.year}
-                href={`/history/${s.year}`}
-                className="archive-season-row"
-              >
-                <span className="archive-year">{s.year}</span>
-                <div>
-                  <p className="eyebrow">
-                    Season {String(s.number).padStart(2, "0")} ·{" "}
-                    {s.complete ? "Complete" : "In progress"}
-                  </p>
-                  <h2>
-                    {s.champion ? entryName(s, s.champion) : "Current season"}
-                  </h2>
-                  <p>
-                    {s.champion ? "Champions" : "In progress"} ·{" "}
-                    {s.entries.length} teams · {s.games.length} official matches
-                  </p>
-                </div>
-                <span className="archive-row-cta">
-                  View season <Icon name="arrow" />
-                </span>
-              </Link>
-            ))}
-          </div>
-          <section className="section">
-            <SectionTitle title="Champions" href="/champions" />
-            {completed.slice(0, 1).map((s) => (
+          <ArchiveNav active="champions" />
+          <div className="champions-roll">
+            {completed.map((s) => (
               <Champion key={s.year} season={s} />
             ))}
-          </section>
+          </div>
         </>
+      ) : (
+        <div className="history-library">
+          {completed
+            .filter((s) => !s.sample)
+            .map((s) => {
+              const final = s.games.find((g) => g.round === "Final");
+              return (
+                <article className="history-season" key={s.year}>
+                  <header className="history-season-heading">
+                    <div>
+                      <p className="eyebrow">
+                        Season {s.number} · Official archive
+                      </p>
+                      <h2>{s.year}</h2>
+                    </div>
+                    <p>
+                      {s.entries.length} teams · {s.games.length} matches
+                    </p>
+                  </header>
+                  <div className="history-winner">
+                    <p className="eyebrow">Champions</p>
+                    <h3>
+                      <Link href={`/records/teams/${s.champion}`}>
+                        {entryName(s, s.champion!)}
+                      </Link>
+                    </h3>
+                    {final && (
+                      <p>
+                        Defeated {entryName(s, s.runnerUp!)} · {final.score}
+                      </p>
+                    )}
+                    {final && (
+                      <Link className="text-link" href={final.href}>
+                        View final result <Icon name="arrow" size={16} />
+                      </Link>
+                    )}
+                  </div>
+                  <nav
+                    className="history-season-links"
+                    aria-label={`${s.year} archive`}
+                  >
+                    {(
+                      [
+                        ["results", "Match results"],
+                        ["standings", "Final standings"],
+                        ["playoffs", "Playoff bracket"],
+                      ] as const
+                    ).map(([view, label]) => (
+                      <Link key={view} href={`/history/${s.year}?view=${view}`}>
+                        {label}
+                        <Icon name="arrow" size={18} />
+                      </Link>
+                    ))}
+                  </nav>
+                </article>
+              );
+            })}
+          <Link className="history-records-link" href="/records">
+            <span>
+              <strong>All-time records</strong>
+              <span>Teams, players and head-to-head results</span>
+            </span>
+            <Icon name="arrow" />
+          </Link>
+        </div>
       )}
     </>
   );
