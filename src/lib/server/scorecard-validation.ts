@@ -45,10 +45,9 @@ export function validateSubmittedScoreRows(input: {
 
     seenHoleNumbers.add(holeNumber);
 
-    const submittedPlayerIds = Object.keys(values);
-    const unknownPlayerIds = submittedPlayerIds.filter((playerId) => !allowedPlayerIds.has(playerId));
+    const hasUnknownPlayer = Object.keys(values).some((playerId) => !allowedPlayerIds.has(playerId));
 
-    if (unknownPlayerIds.length > 0) {
+    if (hasUnknownPlayer) {
       throw new Error("Submitted scores included a player who is not part of this match.");
     }
 
@@ -108,11 +107,9 @@ export function validateSubmittedScoreRows(input: {
       throw new Error("Playoff scorecards must be completed in hole order before publishing.");
     }
   } else if (input.action === "publish") {
-    const missingHoleNumbers = input.holeTemplate
-      .map((hole) => hole.holeNumber)
-      .filter((holeNumber) => !seenHoleNumbers.has(holeNumber));
+    const hasMissingHole = input.holeTemplate.some((hole) => !seenHoleNumbers.has(hole.holeNumber));
 
-    if (missingHoleNumbers.length > 0) {
+    if (hasMissingHole) {
       throw new Error("All 18 holes must be submitted before publishing.");
     }
   }

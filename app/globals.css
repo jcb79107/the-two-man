@@ -94,7 +94,8 @@ a {
   }
 
   .focus-ring:focus-visible {
-    box-shadow: 0 0 0 3px rgba(31, 107, 79, 0.18);
+    outline: 2px solid #1f6b4f;
+    outline-offset: 3px;
   }
 
   .skeleton-brand {
@@ -115,5 +116,15 @@ a {
     background-size: 220% 100%;
     animation: skeleton-shimmer 1.7s ease-in-out infinite;
     pointer-events: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .skeleton-brand::after {
+    animation: none;
   }
 }
