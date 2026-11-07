@@ -13,6 +13,12 @@ import {
 import { ResultSummary } from "./result-summary";
 import { result, validateCard } from "./domain";
 import { Icon, Badge, TeamAvatar, Empty } from "./ui";
+const courseLocations: Record<string, string> = {
+  "The Glen Club": "The Glen Club, 2901 West Lake Ave, Glenview, IL 60026",
+  "Harborside International":
+    "Harborside International Golf Center, 11001 S Doty Ave East, Chicago, IL 60628",
+  "Stonewall Orchard": "Stonewall Orchard Golf Club, Grayslake, IL",
+};
 const sum = (ns: number[]) => ns.reduce((a, b) => a + b, 0);
 const players = (m: Match) => [
   ...teams.find((t) => t.id === m.a)!.names,
@@ -71,7 +77,15 @@ export function MatchDetail({ id }: { id: string }) {
       <div className="match-location">
         <span>
           <Icon name="flag" size={17} />
-          {m.course} · {m.tees}
+          <a
+            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(courseLocations[m.course] ?? m.course)}`}
+            target="_blank"
+            rel="noreferrer"
+            aria-label={`${m.course} on Google Maps (opens in a new tab)`}
+          >
+            {m.course}
+          </a>{" "}
+          · {m.tees}
         </span>
         <span>
           <Icon name="calendar" size={17} />
@@ -148,7 +162,9 @@ function StrokeSummary({ match: m }: { match: Match }) {
             <span>
               Holes{" "}
               {m.strokes[i]
-                .map((s, h) => (s ? h + 1 : null))
+                .map((s, h) =>
+                  s ? `${h + 1}${s > 1 ? ` (${s} strokes)` : ""}` : null,
+                )
                 .filter(Boolean)
                 .join(", ")}
             </span>
@@ -317,9 +333,9 @@ export function Scorecard({
                     {m.strokes[p][h] > 0 && (
                       <span
                         className="stroke-dot"
-                        aria-label={`${m.strokes[p][h]} agreed stroke`}
+                        aria-label={`${m.strokes[p][h]} agreed strokes`}
                       >
-                        •
+                        {m.strokes[p][h] === 1 ? "•" : m.strokes[p][h]}
                       </span>
                     )}
                   </td>

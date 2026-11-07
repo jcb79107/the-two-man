@@ -47,7 +47,6 @@ function App() {
   const path = usePathname();
   const store = usePreview();
   const router = useRouter();
-  const archiveYear = path.startsWith("/history/") ? path.split("/")[2] : "";
   const [resetOpen, setResetOpen] = useState(false);
   const [menu, setMenu] = useState(false);
   const menuButton = useRef<HTMLButtonElement>(null);
@@ -74,9 +73,7 @@ function App() {
       <div className="preview-strip">
         <span>
           <span className="preview-dot" /> Season 2 preview{" "}
-          <span className="strip-detail">
-            · Sample current season · Official 2026 archive
-          </span>
+          <span className="strip-detail">· Sample current season</span>
         </span>
         <div>
           <button
@@ -151,11 +148,11 @@ function App() {
           </Link>
         </nav>
         <div className="header-end">
-          <Link className="button small outline header-rules" href="/rules">
-            Rules
+          <Link className="text-link header-rules" href="/rules">
+            <Icon name="book" size={18} /> <span>Rules</span>
           </Link>
           <a
-            className="button small outline header-ai"
+            className="text-link header-ai"
             href={RULES_JUDGE_URL}
             target="_blank"
             rel="noreferrer"
@@ -193,8 +190,6 @@ function App() {
         >
           {[
             ["/history", "Season history"],
-            ["/records", "All-time records"],
-            ["/champions", "Champions"],
             ["/earnings", "The purse"],
             ["/rules", "Format & rules"],
           ].map(([href, label]) => (
@@ -205,25 +200,6 @@ function App() {
           ))}
         </nav>
       )}
-      <div className="season-line">
-        <Link href="/rules">
-          Regular season · 2027
-          <Icon name="arrow" size={14} />
-        </Link>
-        <label className="season-jump">
-          <span className="sr-only">Browse season</span>
-          <select
-            value={archiveYear}
-            onChange={(e) => router.push(`/history/${e.target.value}`)}
-          >
-            <option value="" disabled>
-              Browse seasons
-            </option>
-            <option value="2027">2027 · Season 2</option>
-            <option value="2026">2026 · Season 1</option>
-          </select>
-        </label>
-      </div>
       <main id="main" className="main" tabIndex={-1}>
         {!store.ready ? (
           <div className="loading" role="status">
@@ -282,8 +258,6 @@ function App() {
           THE TWO-MAN
         </Link>
         <nav aria-label="Footer">
-          <Link href="/history">Season history</Link>
-          <Link href="/champions">Champions</Link>
           <Link href="/rules">Format & rules</Link>
           <a
             href="https://www.instagram.com/twomantournament/"
@@ -455,20 +429,6 @@ function Home() {
                 <Icon name="arrow" size={16} />
               </Link>
             )}
-          </section>
-          <section className="clubhouse-history">
-            <p className="feed-season">Season 1 / Official archive</p>
-            <h2>Last year’s champions</h2>
-            <p className="clubhouse-champion">
-              {
-                archive2026.entries.find(
-                  (entry) => entry.teamId === archive2026.champion,
-                )?.name
-              }
-            </p>
-            <Link className="text-link" href="/history/2026">
-              Explore the 2026 season <Icon name="arrow" size={16} />
-            </Link>
           </section>
           <section className="clubhouse-rules">
             <h2>On the course</h2>
@@ -746,19 +706,7 @@ function Bracket() {
   const seeds = qualified(matches);
   return (
     <>
-      <PageHeading
-        eyebrow="The knockout rounds"
-        title="Bracket"
-        action={
-          <Link
-            className="button outline"
-            href={scenario ? "/bracket" : "/history/2026?view=playoffs"}
-          >
-            {scenario ? "Back to current season" : "2026 bracket"}
-            <Icon name="arrow" />
-          </Link>
-        }
-      />
+      <PageHeading eyebrow="The knockout rounds" title="Bracket" />
       {scenario ? (
         <div className="notice">
           <Icon name="image" />
@@ -909,10 +857,10 @@ function Rules() {
       <PageHeading
         eyebrow="The way we play"
         title="Rules"
-        description="Season 2 · Proposals labeled below."
+        description="Season 2 tournament rules. Format to be confirmed."
         action={
           <a
-            className="button outline"
+            className="text-link"
             href={RULES_JUDGE_URL}
             target="_blank"
             rel="noreferrer"
@@ -925,54 +873,44 @@ function Rules() {
         <div className="rules-list">
           {[
             {
-              n: "01",
               title: "Format",
-              tag: "Confirmed direction",
-              body: "Three teams per pod in this sample format. Play both opponents before elimination. Six pod winners and two wild cards move on; expanded field details are still to be decided.",
+              body: "Format TBD. The final field, regular-season structure and playoff qualification will be announced before Season 2 begins.",
             },
             {
-              n: "02",
               title: "Set strokes in GHIN before you tee off",
-              tag: "Confirmed rule",
-              body: "GHIN is the source of truth. Select the course and each player’s tees, using the four-ball match-play setup with a 90% Course Handicap allowance. The lowest player plays off zero; the others receive the difference, allocated by the scorecard handicap row, with a maximum of one stroke per hole. Confirm the strokes together before the first tee shot—even at the tee box.",
+              body: "Every player must have an active GHIN number and an accurate, up-to-date Handicap Index. At least one person in each group must have the GHIN app. Before teeing off, select the correct course and tees for every player and use the four-ball match-play setup with a 90% handicap allowance. Everyone must play the strokes GHIN assigns—no negotiated adjustments. Review the allocation together and save a screenshot for the commissioner.",
             },
             {
-              n: "03",
               title: "Regular season: turn in the full card",
-              tag: "Confirmed workflow",
               body: "Play and record all 18 holes. Turn in gross scores for all four players, with each player’s strokes clearly labeled and the best ball used by each team clearly marked on every hole. Include names, date, course, tees and GHIN evidence. These full cards determine hole points and tiebreakers, including cumulative net better-ball. Text or email the card to the commissioner.",
             },
             {
-              n: "04",
               title: "Playoffs: report the winner and result",
-              tag: "Confirmed workflow",
               body: "Report which team won and the match-play result, such as 2 & 1 or 1 up. No scorecard or hole-by-hole scores are required for the bracket. Playoff matches cannot finish tied; settle the winner on the course and report the final result.",
             },
             {
-              n: "05",
               title: "Scheduling",
-              tag: "Proposed scheduling policy",
-              body: "Optional April early play. May and June for regular-season matches. Contact opponents early. Request any extension before the deadline with a new date both sides accept. Penalties and exception rules are not finalized.",
+              body: "Optional April early play. May and June for regular-season matches. Contact opponents early. Request any extension before the deadline with a new date both sides accept.",
             },
             {
-              n: "06",
               title: "Scoring & seeding",
-              tag: "Sample competition format",
-              body: "Net better-ball on each hole. Win a hole for one point; halve it for half a point each. Regular-season ranking uses match record, hole points, holes won and cumulative net better-ball. Remaining ties need a recorded decision.",
+              body: "Scoring and seeding will be confirmed with the Season 2 format. The current preview demonstrates net better-ball, hole points and standings tiebreakers; these sample calculations do not set the final tournament rules.",
             },
             {
-              n: "07",
               title: "Prize money",
-              tag: "Amounts still to be decided",
               body: "Pod winners, champions and runners-up have their awards displayed. Earned money and paid money are different. Sample amounts shown in this preview are per team and stack.",
             },
+            {
+              title: "If a partner must withdraw",
+              body: "For a medical emergency or another serious reason, contact the commissioner before the next match. With approval, the remaining player may play two separately marked balls on six holes in that match: three on the front nine and three on the back nine, declared to the opponents before tee-off.\n\nPlay each ball independently from tee to hole and count the better net score, using the remaining player’s GHIN-assigned strokes for both. This is not a scramble: do not switch balls or replay a shot. Play one ball on the other 12 holes and on every extra playoff hole. The allowance applies only to the next match; any later participation needs a new commissioner decision.\n\nThis is a tournament-specific emergency exception, not standard four-ball play. Ask the handicap committee whether the modified round is eligible for handicap posting. If a regular-season card is required, report the exception and both scores on the six nominated holes directly to the commissioner.",
+            },
           ].map((r) => (
-            <section key={r.n}>
-              <span className="rule-number">{r.n}</span>
+            <section key={r.title}>
               <div>
-                <p className="eyebrow">{r.tag}</p>
                 <h2>{r.title}</h2>
-                <p>{r.body}</p>
+                {r.body.split("\n\n").map((paragraph) => (
+                  <p key={paragraph}>{paragraph}</p>
+                ))}
               </div>
             </section>
           ))}

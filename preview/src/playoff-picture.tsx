@@ -273,7 +273,6 @@ export function PlayoffPicture({ matches }: { matches: Match[] }) {
                 {nameOf(match.a)} net BB
                 <input
                   type="number"
-                  min="0"
                   max="360"
                   value={aNet}
                   onChange={(e) => {
@@ -286,7 +285,6 @@ export function PlayoffPicture({ matches }: { matches: Match[] }) {
                 {nameOf(match.b)} net BB
                 <input
                   type="number"
-                  min="0"
                   max="360"
                   value={bNet}
                   onChange={(e) => {

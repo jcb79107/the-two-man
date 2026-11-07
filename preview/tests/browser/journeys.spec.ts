@@ -164,11 +164,7 @@ test("all main journeys render without page errors or document overflow", async 
   ]) {
     await page.goto(path);
     await expect(page.locator("main h1").first()).toBeVisible();
-    if (test.info().project.name === "mobile") {
-      await expect(
-        page.getByRole("combobox", { name: "Browse season" }),
-      ).toHaveCSS("font-size", "16px");
-    }
+    await expect(page.locator(".season-line")).toHaveCount(0);
     expect(
       await page.evaluate(
         () => document.documentElement.scrollWidth <= window.innerWidth + 1,
@@ -354,11 +350,14 @@ test("clubhouse connects results, pending matches and the official archive", asy
   await page.locator(".clubhouse-fixtures .match-row").first().click();
   await expect(page).toHaveURL(/\/matches\/m1$/);
   await page.goto("/");
-  await expect(page.locator(".clubhouse-champion")).toHaveText(
-    "Barron & Loewenstein",
-  );
-  await page.getByRole("link", { name: "Explore the 2026 season" }).click();
-  await expect(page).toHaveURL(/\/history\/2026$/);
+  await expect(page.locator(".clubhouse-champion")).toHaveCount(0);
+  await page.goto("/matches/m1");
+  await expect(
+    page.getByRole("link", { name: /The Glen Club on Google Maps/ }),
+  ).toHaveAttribute("href", /google.com\/maps\/search.*2901/);
+  await page.goto("/rules");
+  await expect(page.getByText(/Format TBD/)).toBeVisible();
+  await expect(page.locator(".rule-number")).toHaveCount(0);
   if (test.info().project.name === "desktop") {
     for (const width of [1024, 1280, 1440, 1920]) {
       await page.setViewportSize({ width, height: 900 });

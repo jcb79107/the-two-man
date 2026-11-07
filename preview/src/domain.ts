@@ -19,8 +19,7 @@ export function validateCard(
     strokes.length !== 4 ||
     strokes.some(
       (r) =>
-        r.length !== 18 ||
-        r.some((s) => !Number.isInteger(s) || s < 0 || s > 1),
+        r.length !== 18 || r.some((s) => !Number.isSafeInteger(s) || s < 0),
     )
   )
     return "Check the agreed stroke allocation for each player.";

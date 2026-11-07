@@ -12,6 +12,9 @@ export function Icon({ name, size = 18 }: { name: string; size?: number }) {
         <circle cx="17.5" cy="6.5" r=".75" fill="currentColor" stroke="none" />
       </>
     ),
+    book: (
+      <path d="M12 5v16M3 3h5a4 4 0 0 1 4 2 4 4 0 0 1 4-2h5v16h-5a4 4 0 0 0-4 2 4 4 0 0 0-4-2H3V3Z" />
+    ),
     ai: (
       <>
         <path d="m12 3 2.3 6.7L21 12l-6.7 2.3L12 21l-2.3-6.7L3 12l6.7-2.3L12 3ZM20 2v4m-2-2h4" />
