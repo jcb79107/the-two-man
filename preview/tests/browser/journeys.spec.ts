@@ -330,4 +330,51 @@ test("commissioner can enter a pending result directly from the results desk", a
   await expect(
     page.getByRole("heading", { name: "Scorecard", exact: true }),
   ).toBeVisible();
+  await page.goto("/");
+  await expect(
+    page.getByRole("progressbar", { name: "Regular-season matches completed" }),
+  ).toHaveAttribute("value", "16");
+  await expect(page.locator(".clubhouse-fixtures .match-row")).toHaveCount(2);
+});
+
+test("clubhouse connects results, pending matches and the official archive", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await expect(
+    page.getByRole("heading", { name: "The Two-Man", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("progressbar", { name: "Regular-season matches completed" }),
+  ).toHaveAttribute("value", "15");
+  await expect(page.locator(".activity-timeline > li")).toHaveCount(4);
+  await page.getByRole("button", { name: "Earlier results" }).click();
+  await expect(page.locator(".activity-timeline > li")).toHaveCount(8);
+  await expect(page.locator(".clubhouse-fixtures .match-row")).toHaveCount(3);
+  await page.locator(".clubhouse-fixtures .match-row").first().click();
+  await expect(page).toHaveURL(/\/matches\/m1$/);
+  await page.goto("/");
+  await expect(page.locator(".clubhouse-champion")).toHaveText(
+    "Barron & Loewenstein",
+  );
+  await page.getByRole("link", { name: "Explore the 2026 season" }).click();
+  await expect(page).toHaveURL(/\/history\/2026$/);
+  if (test.info().project.name === "desktop") {
+    for (const width of [1024, 1280, 1440, 1920]) {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto("/standings");
+      await expect(
+        page.getByRole("heading", { name: "Standings", exact: true }),
+      ).toBeVisible();
+      expect(
+        await page
+          .locator(".pods-grid .table-scroll")
+          .evaluateAll((elements) =>
+            elements.every(
+              (element) => element.scrollWidth <= element.clientWidth + 1,
+            ),
+          ),
+      ).toBe(true);
+    }
+  }
 });

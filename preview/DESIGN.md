@@ -75,3 +75,6 @@ The home feed uses a desktop date rail and stacked mobile metadata. Points align
 The purse is a compact ledger with explicit sample amounts and earned/pending states, never a payment claim. Commissioner Results and Instagram graphics are separate tabs. Manual entry is collapsed until requested; draft, review and durable-save feedback remain explicit.
 
 The scorebook identity overrides marketing-oriented skill defaults: no promotional hero, generic dashboard tiles, global overflow clipping or removed table data. References: [Hallmark](https://github.com/Nutlope/hallmark), [Awesome DESIGN.md](https://github.com/VoltAgent/awesome-design-md) Nike hierarchy study, and [Unslop](https://github.com/heydamir/unslop), CC BY 4.0. These guide restraint and hierarchy, not copied branding. Superseded iteration notes live in docs/DESIGN-HISTORY.md.
+
+## Desktop clubhouse revision — November 7
+The homepage now opens with the tournament name and existing mascot, followed by derived regular-season progress. Recent results remain the primary content; remaining fixtures occupy a secondary desktop column and follow the initial four results on mobile. The AI helper lives with the rules links. Season 1 recognition reads from the preserved archive. This supersedes the earlier results-only homepage composition; keep the page factual and avoid promotional slogans.

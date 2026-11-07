@@ -3147,16 +3147,6 @@ summary {
 .feed-home {
   margin: 32px auto 64px;
 }
-.feed-heading {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 20px;
-}
-.feed-heading h1 {
-  font-size: clamp(32px, 5vw, 48px);
-}
-.feed-heading p:not(.eyebrow),
 .feed-detail {
   color: var(--muted);
   font-size: 14px;
@@ -3209,11 +3199,6 @@ summary {
   font-variant-numeric: tabular-nums;
 }
 @media (max-width: 600px) {
-  .feed-heading {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 12px;
-  }
   .feed-home {
     margin-top: 24px;
   }
@@ -3310,7 +3295,7 @@ details.fine-note > summary {
   }
 }
 .feed-home {
-  max-width: 880px;
+  max-width: 1240px;
 }
 .feed-season,
 .page-heading .eyebrow {
@@ -3320,13 +3305,6 @@ details.fine-note > summary {
   letter-spacing: 0;
   text-transform: none;
   color: var(--muted);
-}
-.feed-heading {
-  padding-bottom: 24px;
-  border-bottom: 2px solid var(--pine);
-}
-.feed-heading h1 {
-  margin: 8px 0 12px;
 }
 .feed-shortcuts {
   padding: 8px 0;
@@ -3436,7 +3414,7 @@ details.fine-note > summary {
 .activity-timeline .text-link {
   justify-self: start;
 }
-.feed-home > .button {
+.clubhouse-results > .button {
   margin-top: 24px;
 }
 .standings-table thead th {
@@ -4336,5 +4314,209 @@ main :where(a, button, input, select, textarea, summary) {
   }
   .graphic-preview {
     padding: 8px;
+  }
+}
+
+/* The clubhouse pairs the result feed with the remaining field. */
+.clubhouse-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+  padding-bottom: 32px;
+}
+.clubhouse-heading h1 {
+  font-size: clamp(52px, 7vw, 100px);
+  margin: 12px 0 16px;
+  overflow-wrap: break-word;
+}
+.clubhouse-description {
+  font-size: 18px;
+  color: var(--muted);
+}
+.clubhouse-mark {
+  flex: 0 0 240px;
+}
+.clubhouse-mark .mascot {
+  width: 100%;
+  height: auto;
+}
+.clubhouse-progress {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  padding: 18px 0;
+  border-top: 2px solid var(--pine);
+  border-bottom: 1px solid var(--line);
+  font-size: 14px;
+}
+.clubhouse-progress p {
+  white-space: nowrap;
+}
+.clubhouse-progress progress {
+  flex: 1;
+  min-width: 0;
+  height: 6px;
+  border: 0;
+  appearance: none;
+  background: var(--line);
+  color: var(--pine);
+}
+.clubhouse-progress progress::-webkit-progress-bar {
+  background: var(--line);
+}
+.clubhouse-progress progress::-webkit-progress-value {
+  background: var(--pine);
+}
+.clubhouse-progress progress::-moz-progress-bar {
+  background: var(--pine);
+}
+.clubhouse-progress a {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  font-weight: 600;
+}
+.clubhouse-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1.8fr) minmax(0, 1fr);
+  gap: 48px;
+  margin-top: 36px;
+}
+.clubhouse-columns .section-title {
+  margin-bottom: 0;
+}
+.clubhouse-aside {
+  border-left: 1px solid var(--line);
+  padding-left: 32px;
+}
+.clubhouse-note {
+  margin: 12px 0 20px;
+  font-size: 14px;
+  color: var(--muted);
+}
+.clubhouse-fixtures {
+  display: grid;
+  gap: 12px;
+}
+.clubhouse-fixtures .match-row {
+  padding: 16px;
+}
+.clubhouse-fixtures .match-pair .team-avatar {
+  display: none;
+}
+.clubhouse-fixtures .match-pair {
+  font-size: 14px;
+}
+.clubhouse-history,
+.clubhouse-rules {
+  border-top: 1px solid var(--line);
+  margin-top: 32px;
+  padding-top: 24px;
+}
+.clubhouse-history h2 {
+  margin: 12px 0;
+  font-size: 20px;
+}
+.clubhouse-champion {
+  font: 28px/1.2 var(--display);
+  margin-bottom: 12px;
+}
+.clubhouse-aside .text-link {
+  min-height: 44px;
+}
+.clubhouse-rules {
+  display: grid;
+  gap: 8px;
+}
+.clubhouse-rules h2 {
+  font-size: 20px;
+}
+@media (min-width: 901px) {
+  .pods-grid .standings-table {
+    table-layout: fixed;
+  }
+  .pods-grid .standings-table th:first-child {
+    width: 36%;
+  }
+  .pods-grid .standings-table thead th,
+  .pods-grid .standings-table tbody th,
+  .pods-grid .standings-table td {
+    padding-inline: 10px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  .pods-grid .standings-table tbody th .team-avatar {
+    display: none;
+  }
+  .pods-grid .column-sort {
+    gap: 4px;
+    width: 100%;
+  }
+}
+@media (max-width: 1000px) {
+  .clubhouse-columns {
+    gap: 24px;
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  }
+  .clubhouse-aside {
+    padding-left: 24px;
+  }
+  .clubhouse-results .activity-timeline li {
+    grid-template-columns: 64px minmax(0, 1fr);
+    column-gap: 16px;
+  }
+}
+@media (max-width: 760px) {
+  .clubhouse-columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .clubhouse-aside {
+    border-left: 0;
+    padding-left: 0;
+  }
+  .clubhouse-mark {
+    flex-basis: 140px;
+  }
+  .clubhouse-heading {
+    gap: 16px;
+  }
+  .clubhouse-heading h1 {
+    font-size: 52px;
+  }
+  .clubhouse-description {
+    font-size: 16px;
+  }
+}
+@media (max-width: 600px) {
+  .clubhouse-heading {
+    align-items: flex-start;
+    position: relative;
+    padding-bottom: 24px;
+  }
+  .clubhouse-heading h1 {
+    font-size: clamp(48px, 12vw, 64px);
+  }
+  .clubhouse-mark {
+    display: none;
+  }
+  .clubhouse-progress {
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    padding: 12px 0;
+  }
+  .clubhouse-progress progress {
+    flex: 0 0 100%;
+    order: 3;
+  }
+  .clubhouse-progress a {
+    margin-left: auto;
+  }
+  .clubhouse-columns {
+    margin-top: 24px;
+  }
+  .clubhouse-results .activity-timeline li {
+    grid-template-columns: minmax(0, 1fr);
   }
 }

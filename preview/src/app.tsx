@@ -310,7 +310,8 @@ function App() {
 }
 function Home() {
   const { matches } = usePreview();
-  const [limit, setLimit] = useState(8);
+  const [limit, setLimit] = useState(4);
+  const pending = matches.filter((m) => m.status !== "official");
   const official = matches
     .filter((m) => m.status === "official")
     .sort(
@@ -319,20 +320,35 @@ function Home() {
     );
   return (
     <div className="feed-home">
-      <div className="feed-heading">
+      <header className="clubhouse-heading">
         <div>
-          <p className="feed-season">2027 regular season</p>
-          <h1>Results</h1>
-          <p>{official.length} of 18 matches final</p>
+          <p className="feed-season">
+            Season 02 / {season.year} / Sample season
+          </p>
+          <h1>The Two-Man</h1>
+          <p className="clubhouse-description">
+            {teams.length} teams. {pods.length} pods. Eight playoff places.
+          </p>
         </div>
-        <a
-          className="button outline"
-          href={RULES_JUDGE_URL}
-          target="_blank"
-          rel="noreferrer"
-        >
-          <Icon name="judge" size={20} /> AI rules helper
-        </a>
+        <div className="clubhouse-mark" aria-hidden="true">
+          <Mark />
+        </div>
+      </header>
+      <div className="clubhouse-progress">
+        <p>
+          <strong>
+            {official.length} of {matches.length}
+          </strong>{" "}
+          matches final
+        </p>
+        <progress
+          value={official.length}
+          max={matches.length || 1}
+          aria-label="Regular-season matches completed"
+        />
+        <Link href="/standings?view=qualification">
+          Playoff picture <Icon name="arrow" size={16} />
+        </Link>
       </div>
       <nav className="feed-shortcuts" aria-label="Season shortcuts">
         <Link href="/standings">
@@ -345,59 +361,126 @@ function Home() {
           Upcoming matches <Icon name="arrow" size={14} />
         </Link>
       </nav>
-      <ol className="activity-timeline">
-        {official.slice(0, limit).map((m) => {
-          const r = result(m);
-          return (
-            <li key={m.id}>
-              <div className="feed-meta">
-                <time dateTime={m.date}>{dateLabel(m.date)}</time>
-                <span>Final</span>
-              </div>
-              <div className="feed-scoreboard">
-                <div className="feed-score-label">
-                  <span>Pod {m.pod}</span>
-                  <span>Hole points</span>
-                </div>
-                <Link className="feed-result" href={`/matches/${m.id}`}>
-                  {[
-                    { id: m.a, points: r.aPoints },
-                    { id: m.b, points: r.bPoints },
-                  ].map(({ id, points }) => (
-                    <span
-                      key={id}
-                      className={r.winner === id ? "feed-winner" : undefined}
-                    >
-                      <span className="feed-team">
-                        {nameOf(id)}
-                        {r.winner === id && <small>Won</small>}
-                      </span>
-                      <b>
-                        <span className="sr-only">Hole points: </span>
-                        {points}
-                      </b>
-                    </span>
-                  ))}
-                </Link>
-              </div>
-              <p className="feed-detail">{m.course}</p>
-              <Link className="text-link" href={`/matches/${m.id}`}>
-                Scorecard <Icon name="arrow" size={14} />
+      <div className="clubhouse-columns">
+        <section className="clubhouse-results" aria-label="Recent results">
+          <SectionTitle
+            title="Recent results"
+            href="/matches?filter=official"
+            label="All results"
+          />
+          <ol className="activity-timeline">
+            {official.slice(0, limit).map((m) => {
+              const r = result(m);
+              return (
+                <li key={m.id}>
+                  <div className="feed-meta">
+                    <time dateTime={m.date}>{dateLabel(m.date)}</time>
+                    <span>Final</span>
+                  </div>
+                  <div className="feed-scoreboard">
+                    <div className="feed-score-label">
+                      <span>Pod {m.pod}</span>
+                      <span>Hole points</span>
+                    </div>
+                    <Link className="feed-result" href={`/matches/${m.id}`}>
+                      {[
+                        { id: m.a, points: r.aPoints },
+                        { id: m.b, points: r.bPoints },
+                      ].map(({ id, points }) => (
+                        <span
+                          key={id}
+                          className={
+                            r.winner === id ? "feed-winner" : undefined
+                          }
+                        >
+                          <span className="feed-team">
+                            {nameOf(id)}
+                            {r.winner === id && <small>Won</small>}
+                          </span>
+                          <b>
+                            <span className="sr-only">Hole points: </span>
+                            {points}
+                          </b>
+                        </span>
+                      ))}
+                    </Link>
+                  </div>
+                  <p className="feed-detail">{m.course}</p>
+                  <Link className="text-link" href={`/matches/${m.id}`}>
+                    Scorecard <Icon name="arrow" size={14} />
+                  </Link>
+                </li>
+              );
+            })}
+          </ol>
+          {!official.length && (
+            <Empty title="No results yet">
+              Results appear after the commissioner posts them.
+            </Empty>
+          )}
+          {official.length > limit && (
+            <button
+              className="button outline"
+              onClick={() => setLimit(limit + 4)}
+            >
+              Earlier results
+            </button>
+          )}
+        </section>
+        <aside className="clubhouse-aside" aria-label="Around the tournament">
+          <section aria-label="Matches still to play">
+            <SectionTitle
+              title="Still to play"
+              href="/matches?filter=upcoming"
+              label="Fixtures"
+            />
+            <p className="clubhouse-note">
+              {pending.length
+                ? `${pending.length} matches awaiting a final result.`
+                : "Every regular-season result is in."}
+            </p>
+            <div className="clubhouse-fixtures">
+              {pending.slice(0, 3).map((m) => (
+                <MatchRow key={m.id} match={m} />
+              ))}
+            </div>
+            {pending.length > 3 && (
+              <Link className="text-link" href="/matches?filter=upcoming">
+                View all {pending.length} remaining matches{" "}
+                <Icon name="arrow" size={16} />
               </Link>
-            </li>
-          );
-        })}
-      </ol>
-      {!official.length && (
-        <Empty title="No results yet">
-          Results appear after the commissioner posts them.
-        </Empty>
-      )}
-      {official.length > limit && (
-        <button className="button outline" onClick={() => setLimit(limit + 8)}>
-          Earlier results
-        </button>
-      )}
+            )}
+          </section>
+          <section className="clubhouse-history">
+            <p className="feed-season">Season 1 / Official archive</p>
+            <h2>Last year’s champions</h2>
+            <p className="clubhouse-champion">
+              {
+                archive2026.entries.find(
+                  (entry) => entry.teamId === archive2026.champion,
+                )?.name
+              }
+            </p>
+            <Link className="text-link" href="/history/2026">
+              Explore the 2026 season <Icon name="arrow" size={16} />
+            </Link>
+          </section>
+          <section className="clubhouse-rules">
+            <h2>On the course</h2>
+            <Link className="text-link" href="/rules">
+              Tournament format & rules <Icon name="arrow" size={16} />
+            </Link>
+            <a
+              className="text-link"
+              href={RULES_JUDGE_URL}
+              target="_blank"
+              rel="noreferrer"
+            >
+              <Icon name="judge" size={18} /> AI rules helper
+            </a>
+          </section>
+        </aside>
+      </div>
     </div>
   );
 }
