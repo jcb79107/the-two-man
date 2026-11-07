@@ -4753,3 +4753,134 @@ main :where(a, button, input, select, textarea, summary) {
     border-top: 1px solid var(--line);
   }
 }
+
+.offseason-home {
+  max-width: 1180px;
+  margin: auto;
+}
+.offseason-champions {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 48px;
+  background: #083e34;
+  color: #f8f5eb;
+  padding: 48px;
+}
+.offseason-year {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 12px;
+  border-right: 1px solid #53776d;
+}
+.offseason-year strong {
+  font-family: Anton, sans-serif;
+  font-size: 76px;
+  line-height: 1.1;
+}
+.offseason-year span {
+  font-size: 14px;
+}
+.offseason-champions .eyebrow {
+  color: #c8d6c9;
+}
+.offseason-champions h2 {
+  font-size: clamp(30px, 4vw, 52px);
+  line-height: 1.12;
+  margin: 12px 0 20px;
+}
+.offseason-champions .text-link {
+  margin-top: 28px;
+}
+.offseason-next {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  padding: 48px 0 32px;
+}
+.offseason-next h2 {
+  font-size: 28px;
+  margin: 12px 0;
+}
+.offseason-next > p {
+  color: var(--muted);
+  max-width: 400px;
+  line-height: 1.7;
+}
+.offseason-rules-note {
+  max-width: 760px;
+  margin: 24px 0 40px;
+  color: var(--muted);
+}
+.offseason-rule {
+  max-width: 820px;
+  padding: 24px 0;
+  border-bottom: 1px solid var(--line);
+}
+.offseason-rule p {
+  margin-top: 12px;
+  color: var(--muted);
+  line-height: 1.7;
+}
+.archive-graphics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  padding-top: 32px;
+}
+.archive-graphics label {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+.archive-graphics select {
+  width: 100%;
+  min-width: 0;
+}
+.archive-graphics > div {
+  min-width: 0;
+}
+.archive-graphic-image {
+  width: 100%;
+  height: auto;
+  max-width: 520px;
+}
+@media (max-width: 600px) {
+  .offseason-champions {
+    grid-template-columns: 1fr;
+    gap: 24px;
+    padding: 28px 24px;
+  }
+  .offseason-year {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    border-right: 0;
+    border-bottom: 1px solid #53776d;
+    padding-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  .offseason-year strong {
+    font-size: 42px;
+  }
+  .offseason-year span:last-child {
+    flex-basis: 100%;
+  }
+  .offseason-next,
+  .archive-graphics {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
+.offseason-nav {
+  grid-template-columns: repeat(3, 1fr);
+}
+.archive-graphics select {
+  min-height: 48px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  color: inherit;
+  font: inherit;
+}

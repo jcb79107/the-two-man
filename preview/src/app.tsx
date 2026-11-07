@@ -1,4 +1,7 @@
 "use client";
+import { offseason } from "./site-mode";
+import { OffseasonHome, OffseasonRules } from "./offseason";
+import { ArchiveGraphics } from "./archive-graphics";
 import { publication } from "./publication";
 import Link from "next/link";
 import { usePathname, useSearchParams, useRouter } from "next/navigation";
@@ -31,12 +34,18 @@ import {
 import { StandingsTable } from "./standings-table";
 import { PlayoffPicture } from "./playoff-picture";
 import { RULES_JUDGE_URL } from "./rules-judge";
-const nav = [
-  ["/", "Home", "home"],
-  ["/matches", "Matches", "calendar"],
-  ["/standings", "Standings", "table"],
-  ["/bracket", "Bracket", "cup"],
-];
+const nav = offseason
+  ? [
+      ["/", "Home", "home"],
+      ["/history/2026", "Season 1", "cup"],
+      ["/history", "History", "calendar"],
+    ]
+  : [
+      ["/", "Home", "home"],
+      ["/matches", "Matches", "calendar"],
+      ["/standings", "Standings", "table"],
+      ["/bracket", "Bracket", "cup"],
+    ];
 export function PreviewApp() {
   return (
     <Suspense fallback={<div className="loading">Opening the clubhouse…</div>}>
@@ -64,27 +73,29 @@ function App() {
   }, [menu]);
   const title = path === "/" ? "Clubhouse" : path.split("/")[1];
   useEffect(() => {
-    document.title = `${title.charAt(0).toUpperCase() + title.slice(1)} • The Two-Man preview`;
+    document.title = `${title.charAt(0).toUpperCase() + title.slice(1)} • The Two-Man`;
   }, [title]);
   return (
     <>
       <a href="#main" className="skip-link">
         Skip to content
       </a>
-      <div className="preview-strip">
-        <span>
-          <span className="preview-dot" /> Season 2 preview{" "}
-          <span className="strip-detail">· Sample current season</span>
-        </span>
-        <div>
-          <button
-            onClick={() => setResetOpen(!resetOpen)}
-            aria-expanded={resetOpen}
-          >
-            Reset demo
-          </button>
+      {!offseason && (
+        <div className="preview-strip">
+          <span>
+            <span className="preview-dot" /> Season 2 preview{" "}
+            <span className="strip-detail">· Sample current season</span>
+          </span>
+          <div>
+            <button
+              onClick={() => setResetOpen(!resetOpen)}
+              aria-expanded={resetOpen}
+            >
+              Reset demo
+            </button>
+          </div>
         </div>
-      </div>
+      )}
       {resetOpen && (
         <div className="reset-panel">
           <p>
@@ -120,7 +131,16 @@ function App() {
               key={href}
               href={href}
               aria-current={
-                (href === "/" ? path === "/" : path.startsWith(href))
+                (
+                  href === "/"
+                    ? path === "/"
+                    : href === "/history" && offseason
+                      ? path === "/history" ||
+                        path.startsWith("/records") ||
+                        path.startsWith("/players") ||
+                        path === "/champions"
+                      : path.startsWith(href)
+                )
                   ? "page"
                   : undefined
               }
@@ -128,25 +148,29 @@ function App() {
               {label}
             </Link>
           ))}
-          <Link
-            href="/earnings"
-            aria-current={path === "/earnings" ? "page" : undefined}
-          >
-            The purse
-          </Link>
-          <Link
-            href="/history"
-            aria-current={
-              path.startsWith("/history") ||
-              path.startsWith("/records") ||
-              path.startsWith("/players") ||
-              path === "/champions"
-                ? "page"
-                : undefined
-            }
-          >
-            History
-          </Link>
+          {!offseason && (
+            <>
+              <Link
+                href="/earnings"
+                aria-current={path === "/earnings" ? "page" : undefined}
+              >
+                The purse
+              </Link>
+              <Link
+                href="/history"
+                aria-current={
+                  path.startsWith("/history") ||
+                  path.startsWith("/records") ||
+                  path.startsWith("/players") ||
+                  path === "/champions"
+                    ? "page"
+                    : undefined
+                }
+              >
+                History
+              </Link>
+            </>
+          )}
         </nav>
         <div className="header-end">
           <Link className="text-link header-rules" href="/rules">
@@ -191,7 +215,7 @@ function App() {
         >
           {[
             ["/history", "Season history"],
-            ["/earnings", "The purse"],
+            ...(offseason ? [] : [["/earnings", "The purse"]]),
             ["/rules", "Format & rules"],
           ].map(([href, label]) => (
             <Link key={href} href={href} onClick={() => setMenu(false)}>
@@ -211,7 +235,11 @@ function App() {
             Loading your sample season…
           </div>
         ) : path === "/" ? (
-          <Home />
+          offseason ? (
+            <OffseasonHome />
+          ) : (
+            <Home />
+          )
         ) : path === "/history" || path === "/champions" ? (
           <HistoryHome champions={path === "/champions"} />
         ) : path.startsWith("/history/") && path.includes("/matches/") ? (
@@ -242,7 +270,11 @@ function App() {
         ) : path === "/earnings" ? (
           <Earnings />
         ) : path === "/rules" ? (
-          <Rules />
+          offseason ? (
+            <OffseasonRules />
+          ) : (
+            <Rules />
+          )
         ) : path === "/submit" ? (
           <Empty title="Send your card to the commissioner.">
             <p>
@@ -253,7 +285,11 @@ function App() {
             <Link href="/rules">Read the checklist</Link>
           </Empty>
         ) : path === "/review" ? (
-          <Commissioner />
+          offseason ? (
+            <ArchiveGraphics />
+          ) : (
+            <Commissioner />
+          )
         ) : (
           <Empty title="Page not found">
             <Link href="/">Return to the clubhouse</Link>
@@ -275,13 +311,25 @@ function App() {
           </a>
         </nav>
       </footer>
-      <nav className="mobile-nav" aria-label="Mobile navigation">
+      <nav
+        className={offseason ? "mobile-nav offseason-nav" : "mobile-nav"}
+        aria-label="Mobile navigation"
+      >
         {nav.map(([href, label, icon]) => (
           <Link
             key={href}
             href={href}
             aria-current={
-              (href === "/" ? path === "/" : path.startsWith(href))
+              (
+                href === "/"
+                  ? path === "/"
+                  : href === "/history" && offseason
+                    ? path === "/history" ||
+                      path.startsWith("/records") ||
+                      path.startsWith("/players") ||
+                      path === "/champions"
+                    : path.startsWith(href)
+              )
                 ? "page"
                 : undefined
             }

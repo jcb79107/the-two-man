@@ -1,5 +1,15 @@
-# Season 2 preview
+# Public offseason site and Season 2 preview
 
-Continue the existing isolated preview branch; do not modify production or the Season 1 archive. For commissioner result updates, read `docs/CODEX-RESULTS.md` and use `npm run results` to validate the Season 2 publication before writing it. Keep Jason's workflow in his existing AI chat. Do not add scheduling forms, an in-app chatbot or player submission requirements.
+The user authorized the offseason production launch on November 7, 2026.
+`npm run build:live` exports the public offseason site. `npm run build` retains
+the fictional Season 2 preview for development. Never promote that demo to production.
 
-Only fictional data belongs in this preview. Never commit private scorecard evidence, GHIN IDs or contact details. Test relevant result, graphic and public-view changes; preserve the one-stroke-per-hole tournament cap. Preview deployment is separate from production promotion.
+Season 1 is the immutable archive in `src/season1-public.json`. Preserve its hash,
+records and private-data exclusions. No production database writes or migrations
+are needed for the public site. Read `docs/OFFSEASON-LAUNCH.md` before deployment.
+
+Commissioner result updates belong in the existing AI chat. Read
+`docs/CODEX-RESULTS.md` for the separate Season 2 publication workflow.
+Do not add scheduling forms, in-app chat or player submission requirements.
+Only fictional data belongs in the Season 2 preview; never commit private scorecard
+evidence, GHIN IDs or contact details. Preserve the one-stroke-per-hole cap.

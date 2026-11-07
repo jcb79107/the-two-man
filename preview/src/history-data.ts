@@ -1,3 +1,4 @@
+import { offseason } from "./site-mode";
 import { publication } from "./publication";
 import source from "./season1-public.json";
 import { teams, season, type Match } from "./data";
@@ -254,6 +255,7 @@ export const archive2026: SeasonRecord = {
   ],
 };
 export function seasons(current: Match[]): SeasonRecord[] {
+  if (offseason) return [archive2026];
   const final = publication.games.find((g) => g.id === "final");
   return [
     {

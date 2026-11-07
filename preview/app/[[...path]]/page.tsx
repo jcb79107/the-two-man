@@ -1,8 +1,26 @@
+import { offseason } from "../../src/site-mode";
 import { PreviewApp } from "../../src/app";
 import { teams, matches } from "../../src/data";
 import { archive2026, players } from "../../src/history-data";
 export const dynamicParams = false;
 export function generateStaticParams() {
+  if (offseason)
+    return [
+      { path: [] },
+      ...["rules", "review", "history", "champions", "records"].map((p) => ({
+        path: [p],
+      })),
+      { path: ["history", "2026"] },
+      ...archive2026.games.map((g) => ({
+        path: ["history", "2026", "matches", g.id],
+      })),
+      ...archive2026.entries.map((e) => ({
+        path: ["records", "teams", e.teamId],
+      })),
+      ...players
+        .filter((p) => p.id.startsWith("s1-"))
+        .map((p) => ({ path: ["players", p.id] })),
+    ];
   return [
     { path: [] },
     ...[
@@ -35,4 +53,19 @@ export function generateStaticParams() {
 }
 export default function Page() {
   return <PreviewApp />;
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ path?: string[] }>;
+}) {
+  const { path = [] } = await params;
+  const route = "/" + path.join("/");
+  return {
+    ...(offseason ? { alternates: { canonical: route } } : {}),
+    ...(path[0] === "review"
+      ? { robots: { index: false, follow: false } }
+      : {}),
+  };
 }

@@ -35,5 +35,8 @@ jobs:
       - name: Test
         run: npm test
 
+      - name: Install public site dependencies
+        run: npm ci --prefix preview
+
       - name: Build
         run: npm run build

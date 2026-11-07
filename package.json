@@ -6,7 +6,7 @@
   "scripts": {
     "security:artifacts": "node scripts/check_tracked_artifacts.mjs",
     "dev": "next dev",
-    "build": "next build",
+    "build": "npm run build:live --prefix preview",
     "start": "next start",
     "postinstall": "prisma generate",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
@@ -27,7 +27,8 @@
     "tournament:reset:state": "tsx scripts/reset_tournament_state.ts",
     "recap:export": "tsx scripts/export_pod_play_recap.ts",
     "results:backfill-snapshots": "tsx scripts/backfill_official_result_snapshots.ts",
-    "deploy:prod": "node scripts/require_github_synced_before_deploy.mjs && npx -y vercel@52.2.0 --prod --yes"
+    "deploy:prod": "node scripts/require_github_synced_before_deploy.mjs && npm run build && cd preview && node scripts/package-preview.mjs --live && npx --yes vercel deploy --prebuilt --prod --yes --scope jcb79107s-projects",
+    "build:legacy": "next build"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",

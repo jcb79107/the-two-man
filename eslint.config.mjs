@@ -19,6 +19,7 @@ const config = [
       "node_modules/**",
       "next-env.d.ts",
       "out/**",
+      "preview/**",
     ],
   },
 ];

@@ -1,4 +1,5 @@
 "use client";
+import { offseason } from "./site-mode";
 import {
   createContext,
   useContext,
@@ -28,7 +29,7 @@ type Store = {
 const Context = createContext<Store | null>(null);
 export function PreviewProvider({ children }: { children: ReactNode }) {
   const [matches, setMatches] = useState<Match[]>(initial);
-  const [ready, setReady] = useState(false);
+  const [ready, setReady] = useState(offseason);
   const [notice, setNotice] = useState("");
   const [drafts, setDrafts] = useState<Record<string, ReviewDraft>>({});
   const draftsEdited = useRef(false);
@@ -42,6 +43,7 @@ export function PreviewProvider({ children }: { children: ReactNode }) {
     });
   }, []);
   useEffect(() => {
+    if (offseason) return;
     try {
       const rawDrafts = localStorage.getItem(DRAFT_KEY);
       if (rawDrafts) {

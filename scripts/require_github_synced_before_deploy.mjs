@@ -22,7 +22,7 @@ if (!branch || branch === "HEAD") {
   process.exit(1);
 }
 
-git(["fetch", "origin", branch]);
+git(["fetch", "origin", branch, "main"]);
 
 const localHead = git(["rev-parse", "HEAD"]);
 const remoteHead = git(["rev-parse", `origin/${branch}`]);
@@ -30,6 +30,11 @@ const remoteHead = git(["rev-parse", `origin/${branch}`]);
 if (localHead !== remoteHead) {
   console.error(`Refusing to deploy: ${branch} is not synced with origin/${branch}.`);
   console.error(`Run: git push origin ${branch}`);
+  process.exit(1);
+}
+
+if (localHead !== git(["rev-parse", "origin/main"])) {
+  console.error("Refusing production deploy: this revision is not published on origin/main.");
   process.exit(1);
 }
 

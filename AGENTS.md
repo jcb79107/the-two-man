@@ -11,6 +11,15 @@ Canonical repo:
 
 These rules apply to Codex, OpenClaw, Claude, Telegram-driven agents, and any other automated coding path.
 
+## Live offseason site
+
+The public site now builds from `preview/` with `npm run build:live`. Root
+`npm run build` runs that build; `npm run build:legacy` retains the old database app
+for recovery only. Never deploy the fictional Season 2 build to production.
+Read `preview/docs/OFFSEASON-LAUNCH.md` for release and rollback procedures.
+The immutable Season 1 archive and production database must not be changed by UI work.
+Use an isolated checkout when the canonical checkout contains unrelated user edits.
+
 ## Isolated Season 2 preview work
 
 - When the task explicitly targets Season 2, verify and use `codex/season-2-preview`, not the older root app. Explicit task restrictions override the main/push/deploy workflow below.

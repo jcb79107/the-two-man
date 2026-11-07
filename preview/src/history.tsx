@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { offseason } from "./site-mode";
 import { useSearchParams, useRouter } from "next/navigation";
 import { usePreview } from "./store";
 import { money, dateLabel } from "./data";
@@ -44,6 +45,7 @@ function ArchiveNav({ active }: { active: string }) {
   );
 }
 function HistoryDisclosure() {
+  if (offseason) return null;
   return (
     <p className="archive-disclosure">
       <strong>Season 1 official archive.</strong> Preserved 2026 results. Season
@@ -214,7 +216,7 @@ export function SeasonArchive({ year }: { year: number }) {
                 router.push(`/history/${e.target.value}?view=${view}`)
               }
             >
-              <option value="2027">2027 · Sample season</option>
+              {!offseason && <option value="2027">2027 · Sample season</option>}
               <option value="2026">2026 · Complete</option>
             </select>
           </label>
@@ -448,7 +450,9 @@ export function RecordBook() {
   const sort = ["titles", "rate"].includes(params.get("sort") ?? "")
     ? params.get("sort")!
     : "wins";
-  const year = ["2026", "2027"].includes(params.get("season") ?? "")
+  const year = (offseason ? ["2026"] : ["2026", "2027"]).includes(
+    params.get("season") ?? "",
+  )
     ? params.get("season")!
     : "all";
   const q = params.get("q") ?? "";
@@ -499,7 +503,7 @@ export function RecordBook() {
             onChange={(e) => change("season", e.target.value)}
           >
             <option value="all">All seasons</option>
-            <option value="2027">2027 · Sample season</option>
+            {!offseason && <option value="2027">2027 · Sample season</option>}
             <option value="2026">2026 · Complete</option>
           </select>
         </label>
@@ -536,7 +540,7 @@ export function RecordBook() {
       </div>
       <p className="field-help">
         {rows.length} of {all.length} {kind} ·{" "}
-        {year === "all" ? "2026–2027; current season included" : year} ·{" "}
+        {year === "all" ? records.map((s) => s.year).join(", ") : year} ·{" "}
         {phase === "all"
           ? "Regular season + playoffs"
           : phase === "regular"
