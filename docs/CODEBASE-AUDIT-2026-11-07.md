@@ -1,5 +1,8 @@
 # Ponytail cleanup — November 7, 2026
 
+Historical audit before legacy retirement. The old app and its dependencies have
+since been removed from the active tree; see [preservation and recovery](LEGACY-APP.md).
+
 What this repo does: serves the public offseason archive, retains a fictional
 Season 2 preview, and keeps the original database app for recovery. Assumed load:
 a small tournament with 18 archived teams and 25 results; no live public writes.

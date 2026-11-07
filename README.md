@@ -29,8 +29,9 @@ npm run test:offseason --prefix preview
 ```
 
 The fictional Season 2 demo has separate [development instructions](preview/README.md).
-The retained database app uses `dev:legacy`, `build:legacy` and `start:legacy`;
-see [legacy setup](docs/LEGACY-APP.md). Root `npm test` and `npm run lint` check that app.
+Root test, lint and typecheck commands also target the new app. The legacy app
+has been removed; its recovery tag and the preserved database are documented in
+[Season 1 preservation](docs/LEGACY-APP.md).
 
 ## Deploy
 

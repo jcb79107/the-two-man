@@ -31,14 +31,14 @@ Use Standard Vercel Authentication protection so the public production domain is
 open while preview URLs and old deployment URLs remain protected.
 
 ## Recovery
-Previous production deployment:
-dpl_DfUf4rzJCR4rp2K924F6zHUjCaSQ
-https://thetwo-gzy0a8s9g-jcb79107s-projects.vercel.app
+Previous verified static production deployment (before legacy retirement):
+`dpl_31aw47spGf51HuRpgYvJbhekmiE5`
+https://thetwo-g5onci3gr-jcb79107s-projects.vercel.app
 
-Use Vercel rollback to that deployment if the new public site fails. The previous
-database app and its data are unchanged. Reverting the root vercel.json/build
-scripts restores future legacy builds; do not reset the database.
-If restoring the old private site, restore its All Deployments protection too.
+Roll back to this static deployment if the public site fails. Do not reset the
+database or restore database-app build settings. The legacy code is available
+from its recovery tag, documented in [data preservation](../../docs/LEGACY-APP.md).
+The original database and preservation branch remain intact.
 
 ## Limits
 No Season 2 enrollment, field, schedule, prize commitments or live publishing

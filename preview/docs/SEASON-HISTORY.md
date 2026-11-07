@@ -18,6 +18,14 @@ Regular-season standings use match points (win=1, tie=0.5), hole points, holes w
 
 All-time records exclude the fictional 2027 season by default. Its explicit season filter remains available for testing. Current demo edits never change archived results. Filters stay in the URL; refresh and deep links preserve them.
 
-## Remaining production work
+## Current deployment boundary
 
-The current-season commissioner is still a browser-local, openly accessible demo. Live commissioner use needs the existing production authorization and durable transaction/revision boundaries integrated with this UI. Do not serve real private evidence through this static export or treat browser storage as a security boundary. No deployment or production integration is implied by this import.
+The live offseason build is static and read-only. Its `/review` page generates
+images from public archived results; it cannot change Season 1. The separate
+Season 2 demo keeps rehearsal drafts in browser storage and supports validated
+versioned fixture publication through Codex. Neither build accesses the database.
+
+The legacy database app has been removed from the active repository. Its recovery
+tag and full-data preservation branches are recorded in
+[Season 1 preservation](../../docs/LEGACY-APP.md). Do not treat this public JSON as
+a substitute for those private database records.

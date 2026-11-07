@@ -1,118 +1,54 @@
-# Legacy Season 1 app
+# Season 1 preservation and legacy recovery
 
-Retained for recovery. The public site now builds from `preview/`; see the
-[root README](../README.md). Run these commands from the repository root and use
-a disposable local database.
+The legacy app was retired from the active tree on November 7, 2026. Removing its
+source code does not delete database records. No database write, migration, reset,
+seed, endpoint deletion or credential change was part of this removal.
 
-## What The App Does
+## Preserved records
 
-- Public tournament hub with activity feed, standings, bracket, rules, and match result pages
-- Pod-play standings for 18 teams across 6 pods, including hole points, holes won, and playoff qualification
-- Playoff bracket mode for quarterfinals, semifinals, and championship advancement
-- Private tokenized scorecard/setup links for pod matches
-- Simple playoff result posting from the commissioner/admin surface
-- Commissioner dashboard for match ops, invites, scorecard status, overrides, forfeits, bracket sync, and graphics
-- Server-rendered Instagram recap graphics for match results
-- Course and tee lookup through stored catalog data, curated fallbacks, and optional provider integrations
-- Sentry and Vercel Speed Insights instrumentation, with URL/token scrubbing for private match links
-- Production database guardrail to prevent deploying against the wrong Neon endpoint
+- Public archive: `preview/src/season1-public.json`; 18 teams, 36 players,
+  18 full regular-season scorecards and seven playoff results.
+- SHA256: `b3954c209d4c604bee07c3a9fbdc15331674e0380f7887b3b4c169976dca9a87`.
+- Neon project: `gentle-cake-18017138`.
+- Original database branch: `br-noisy-poetry-apwbzdlv` (`main`).
+- Full-data preservation branch: `br-purple-block-aps5d920`
+  (`season-1-preserved-2026-11-07`), parent LSN `0/1C3566D0`.
+- Read-only verification used QA descendant `br-noisy-hill-apnm9y00`, database
+  `neondb`: 18 teams, 36 players, 25 matches and 25 official snapshots.
 
-## Stack
+The public JSON is intentionally not a complete database backup. Private contact
+information, GHIN identifiers, tokens, evidence references and operational records
+remain in the database, not the public site. Do not delete the Neon project or
+these branches as part of code cleanup. External evidence references do not
+necessarily preserve the external files themselves.
 
-- Next.js App Router 15
-- React 19
-- TypeScript
-- Prisma + PostgreSQL
-- Tailwind CSS
-- Vitest
-- Vercel
-- Sentry
+Original repository data and brand files remain under `data/`. No private database
+dump was added to Git. Existing uncommitted work in the canonical local checkout
+was not edited or removed.
 
-## Local Setup
+## Recover the old code
 
-```bash
-npm install
-cp .env.example .env.local
+The complete prior application, schema, scripts, tests, dependencies and old
+runbooks are in the pushed tag `archive/season1-legacy-2026-11-07`, pointing to
+commit `e642fb780d526d00f189b81fc7e52d9af3c9f476`.
+
+```sh
+git fetch origin --tags
+git worktree add --detach ../two-man-legacy-recovery archive/season1-legacy-2026-11-07
 ```
 
-Update `.env.local` with a local or branch database URL and admin credentials:
+Use a separate checkout and database branch for recovery. The legacy dependency
+advisories documented in the prior audit must be remediated before exposing that
+app. Never run its reset, seed or migration scripts against the preserved data.
 
-```bash
-DATABASE_URL="postgresql://postgres:postgres@localhost:5432/the_two_man"
-ADMIN_PASSWORD="your-local-password"
-ADMIN_SESSION_SECRET="a-long-random-secret"
-NEXT_PUBLIC_APP_URL="http://localhost:3000"
-APP_URL="http://localhost:3000"
-```
+For a public-site regression, roll back to the previous static deployment rather
+than reactivating the database app. See [release recovery](../preview/docs/OFFSEASON-LAUNCH.md).
 
-Generate Prisma Client and push the schema when using a fresh local database:
+## Retirement checks
 
-```bash
-npm run prisma:generate
-npm run db:push
-```
-
-Optional seed command:
-
-```bash
-npm run prisma:seed
-```
-
-`prisma:seed` is destructive. It clears and recreates tournament data, so use it only on disposable local or branch databases.
-
-Start the app:
-
-```bash
-npm run dev:legacy
-```
-
-Open http://localhost:3000.
-
-## Useful Commands
-
-```bash
-npm run lint
-npm test
-npm run build:legacy
-npm run dry-run:tournament -- the-two-man-2026
-npm run tournament:reset:state -- the-two-man-2026
-npm run recap:export -- --slug the-two-man-2026
-npm run observability:check
-```
-
-Import a field from CSV files:
-
-```bash
-npm run field:import:csv -- data/examples/teams.example.csv data/examples/pods.example.csv data/examples/emails.example.csv --dry-run
-```
-
-Remove `--dry-run` only when the target database is disposable or intentionally being reset.
-
-## Environment
-
-See `.env.example` for the full template. The important runtime variables are:
-
-- `DATABASE_URL` or one of the supported Postgres aliases
-- `ADMIN_PASSWORD`
-- `ADMIN_SESSION_SECRET`
-- `NEXT_PUBLIC_APP_URL`
-- `APP_URL`
-- `SENTRY_DSN` and `NEXT_PUBLIC_SENTRY_DSN` when Sentry is enabled
-- `SENTRY_AUTH_TOKEN` when uploading Sentry release artifacts during builds
-- `THE_TWO_MAN_VALIDATE_PROD_DB`, `THE_TWO_MAN_ENV`, or `APP_ENV` for explicit production DB validation
-- `GOLF_COURSE_API_KEY` when live course lookup is enabled
-
-## Recovery
-
-Follow the [launch and rollback guide](../preview/docs/OFFSEASON-LAUNCH.md).
-The normal production deploy command publishes the new static site, not this app.
-Do not reset, seed or migrate the production database for UI recovery.
-
-## Documentation
-
-- `ARCHITECTURE.md` explains the current app layout and data flow.
-- `docs/tournament-rules.md` contains the tournament rules source document.
-- `docs/vercel-deployment.md` documents the existing Vercel production setup.
-- `docs/production-database-target.md` documents the expected production Neon target.
-- `docs/observability-runbook.md` explains Sentry and Clarity health checks.
-- `docs/end-to-end-audit-tracker.md` and `docs/dry-run-report.md` capture the June 2026 launch audit and dry run.
+The replacement app passed 62 unit tests, both production/demo builds, lint,
+typecheck and formatting. Browser coverage checks every archived match and player,
+standings, bracket, careers, and graphic downloads on desktop and emulated mobile.
+All 20 original repository data/brand files were compared byte-for-byte with the
+recovery tag. The public archive fingerprint remains unchanged. No private records
+were queried or exported during retirement; database verification used counts only.
