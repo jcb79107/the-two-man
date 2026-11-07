@@ -1,10 +1,10 @@
 # Current worktree
 
-Season 1 History is imported and read-only. Hosted preview links below refer to earlier revisions, not these un-deployed changes. Run locally to review the current build.
+Season 1 History is imported and read-only. The latest desktop/homepage preview is commit `0ce5f5c`, deployed November 7, 2026. The deployment retains Vercel protection; temporary no-login share links are supplied separately.
 
 # The Two-Man · Season 02 preview
 
-[Open the hosted Season 2 preview](https://thetwo-b0t8q0jsi-jcb79107s-projects.vercel.app).
+[Open the hosted Season 2 preview](https://thetwo-me8qmrerc-jcb79107s-projects.vercel.app).
 
 A fully separate staged preview for visual and workflow review. No production data connection or live integrations. See [docs/DECISIONS.md](docs/DECISIONS.md), [DESIGN.md](DESIGN.md) and [UX-CONTRACT.md](UX-CONTRACT.md).
 
@@ -35,7 +35,7 @@ Open http://127.0.0.1:3027. No .env file is required. Do not copy production env
 
 Current-season names, scorecards, awards and dates are fixtures. History now contains an official public Season 1 snapshot; see docs/SEASON-HISTORY.md. The public site has no player writes. Players text or email evidence to the commissioner outside the app. The static commissioner workspace has no login or access protection; all browser-local data is inspectable. Do not enter real cards, GHIN screenshots or personal information. No upload, AI extraction or GHIN connection exists. Real authentication, private storage, notifications, playoff administration, payout transfers, multi-device synchronization and production write safety remain unimplemented. Generated mark needs vector cleanup before print production.
 
-The hosted link above includes the core experience changes from commit `3286f0b`, published to staging on October 14, 2026. See docs/CORE-EXPERIENCE-VERIFICATION.md for test results and remaining limits.
+The hosted link includes the mobile and desktop audit updates and official Season 1 archive. See docs/DESKTOP-AUDIT-2026-11-07.md and docs/MOBILE-AUDIT-2026-11-07.md for checks and remaining limits.
 
 ## Verify and export
 
