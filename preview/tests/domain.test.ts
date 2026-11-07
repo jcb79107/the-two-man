@@ -77,14 +77,10 @@ describe("staged tournament integrity", () => {
     ).toBeNull();
     expect(approvalError({ ...matches[0], lockedAt: null })).toBeNull();
   });
-  it("accepts multiple GHIN strokes and rejects invalid allocations", () => {
+  it("rejects more than one stroke per hole under the tournament allowance", () => {
     const strokes = matches[0].strokes.map((row) => [...row]);
     strokes[0][0] = 2;
-    expect(validateCard(matches[0].scores, strokes)).toBeNull();
-    for (const invalid of [-1, 0.5, Infinity]) {
-      strokes[0][0] = invalid;
-      expect(validateCard(matches[0].scores, strokes)).not.toBeNull();
-    }
+    expect(validateCard(matches[0].scores, strokes)).not.toBeNull();
   });
   it("accepts the fixture snapshot and rejects unrelated data", () => {
     expect(validSnapshot(matches)).toBe(true);

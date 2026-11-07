@@ -10,7 +10,7 @@ Release: static preview only; no production promotion, database query/write, mig
 
 ## Navigation, rules and course feedback
 
-Removed the global season selector and archive promotions outside History. Header Rules, AI judge and Instagram now use matching icon/text links. Match course names open Google Maps with course/address queries. Rules no longer have numbers or status eyebrows; format and seeding are explicitly TBD. GHIN copy requires an accurate active handicap, one app per group and the exact 90% four-ball match-play allocation. Removed the score-entry one-stroke cap and updated scorecard indicators and scenario validation for negative net totals. Season 1 data remains unchanged.
+Removed the global season selector and archive promotions outside History. Header Rules, AI judge and Instagram now use matching icon/text links. Match course names open Google Maps with course/address queries. Rules no longer have numbers or status eyebrows; format and seeding are explicitly TBD. GHIN copy requires an accurate active handicap, one app per group and the 90% four-ball match-play allocation, capped at one stroke per hole under the tournament rule. The commissioner explicitly confirmed this cap; score entry and scenario validation retain it. Season 1 data remains unchanged.
 
 Emergency partner withdrawal is a commissioner-approved, next-match-only exception: six holes declared before tee-off, three per nine, two independently played balls; remaining holes and extra holes single-ball. This is not standard four-ball. Modified regular-season cards require manual commissioner review; the four-player demo editor does not automate this exception.
 

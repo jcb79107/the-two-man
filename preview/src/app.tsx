@@ -878,7 +878,7 @@ function Rules() {
             },
             {
               title: "Set strokes in GHIN before you tee off",
-              body: "Every player must have an active GHIN number and an accurate, up-to-date Handicap Index. At least one person in each group must have the GHIN app. Before teeing off, select the correct course and tees for every player and use the four-ball match-play setup with a 90% handicap allowance. Everyone must play the strokes GHIN assigns—no negotiated adjustments. Review the allocation together and save a screenshot for the commissioner.",
+              body: "Every player must have an active GHIN number and an accurate, up-to-date Handicap Index. At least one person in each group must have the GHIN app. Before teeing off, select the correct course and tees for every player and use the four-ball match-play setup with a 90% handicap allowance. Use the strokes GHIN assigns, capped at one stroke per hole under our tournament rules. No other negotiated adjustments. Review the allocation together and save a screenshot for the commissioner.",
             },
             {
               title: "Regular season: turn in the full card",
@@ -902,7 +902,7 @@ function Rules() {
             },
             {
               title: "If a partner must withdraw",
-              body: "For a medical emergency or another serious reason, contact the commissioner before the next match. With approval, the remaining player may play two separately marked balls on six holes in that match: three on the front nine and three on the back nine, declared to the opponents before tee-off.\n\nPlay each ball independently from tee to hole and count the better net score, using the remaining player’s GHIN-assigned strokes for both. This is not a scramble: do not switch balls or replay a shot. Play one ball on the other 12 holes and on every extra playoff hole. The allowance applies only to the next match; any later participation needs a new commissioner decision.\n\nThis is a tournament-specific emergency exception, not standard four-ball play. Ask the handicap committee whether the modified round is eligible for handicap posting. If a regular-season card is required, report the exception and both scores on the six nominated holes directly to the commissioner.",
+              body: "For a medical emergency or another serious reason, contact the commissioner before the next match. With approval, the remaining player may play two separately marked balls on six holes in that match: three on the front nine and three on the back nine, declared to the opponents before tee-off.\n\nPlay each ball independently from tee to hole and count the better net score, using the remaining player’s GHIN-assigned strokes, capped at one stroke per hole, for both. This is not a scramble: do not switch balls or replay a shot. Play one ball on the other 12 holes and on every extra playoff hole. The allowance applies only to the next match; any later participation needs a new commissioner decision.\n\nThis is a tournament-specific emergency exception, not standard four-ball play. Ask the handicap committee whether the modified round is eligible for handicap posting. If a regular-season card is required, report the exception and both scores on the six nominated holes directly to the commissioner.",
             },
           ].map((r) => (
             <section key={r.title}>

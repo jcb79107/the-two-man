@@ -350,8 +350,8 @@ function Entry({ match: original }: { match: Match }) {
           <details className="agreed-details">
             <summary>Enter agreed strokes by hole</summary>
             <p>
-              Copy the exact GHIN four-ball match-play allocation using the 90%
-              allowance.
+              Copy the GHIN match-play allocation: 90% allowance, playing off
+              the lowest player, maximum one stroke per hole.
             </p>
             <div className="segmented">
               <button
@@ -394,6 +394,7 @@ function Entry({ match: original }: { match: Match }) {
                               aria-label={`${name} hole ${h + 1} agreed strokes`}
                               type="number"
                               min={0}
+                              max={1}
                               value={draft.strokes[p][h]}
                               onChange={(e) => {
                                 const strokes = draft.strokes.map((row) => [

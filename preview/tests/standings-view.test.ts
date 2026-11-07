@@ -118,7 +118,7 @@ describe("hypothetical match scores", () => {
       { points: NaN },
       { points: 12, holesWon: 0 },
       { holesWon: 13 },
-      { aNet: 361 },
+      { aNet: -1 },
       { bNet: Infinity },
       { aNet: 72.5 },
     ])
@@ -135,6 +135,7 @@ it("rejects contradictory sweep and all-halved totals, but allows mixed-result u
     { points: 18, holesWon: 18, aNet: 72, bNet: 72 },
     { points: 0, holesWon: 0, aNet: 72, bNet: 72 },
     { points: 9, holesWon: 0, aNet: 72, bNet: 73 },
+    { points: 10, holesWon: 10, aNet: 0, bNet: 18 },
   ])
     expect(scenarioError(score)).not.toBeNull();
   expect(
@@ -153,8 +154,8 @@ it("accepts generated feasible net cards including boundary scores", () => {
       aNet = 0,
       bNet = 0;
     for (let h = 0; h < 18; h++) {
-      const a = next() - 3,
-        b = next() - 3;
+      const a = next(),
+        b = next();
       aNet += a;
       bNet += b;
       points += a < b ? 1 : a === b ? 0.5 : 0;
