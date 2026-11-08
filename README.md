@@ -1,43 +1,9 @@
-# The Two-Man
+![The Two-Man golf banner with mascot golfers](data/brand/two-man-banner.png)
 
-[thetwoman.site](https://www.thetwoman.site)
+The Two-Man is a two-person team golf tournament. Follow match results, standings
+and the playoff bracket, explore past seasons and player records, and revisit the
+matches that decided the championship.
 
-The offseason site shows Season 1 results, standings, the playoff bracket and
-player records. Season 2 details will follow once the field and format are set.
+Season 1 is in the books. Season 2 details are coming this winter.
 
-## Run locally
-
-From the repository root:
-
-```sh
-npm ci --prefix preview
-npm run dev
-```
-
-Open http://127.0.0.1:3027. `npm run build` exports the live offseason site;
-`npm start` serves that export. The site uses the read-only Season 1 archive and
-needs no database or credentials.
-
-## Check changes
-
-```sh
-npm test --prefix preview
-npm run lint --prefix preview
-npm run typecheck --prefix preview
-npm run build
-npm run test:offseason --prefix preview
-```
-
-The fictional Season 2 demo has separate [development instructions](preview/README.md).
-Root test, lint and typecheck commands also target the new app. The legacy app
-has been removed; its recovery tag and the preserved database are documented in
-[Season 1 preservation](docs/LEGACY-APP.md).
-
-## Deploy
-
-Merge verified changes to `main`, then run `npm run deploy:prod` from a clean,
-synced checkout. It deploys to the existing Vercel project, `the_two_man`.
-See [release checks and rollback](preview/docs/OFFSEASON-LAUNCH.md).
-
-Do not edit the Season 1 archive or run database resets, seeds or migrations for
-public-site work.
+[Visit thetwoman.site](https://www.thetwoman.site)
