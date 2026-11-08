@@ -20,14 +20,15 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           cache: npm
+          cache-dependency-path: preview/package-lock.json
 
       - name: Reject tracked build artifacts and private environment files
         run: npm run security:artifacts
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --prefix preview
 
       - name: Lint
         run: npm run lint
@@ -35,8 +36,11 @@ jobs:
       - name: Test
         run: npm test
 
-      - name: Install public site dependencies
-        run: npm ci --prefix preview
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Formatting
+        run: npm run format:check
 
       - name: Build
         run: npm run build
