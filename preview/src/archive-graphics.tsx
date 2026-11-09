@@ -1,6 +1,7 @@
 "use client";
+import type { GraphicResult } from "./graphic-state";
 import NextImage from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { archive2026, entryName } from "./history-data";
 import { PageHeading } from "./ui";
@@ -11,8 +12,15 @@ export function ArchiveGraphics() {
   const router = useRouter();
   const id = params.get("result") ?? "final";
   const game = archive2026.games.find((g) => g.id === id);
-  const [image, setImage] = useState({ id: "", url: "", error: "" });
+  const [image, setImage] = useState<GraphicResult | null>(null);
   const [retry, setRetry] = useState(0);
+  const key = JSON.stringify([id, retry]);
+  const current = image?.key === key ? image : null;
+  const download = useRef<HTMLAnchorElement>(null);
+  useEffect(() => {
+    if (retry > 0 && current?.status === "ready")
+      download.current?.focus({ preventScroll: true });
+  }, [current, retry]);
   useEffect(() => {
     if (!game) return;
     let cancelled = false;
@@ -74,12 +82,16 @@ export function ArchiveGraphics() {
         await mark.decode();
         ctx.drawImage(mark, 820, 45, 196, (196 * mark.height) / mark.width);
         if (!cancelled)
-          setImage({ id, url: canvas.toDataURL("image/png"), error: "" });
+          setImage({
+            key,
+            status: "ready",
+            url: canvas.toDataURL("image/png"),
+          });
       } catch (e) {
         if (!cancelled)
           setImage({
-            id,
-            url: "",
+            key,
+            status: "failed",
             error:
               e instanceof Error ? e.message : "Unable to generate graphic.",
           });
@@ -89,7 +101,7 @@ export function ArchiveGraphics() {
     return () => {
       cancelled = true;
     };
-  }, [game, id, retry]);
+  }, [game, key]);
   return (
     <>
       <PageHeading eyebrow="Season 1" title="Result graphics" />
@@ -117,20 +129,21 @@ export function ArchiveGraphics() {
               This result is not in the official archive. Choose a recorded
               match.
             </p>
-          ) : image.id !== id ? (
+          ) : !current ? (
             <p role="status">Preparing graphic…</p>
-          ) : image.error ? (
+          ) : current.status === "failed" ? (
             <div role="alert">
-              <p>{image.error}</p>
+              <p>{current.error}</p>
               <button className="button" onClick={() => setRetry(retry + 1)}>
                 Try again
               </button>
             </div>
           ) : (
             <a
+              ref={download}
               className="button"
               download={`two-man-2026-${id}.png`}
-              href={image.url}
+              href={current.url}
             >
               Download Instagram graphic
             </a>
@@ -139,11 +152,11 @@ export function ArchiveGraphics() {
             Official Season 1 results. Downloads do not change the archive.
           </p>
         </div>
-        {game && image.id === id && image.url && (
+        {game && current?.status === "ready" && (
           <NextImage
             unoptimized
             className="archive-graphic-image"
-            src={image.url}
+            src={current.url}
             width={1080}
             height={1350}
             alt={`2026 ${game.round}: ${entryName(archive2026, game.a)} vs ${entryName(archive2026, game.b)}, ${game.score}`}

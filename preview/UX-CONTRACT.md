@@ -72,3 +72,12 @@ The homepage omits the teams/pods/playoff-places sentence. The AI rules judge is
 ## November 7: Codex-led commissioner workflow
 
 The default commissioner destination is now the graphic desk; Results/manual correction is secondary. Players schedule in group texts. Manual entry records a played date, not a booked tee time. The versioned Season 2 publication feeds the public app and graphics after deployment; browser edits are only rehearsal overrides isolated by publication revision. See `docs/CODEX-RESULTS.md`. Confirmed playoff results propagate into the bracket, result pages, current-season history and proposed awards. No production database or Season 1 write path was introduced.
+
+## Explicit workflow states
+
+See [STATE-MACHINES.md](docs/STATE-MACHINES.md) for the active app's state owners,
+transition guards and verification map. Commissioner review uses `review-state.ts`:
+editing cannot retain attestation, and completion distinguishes visit-only results
+from persisted results. Graphics use `graphic-state.ts`: each selection/retry owns
+its result; a retry replaces stale errors with loading until that attempt finishes.
+Storage formats, publication validation, public URLs and archive data are unchanged.

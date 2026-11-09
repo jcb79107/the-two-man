@@ -1,7 +1,8 @@
 "use client";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useReducer, useState } from "react";
+import { initialReviewState, reviewTransition } from "./review-state";
 import { usePreview } from "./store";
 import { matches as originals, nameOf, teams, type Match } from "./data";
 import { approvalError, publishDraft, result } from "./domain";
@@ -138,19 +139,21 @@ function Entry({ match: original }: { match: Match }) {
   const [draft, setDraft] = useState<Match>(
     store.drafts[original.id]?.match ?? startingDraft(original),
   );
-  const [step, setStep] = useState<"edit" | "review" | "done">("edit");
-  const [error, setError] = useState("");
-  const [confirmed, setConfirmed] = useState(false);
+  const [state, dispatch] = useReducer(reviewTransition, initialReviewState);
+  const { step } = state;
+  const error = state.step === "done" ? "" : state.error;
+  const confirmed = state.step === "review" && state.confirmed;
   const [cancelOpen, setCancelOpen] = useState(false);
-  const [saved, setSaved] = useState(false);
-  const [publicationSaved, setPublicationSaved] = useState(false);
+  const saved = state.step === "edit" && state.saved;
+  const publicationSaved = state.step === "done" && state.persisted;
+  function setError(message: string) {
+    dispatch({ type: "error", message });
+  }
   const [strokeNine, setStrokeNine] = useState(0);
   const correcting = original.status === "official";
   function update(next: Match) {
     setDraft(next);
-    setConfirmed(false);
-    setSaved(false);
-    setError("");
+    dispatch({ type: "edit" });
     store.setDraft(original.id, { match: next, note: next.note });
   }
   function review() {
@@ -167,11 +170,11 @@ function Entry({ match: original }: { match: Match }) {
       setError("Explain the correction before publishing a revised result.");
       return;
     }
-    setError("");
-    setStep("review");
+    dispatch({ type: "review" });
     window.scrollTo(0, 0);
   }
   function publish() {
+    if (state.step !== "review") return;
     if (!confirmed) {
       setError("Confirm that you checked the card and GHIN evidence.");
       return;
@@ -184,10 +187,8 @@ function Entry({ match: original }: { match: Match }) {
           ? "Correction published. Current standings and records recalculated."
           : "Result published. Current standings and records updated.",
       );
-      setPublicationSaved(persisted);
       if (persisted) store.setDraft(original.id, null);
-      setError("");
-      setStep("done");
+      dispatch({ type: "publish", persisted });
       window.scrollTo(0, 0);
     } catch (e) {
       setError(
@@ -222,7 +223,7 @@ function Entry({ match: original }: { match: Match }) {
                   className="button outline"
                   onClick={() => {
                     if (store.save(store.matches, "Result published.")) {
-                      setPublicationSaved(true);
+                      dispatch({ type: "persist" });
                       store.setDraft(original.id, null);
                     }
                   }}
@@ -445,7 +446,9 @@ function Entry({ match: original }: { match: Match }) {
             <input
               type="checkbox"
               checked={confirmed}
-              onChange={(e) => setConfirmed(e.target.checked)}
+              onChange={(e) =>
+                dispatch({ type: "confirm", confirmed: e.target.checked })
+              }
             />
             I checked all 18 holes and the agreed strokes against the card and
             GHIN evidence.
@@ -468,7 +471,7 @@ function Entry({ match: original }: { match: Match }) {
                 className="button outline"
                 onClick={() => {
                   store.setDraft(draft.id, { match: draft, note: draft.note });
-                  setSaved(true);
+                  dispatch({ type: "retain" });
                 }}
               >
                 {saved ? "Draft retained" : "Save draft"}
@@ -486,9 +489,7 @@ function Entry({ match: original }: { match: Match }) {
               <button
                 className="button outline"
                 onClick={() => {
-                  setStep("edit");
-                  setConfirmed(false);
-                  setError("");
+                  dispatch({ type: "edit" });
                 }}
               >
                 Back to editing

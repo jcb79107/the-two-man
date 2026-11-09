@@ -13,3 +13,8 @@ Commissioner result updates belong in the existing AI chat. Read
 Do not add scheduling forms, in-app chat or player submission requirements.
 Only fictional data belongs in the Season 2 preview; never commit private scorecard
 evidence, GHIN IDs or contact details. Preserve the one-stroke-per-hole cap.
+
+For interaction or workflow changes, consult `docs/STATE-MACHINES.md` for state
+owners, transition guards and regression checks. Keep URL, draft, published and
+archive state separate; assess user recovery, code clarity and agent-verifiable
+outcomes together before introducing a new state or transition.

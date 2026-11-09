@@ -1,3 +1,4 @@
+import { expectGraphicRetry } from "../graphic-recovery";
 import { test, expect } from "@playwright/test";
 import { archive2026 } from "../../src/history-data";
 
@@ -164,4 +165,14 @@ test("detail titles survive hydration and reload", async ({ page }) => {
     .getByRole("button", { name: "More navigation", exact: true })
     .click();
   await expect(page).toHaveTitle(/2026 Final/);
+});
+
+test("graphic retry replaces stale failure with loading before download", async ({
+  page,
+}) => {
+  await expectGraphicRetry(page, "Download Instagram graphic");
+  await page.screenshot({
+    path: test.info().outputPath("graphic-recovered.png"),
+    fullPage: true,
+  });
 });
