@@ -939,150 +939,223 @@ textarea {
 .segmented button:hover:not([aria-pressed="true"]) {
   background: var(--mist);
 }
+.scorecard-mode-note {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 20px;
+  margin: 0;
+  padding: 10px 20px;
+  border-top: 1px solid var(--line);
+  font-size: 12px;
+  color: var(--muted);
+}
+.scorecard-swipe {
+  display: none;
+}
 .score-scroll {
   overflow: auto;
-  scrollbar-gutter: stable;
 }
 .score-table {
   width: 100%;
-  border-collapse: collapse;
-  min-width: 840px;
-  font-size: 13px;
+  border-collapse: separate;
+  border-spacing: 0;
+  table-layout: fixed;
+  min-width: 760px;
+  font-size: 15px;
   font-variant-numeric: tabular-nums;
 }
 .score-table th,
 .score-table td {
-  padding: 14px 8px;
+  position: relative;
+  padding: 7px 4px;
+  height: 42px;
   text-align: center;
   border-bottom: 1px solid var(--line);
-  position: relative;
-  min-width: 47px;
+  border-right: 1px solid var(--line);
 }
 .score-table th:first-child {
-  width: 175px;
-  text-align: left;
-  padding-left: 23px;
   position: sticky;
   left: 0;
   z-index: 1;
+  width: 184px;
+  text-align: left;
+  padding-left: 18px;
   background: var(--paper);
-  box-shadow: 1px 0 var(--line);
+  font-size: 14px;
+  font-weight: 600;
 }
 .score-table th:first-child small {
   display: block;
+  margin-top: 1px;
+  font-size: 11px;
+  font-weight: 400;
   color: var(--muted);
-  font-size: 8px;
-  margin-top: 5px;
-  letter-spacing: 0.05em;
 }
-.score-table thead {
+.score-table thead th {
   background: var(--pine);
-  color: var(--cream);
-  font: 10px var(--mono);
+  color: var(--paper);
+  font-size: 13px;
+  font-weight: 600;
+  height: 38px;
+  border-color: #416354;
 }
 .score-table thead th:first-child {
   background: var(--pine);
 }
-.score-table thead th {
-  font-weight: 400;
-}
-.score-table .par-row,
-.score-table .index-row {
-  background: var(--mist);
-  font: 10px var(--mono);
-  color: var(--muted);
+.score-table thead th:nth-last-child(-n + 2) {
+  width: 75px;
 }
 .score-table .par-row th,
-.score-table .index-row th {
-  background: var(--mist);
-}
+.score-table .par-row td,
 .score-table .index-row th,
 .score-table .index-row td {
-  padding-top: 8px;
-  padding-bottom: 8px;
+  background: #f1f2ed;
+  height: 30px;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  font-size: 12px;
+}
+.score-table .index-row {
+  color: var(--muted);
+}
+.score-team {
+  --team-color: #073e2f;
+  --team-tint: #edf2ee;
+}
+.score-team-b {
+  --team-color: #7a3926;
+  --team-tint: #f6eeea;
+}
+.score-table .score-team-heading th {
+  background: var(--team-tint);
+  padding: 7px 18px;
+  height: 36px;
+  border-top: 1px solid var(--team-color);
+  color: var(--team-color);
+  position: static;
+  font-size: 13px;
+}
+.score-team-letter {
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  margin-right: 9px;
+  background: var(--team-color);
+  color: var(--paper);
+  font-size: 11px;
+}
+.score-team .score-player th {
+  border-left: 4px solid var(--team-color);
+  padding-left: 14px;
+}
+.score-entry {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  min-height: 34px;
 }
 .score-number {
   display: inline-grid;
   place-items: center;
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 1;
+}
+.score-number.birdie,
+.score-number.eagle {
+  border-radius: 50%;
+  border: 1px solid currentColor;
+}
+.score-number.bogey,
+.score-number.double-bogey {
+  border: 1px solid currentColor;
+}
+.score-number.eagle,
+.score-number.double-bogey {
+  border-width: 3px;
+  border-style: double;
 }
 .stroke-dot {
   position: absolute;
-  top: 7px;
-  right: 7px;
-  color: var(--muted);
-  font-size: 12px;
+  top: -5px;
+  right: -2px;
+  font-size: 14px;
+  line-height: 1;
+  color: var(--ink);
 }
 .score-total {
-  background: var(--cream);
-  font-weight: 600;
+  background: #f5f4ee;
+  font-weight: 700;
 }
-.score-table .team-break {
-  border-top: 2px solid #b0c0af;
+.score-table .net-row th,
+.score-table .net-row td {
+  background: var(--team-tint);
+  height: 38px;
+  font-weight: 700;
 }
-.net-row {
-  font: 10px var(--mono);
-  background: var(--mist);
+.score-table .net-row th {
+  border-left: 4px solid var(--team-color);
+  padding-left: 14px;
 }
-.net-row th:first-child {
-  background: var(--mist);
+.score-table .net-row th small {
+  display: inline;
+  margin-left: 5px;
+  font-size: 10px;
 }
-.score-table .hole-result th {
-  font: 9px var(--mono);
-  background: var(--cream);
-}
-.hole-result {
-  background: var(--cream);
-  font: 11px var(--mono);
+.score-table .hole-result td {
+  background: var(--paper);
+  height: 42px;
+  border-top: 1px solid var(--ink);
+  font-size: 12px;
 }
 .hole-result td > span {
   display: grid;
   place-items: center;
-  width: 26px;
+  width: 28px;
   height: 26px;
   margin: auto;
-  border-radius: 50%;
+  font-weight: 700;
 }
 .hole-result .a {
-  background: var(--pine);
+  background: #073e2f;
   color: var(--paper);
 }
 .hole-result .b {
-  background: #e6d0bf;
-  color: #733918;
+  background: #7a3926;
+  color: var(--paper);
 }
-.scorecard-guide {
-  padding: 16px 20px;
-  border-top: 1px solid var(--line);
-  background: var(--paper);
-  font-size: 13px;
-  line-height: 1.5;
-}
-.scorecard-guide p {
-  margin: 0 0 8px;
-}
-.scorecard-teams {
+.scorecard-legend {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px 24px;
-}
-.scorecard-teams strong {
-  margin-right: 6px;
-}
-.best-ball-label {
-  display: block;
-  color: var(--pine);
+  gap: 12px 22px;
+  padding: 14px 18px 8px;
   font-size: 12px;
-  font-weight: 600;
+  color: var(--muted);
 }
-.best-ball-key {
-  display: inline-block;
-  padding: 0 5px;
-  background: var(--mist);
-  border-bottom: 2px solid var(--pine);
-  color: var(--pine);
-  font-weight: 600;
+.scorecard-legend > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.scorecard-legend .score-number {
+  width: 23px;
+  height: 23px;
+  font-size: 11px;
+  color: var(--ink);
+}
+.scorecard-footnote {
+  padding: 0 18px 14px;
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--muted);
 }
 
 .score-table input {
@@ -1897,22 +1970,37 @@ summary {
     font-size: 12px;
   }
   .score-table {
-    min-width: 760px;
+    min-width: 720px;
   }
   .score-table th:first-child {
-    width: 133px;
-    padding-left: 14px;
-    min-width: 133px;
+    width: 140px;
+    padding-left: 12px;
+    font-size: 13px;
   }
-  .score-table th,
-  .score-table td {
-    min-width: 44px;
-    padding: 12px 7px;
+  .score-table .score-player th,
+  .score-table .net-row th {
+    padding-left: 8px;
+  }
+  .score-table .score-team-heading th {
+    padding-left: 12px;
+  }
+  .scorecard-swipe {
+    display: inline;
+  }
+  .scorecard-mode-note {
+    padding: 9px 12px;
+    gap: 5px 14px;
   }
   .scorecard-legend {
-    padding: 16px;
-    gap: 12px;
-    font-size: 9px;
+    padding: 12px;
+    gap: 10px 16px;
+  }
+  .scorecard-footnote {
+    padding: 0 12px 12px;
+  }
+  .score-table .net-row th small {
+    display: block;
+    margin-left: 0;
   }
   .scorecard {
     margin: 20px -1px;
@@ -3749,14 +3837,6 @@ details.fine-note > summary {
 .team-record span,
 .match-location,
 .big-score small,
-.scorecard-legend,
-.score-table th:first-child small,
-.score-table .hole-result th,
-.score-table .par-row,
-.score-table .index-row,
-.score-table thead,
-.net-row,
-.hole-result,
 .tournament-match-meta,
 .tournament-match-footer,
 .tournament-seed,
@@ -4184,10 +4264,6 @@ main :where(a, button, input, select, textarea, summary) {
 }
 #projected-eight {
   scroll-margin-top: 24px;
-}
-.best-ball-cell {
-  background: var(--mist);
-  box-shadow: inset 0 -2px var(--pine);
 }
 @media (max-width: 600px) {
   .scenario-comparison {

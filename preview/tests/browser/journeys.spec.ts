@@ -4,7 +4,7 @@ import { expectRecordScopeJourney } from "../record-book";
 import { test, expect } from "@playwright/test";
 import { archive2026 } from "../../src/history-data";
 
-test("scorecard explains best net scores and separates nine-hole totals", async ({
+test("four-ball scorecard uses traditional symbols and grouped team scores", async ({
   page,
 }) => {
   await expectScorecardClarity(page);

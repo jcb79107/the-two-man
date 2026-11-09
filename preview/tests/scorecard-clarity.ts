@@ -3,31 +3,40 @@ import { expect, type Page } from "@playwright/test";
 export async function expectScorecardClarity(page: Page) {
   await page.goto("/history/2026/matches/9d21d132165a4737add5c");
   const card = page.locator(".scorecard");
-  await expect(card.locator(".scorecard-guide")).toContainText(
-    "not necessarily the hole winner",
-  );
-  await expect(card.locator(".scorecard-guide")).toContainText(
-    "the score counts once",
-  );
-  await expect(card.locator(".scorecard-guide")).toContainText(
-    "Gross = shots taken",
-  );
   const player = (name: string) =>
     card
       .getByRole("row")
       .filter({ has: page.getByRole("rowheader", { name: new RegExp(name) }) });
-  await expect(player("Jason Baer").locator("td").first()).not.toHaveClass(
-    /best-ball-cell/,
+  await expect(
+    card.locator(".scorecard-guide, .best-ball-label, .best-ball-cell"),
+  ).toHaveCount(0);
+  await expect(card.locator(".score-team")).toHaveCount(2);
+  await expect(card.locator(".score-team-a .score-player")).toHaveCount(2);
+  await expect(card.locator(".score-team-b .score-player")).toHaveCount(2);
+  await expect(card.locator(".score-team-a .net-row")).toContainText(
+    "Better ball",
   );
-  await expect(player("Jack Cadden").locator("td").first()).toContainText(
-    "Best",
+  await expect(card.locator(".score-team-b .net-row")).toContainText(
+    "Better ball",
   );
-  // Equal net scores both get marked, even when their gross scores differ.
-  await expect(player("Andrew Rausch").locator("td").first()).toContainText(
-    "Best",
-  );
-  await expect(player("Brandon Grant").locator("td").first()).toContainText(
-    "Best",
+  await expect(
+    player("Jason Baer").locator(".score-number").nth(0),
+  ).toHaveClass(/\bbogey\b/);
+  await expect(
+    player("Jason Baer").locator(".score-number").nth(1),
+  ).toHaveClass(/\bdouble-bogey\b/);
+  await expect(
+    player("Jason Baer").locator(".score-number").nth(2),
+  ).toHaveClass(/\bpar\b/);
+  await expect(
+    player("Andrew Rausch").locator(".score-number").nth(1),
+  ).toHaveClass(/\bbirdie\b/);
+  await expect(
+    player("Andrew Rausch").locator(".score-number").nth(1),
+  ).toHaveCSS("border-radius", "50%");
+  await expect(player("Jason Baer").locator(".score-number").nth(1)).toHaveCSS(
+    "border-top-style",
+    "double",
   );
   await expect(
     player("Brandon Grant").locator(".score-number").first(),
@@ -37,15 +46,18 @@ export async function expectScorecardClarity(page: Page) {
   );
   await expect(card.locator(".hole-result td").last()).toHaveText("A 8 : 10 B");
   await card.getByRole("button", { name: "Net", exact: true }).click();
-  await expect(card.locator(".scorecard-guide")).toContainText(
-    "already deducted",
+  await expect(card.locator(".scorecard-mode-note")).toContainText(
+    "strokes deducted",
   );
   await expect(
     player("Brandon Grant").locator(".score-number").first(),
   ).toHaveText("4");
-  await expect(player("Brandon Grant").locator("td").first()).toContainText(
-    "Best",
-  );
+  await expect(
+    player("Brandon Grant").locator(".score-number").first(),
+  ).toHaveClass(/\bpar\b/);
+  await expect(
+    player("Jack Cadden").locator(".score-number").first(),
+  ).toHaveClass(/\bbirdie\b/);
   await card.getByRole("button", { name: "Back 9", exact: true }).click();
   await expect(card.locator(".hole-result td").nth(9)).toHaveText(
     "A 2.5 : 6.5 B",
@@ -53,6 +65,18 @@ export async function expectScorecardClarity(page: Page) {
   await expect(card.locator(".hole-result td").last()).toHaveText("A 8 : 10 B");
   await card.getByRole("button", { name: "Front 9", exact: true }).click();
   await card.getByRole("button", { name: "Gross", exact: true }).click();
+  // The full grid scrolls while player names remain visible.
+  const scroll = card.getByRole("region");
+  const name = player("Jason Baer").getByRole("rowheader");
+  const before = await name.boundingBox();
+  await scroll.evaluate((el) => {
+    el.scrollLeft = el.scrollWidth;
+  });
+  const after = await name.boundingBox();
+  expect(after!.x).toBeCloseTo(before!.x, 0);
+  await card.getByRole("button", { name: "Back 9", exact: true }).click();
+  await expect.poll(() => scroll.evaluate((el) => el.scrollLeft)).toBe(0);
+  await card.getByRole("button", { name: "Front 9", exact: true }).click();
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= innerWidth,
