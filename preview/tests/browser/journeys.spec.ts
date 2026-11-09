@@ -1,3 +1,4 @@
+import { expectGraphicRetry } from "../graphic-recovery";
 import { test, expect } from "@playwright/test";
 import { archive2026 } from "../../src/history-data";
 
@@ -125,6 +126,18 @@ test("commissioner correction persists a draft and requires review before public
     page.getByRole("alert").filter({ hasText: "Confirm that you checked" }),
   ).toBeVisible();
   await page.getByRole("checkbox", { name: /I checked all 18 holes/ }).check();
+  await expect(
+    page.getByRole("alert").filter({ hasText: "Confirm that you checked" }),
+  ).toHaveCount(0);
+  await page.getByRole("button", { name: "Back to editing" }).click();
+  await page
+    .getByRole("button", { name: "Review result", exact: true })
+    .click();
+  await expect(
+    page.getByRole("checkbox", { name: /I checked all 18 holes/ }),
+  ).not.toBeChecked();
+  await page.getByRole("checkbox", { name: /I checked all 18 holes/ }).check();
+
   await page
     .getByRole("button", { name: "Publish correction", exact: true })
     .click();
@@ -423,4 +436,14 @@ test("pending matches omit unconfirmed details and history links open the archiv
     await expect(page).toHaveURL(new RegExp("/history/2026\\?view=" + view));
     await page.goto("/history");
   }
+});
+
+test("graphic retry replaces stale failure with loading before download", async ({
+  page,
+}) => {
+  await expectGraphicRetry(page, "Download PNG");
+  await page.screenshot({
+    path: test.info().outputPath("graphic-recovered.png"),
+    fullPage: true,
+  });
 });

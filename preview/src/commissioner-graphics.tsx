@@ -1,5 +1,6 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import type { GraphicResult } from "./graphic-state";
 import NextImage from "next/image";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
@@ -28,9 +29,16 @@ export function CommissionerGraphics({ matches }: { matches: Match[] }) {
   const needsResult = kind === "result" || kind === "scorecard";
   const invalid = needsResult && !!requestedId && !selected;
   const [retry, setRetry] = useState(0);
-  const [rendered, setRendered] = useState({ key: "", url: "", error: "" });
-  const key = JSON.stringify([kind, matchId, matches]);
-  const current = rendered.key === key;
+  const [rendered, setRendered] = useState<GraphicResult | null>(null);
+  const key = JSON.stringify([kind, matchId, matches, retry]);
+  const current = rendered?.key === key ? rendered : null;
+  const download = useRef<HTMLAnchorElement>(null);
+  useEffect(() => {
+    if (retry > 0 && current?.status === "ready")
+      download.current?.focus({ preventScroll: true });
+  }, [current, retry]);
+  const url = current?.status === "ready" ? current.url : "";
+  const error = current?.status === "failed" ? current.error : "";
   function select(nextKind: GraphicKind, id = matchId) {
     const query = new URLSearchParams({ graphic: nextKind });
     if (id) query.set("result", id);
@@ -67,7 +75,7 @@ export function CommissionerGraphics({ matches }: { matches: Match[] }) {
             mascot.height * scale,
           );
           const url = canvas.toDataURL("image/png");
-          if (!cancelled) setRendered({ key, url, error: "" });
+          if (!cancelled) setRendered({ key, status: "ready", url });
         } finally {
           URL.revokeObjectURL(svgUrl);
         }
@@ -75,7 +83,7 @@ export function CommissionerGraphics({ matches }: { matches: Match[] }) {
         if (!cancelled)
           setRendered({
             key,
-            url: "",
+            status: "failed",
             error:
               e instanceof Error
                 ? e.message
@@ -143,10 +151,11 @@ export function CommissionerGraphics({ matches }: { matches: Match[] }) {
             View published result →
           </Link>
         )}
-        {!invalid && current && rendered.url && (
+        {!invalid && current && url && (
           <a
+            ref={download}
             className="button primary"
-            href={rendered.url}
+            href={url}
             download={`two-man-${kind}${needsResult && selected ? "-" + nameOf(selected.a).replaceAll(" & ", "-").toLowerCase() + "-vs-" + nameOf(selected.b).replaceAll(" & ", "-").toLowerCase() + "-" + selected.date.slice(0, 10) : ""}.png`}
           >
             Download PNG
@@ -159,13 +168,13 @@ export function CommissionerGraphics({ matches }: { matches: Match[] }) {
               ? "Publish a result to make a match graphic. Standings and bracket graphics are available now."
               : !current
                 ? "Generating preview…"
-                : rendered.url
+                : url
                   ? "Ready to download."
                   : ""}
         </p>
-        {!invalid && !empty && current && rendered.error && (
+        {!invalid && !empty && current && error && (
           <div role="alert">
-            <p>{rendered.error}</p>
+            <p>{error}</p>
             <button
               className="button outline"
               onClick={() => setRetry((n) => n + 1)}
@@ -176,10 +185,10 @@ export function CommissionerGraphics({ matches }: { matches: Match[] }) {
         )}
       </div>
       <div className="graphic-preview">
-        {!invalid && current && rendered.url ? (
+        {!invalid && current && url ? (
           <NextImage
             unoptimized
-            src={rendered.url}
+            src={url}
             width={1080}
             height={1350}
             alt={`${kind === "result" ? "Match result" : kind === "scorecard" ? "Scorecard" : kind === "standings" ? "Standings" : "Bracket"} Instagram graphic preview. Sample season data.`}
@@ -190,7 +199,7 @@ export function CommissionerGraphics({ matches }: { matches: Match[] }) {
               ? "No graphic for this match."
               : empty
                 ? "No published match to preview."
-                : current && rendered.error
+                : current && error
                   ? "Preview unavailable."
                   : "Preparing graphic…"}
           </p>
