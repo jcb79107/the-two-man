@@ -1007,13 +1007,6 @@ textarea {
   width: 28px;
   height: 28px;
 }
-.score-number.birdie {
-  border: 1px solid var(--pine);
-  border-radius: 50%;
-}
-.score-number.bogey {
-  border: 1px solid var(--pine);
-}
 .stroke-dot {
   position: absolute;
   top: 7px;
@@ -1059,30 +1052,39 @@ textarea {
   background: #e6d0bf;
   color: #733918;
 }
-.scorecard-legend {
+.scorecard-guide {
+  padding: 16px 20px;
+  border-top: 1px solid var(--line);
+  background: var(--paper);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.scorecard-guide p {
+  margin: 0 0 8px;
+}
+.scorecard-teams {
   display: flex;
-  gap: 20px;
-  align-items: center;
   flex-wrap: wrap;
-  padding: 17px 24px;
-  font-size: 10px;
-  color: var(--muted);
+  gap: 8px 24px;
 }
-.scorecard-legend > span {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+.scorecard-teams strong {
+  margin-right: 6px;
 }
-.legend-circle,
-.legend-square {
-  border: 1px solid var(--pine);
-  width: 12px;
-  height: 12px;
+.best-ball-label {
+  display: block;
+  color: var(--pine);
+  font-size: 12px;
+  font-weight: 600;
+}
+.best-ball-key {
   display: inline-block;
+  padding: 0 5px;
+  background: var(--mist);
+  border-bottom: 2px solid var(--pine);
+  color: var(--pine);
+  font-weight: 600;
 }
-.legend-circle {
-  border-radius: 50%;
-}
+
 .score-table input {
   width: 38px;
   min-height: 36px;
@@ -4186,13 +4188,6 @@ main :where(a, button, input, select, textarea, summary) {
 .best-ball-cell {
   background: var(--mist);
   box-shadow: inset 0 -2px var(--pine);
-}
-.legend-best-ball {
-  display: inline-block;
-  width: 16px;
-  height: 16px;
-  background: var(--mist);
-  border-bottom: 2px solid var(--pine);
 }
 @media (max-width: 600px) {
   .scenario-comparison {

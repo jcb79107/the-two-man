@@ -1,7 +1,17 @@
 import { expectGraphicRetry } from "../graphic-recovery";
+import { expectScorecardClarity } from "../scorecard-clarity";
 import { expectRecordScopeJourney } from "../record-book";
 import { test, expect } from "@playwright/test";
 import { archive2026 } from "../../src/history-data";
+
+test("scorecard explains best net scores and separates nine-hole totals", async ({
+  page,
+}) => {
+  await expectScorecardClarity(page);
+  await page
+    .locator(".scorecard")
+    .screenshot({ path: test.info().outputPath("scorecard.png") });
+});
 
 test("record scopes rank participants and recover through browser navigation", async ({
   page,

@@ -248,6 +248,38 @@ export function Scorecard({
           strokes are valid.
         </p>
       )}
+      <div className="scorecard-guide">
+        <p>
+          <strong>
+            {mode === "gross"
+              ? "Gross = shots taken."
+              : "Net = gross minus agreed strokes."}
+          </strong>{" "}
+          {mode === "gross"
+            ? "Team scores and hole points always use net scores."
+            : "Stroke dots are already deducted from these scores."}
+        </p>
+        {complete && (
+          <p>
+            <span className="best-ball-key">Best</span> Highlighted scores are
+            the lowest net score on that team—not necessarily the hole winner.
+            Both partners are marked when tied; the score counts once.
+          </p>
+        )}
+        <p>
+          <strong>•</strong> One agreed stroke on this hole.{" "}
+          <strong>A / B</strong> wins 1 hole point; <strong>½</strong> means
+          half a point each.
+        </p>
+        <div className="scorecard-teams">
+          <span>
+            <strong>A</strong> {teamLabels[0]}
+          </span>
+          <span>
+            <strong>B</strong> {teamLabels[1]}
+          </span>
+        </div>
+      </div>
       <p className="table-hint">
         Swipe the scorecard for all nine holes and totals.
       </p>
@@ -271,8 +303,8 @@ export function Scorecard({
                   {h + 1}
                 </th>
               ))}
-              <th scope="col">{nine === 0 ? "Out" : "In"}</th>
-              <th scope="col">Total</th>
+              <th scope="col">{nine === 0 ? "Front 9" : "Back 9"}</th>
+              <th scope="col">18 holes</th>
             </tr>
           </thead>
           <tbody>
@@ -309,9 +341,6 @@ export function Scorecard({
                         : undefined
                     }
                   >
-                    {complete && r.net[p][h] === (p < 2 ? r.a[h] : r.b[h]) && (
-                      <span className="sr-only">Team best ball: </span>
-                    )}
                     {editable && mode === "gross" ? (
                       <input
                         aria-label={`${name} hole ${h + 1} gross score`}
@@ -327,10 +356,14 @@ export function Scorecard({
                         }}
                       />
                     ) : (
-                      <span
-                        className={`score-number ${(mode === "gross" ? m.scores[p][h] : r.net[p][h]) < cardPars[h] ? "birdie" : (mode === "gross" ? m.scores[p][h] : r.net[p][h]) > cardPars[h] ? "bogey" : ""}`}
-                      >
+                      <span className="score-number">
                         {mode === "gross" ? m.scores[p][h] : r.net[p][h]}
+                      </span>
+                    )}
+                    {complete && r.net[p][h] === (p < 2 ? r.a[h] : r.b[h]) && (
+                      <span className="best-ball-label">
+                        <span className="sr-only">Team best net score: </span>
+                        Best
                       </span>
                     )}
                     {m.strokes[p][h] > 0 && (
@@ -377,7 +410,7 @@ export function Scorecard({
                     <td key={h}>
                       <span
                         className={r.holes[h]}
-                        title={
+                        aria-label={
                           r.holes[h] === "tie"
                             ? "Half a point each"
                             : `${r.holes[h] === "a" ? teamLabels[0] : teamLabels[1]} wins hole`
@@ -387,7 +420,22 @@ export function Scorecard({
                       </span>
                     </td>
                   ))}
-                  <td colSpan={2}>
+                  <td>
+                    A{" "}
+                    {sum(
+                      holes.map((h) =>
+                        r.holes[h] === "a" ? 1 : r.holes[h] === "tie" ? 0.5 : 0,
+                      ),
+                    )}{" "}
+                    :{" "}
+                    {sum(
+                      holes.map((h) =>
+                        r.holes[h] === "b" ? 1 : r.holes[h] === "tie" ? 0.5 : 0,
+                      ),
+                    )}{" "}
+                    B
+                  </td>
+                  <td>
                     A {r.aPoints} : {r.bPoints} B
                   </td>
                 </tr>
@@ -395,22 +443,6 @@ export function Scorecard({
             )}
           </tbody>
         </table>
-      </div>
-      <div className="scorecard-legend">
-        <span>
-          <i className="legend-circle" /> Birdie or better
-        </span>
-        <span>
-          <i className="legend-square" /> Bogey or worse
-        </span>
-        <span>• Agreed stroke</span>
-        <span>
-          <i className="legend-best-ball" /> Team best ball (both marked when
-          tied)
-        </span>
-        <span>
-          A = {teamLabels[0]} · B = {teamLabels[1]}
-        </span>
       </div>
     </section>
   );

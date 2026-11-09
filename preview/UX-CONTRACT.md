@@ -91,3 +91,14 @@ and career earnings; earned amounts do not assert payment. The imported match
 archive and its fingerprint remain unchanged. Only regular-season matches show
 scorecards or missing-card notices. Playoff pages and metadata focus on the
 winning team and final match-play score.
+
+## Scorecard clarity — November 9
+
+The reading key sits above the scorecard. Shading plus a visible “Best” label
+marks each team's lowest net score, including both partners on a tie; that score
+counts once and does not by itself indicate a won hole. Gross/net explanations
+and agreed-stroke dots remain explicit. Plain score numerals replace par-relative
+circles and squares. The hole-point row identifies the winning team or half-point
+tie; selected-nine and 18-hole totals occupy separate, labeled columns. The same
+presentation applies to archived, demo, and editable scorecards without changing
+scoring rules or source data.
