@@ -1,3 +1,4 @@
+import { expectLocalFilters } from "../local-filters";
 import { expectArchiveResultsJourney } from "../archive-results";
 import { expectGraphicRetry } from "../graphic-recovery";
 import {
@@ -321,4 +322,8 @@ test("player scores stay gross while better ball applies recorded strokes", asyn
   await page
     .locator(".scorecard")
     .screenshot({ path: test.info().outputPath("simple-scorecard.png") });
+});
+
+test("loaded filters work without network requests", async ({ page }) => {
+  await expectLocalFilters(page);
 });
