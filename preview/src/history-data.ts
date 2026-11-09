@@ -48,6 +48,7 @@ export type Award = {
   kind: "champion" | "runner-up" | "pod";
   label: string;
   amount: number | null;
+  perPlayer?: number;
 };
 export type SeasonRecord = {
   year: number;
@@ -212,7 +213,8 @@ const archiveBase: SeasonRecord = {
   games: archiveGames,
   champion: final.winner,
   runnerUp: final.winner === final.a ? final.b : final.a,
-  prizePool: null,
+  // Commissioner-confirmed November 9, 2026; preserve the imported match archive.
+  prizePool: 3600,
   awards: [],
 };
 const archiveStandings = seasonStandings(archiveBase);
@@ -222,36 +224,42 @@ export const archive2026: SeasonRecord = {
     {
       teamId: archiveBase.champion!,
       kind: "champion",
-      label: "Champion",
-      amount: null,
+      label: "Champions",
+      amount: 1800,
+      perPlayer: 900,
     },
     {
       teamId: archiveBase.runnerUp!,
       kind: "runner-up",
       label: "Runner-up",
-      amount: null,
+      amount: 900,
+      perPlayer: 450,
     },
-    ...[...new Set(archiveBase.entries.map((e) => e.pod))].flatMap((pod) => {
-      const rows = archiveStandings.filter(
-        (r) => archiveBase.entries.find((e) => e.teamId === r.id)?.pod === pod,
-      );
-      const [first, second] = rows;
-      const tied =
-        first.won + first.tied / 2 === second.won + second.tied / 2 &&
-        first.points === second.points &&
-        first.holesWon === second.holesWon &&
-        first.netTotal === second.netTotal;
-      return tied
-        ? []
-        : [
-            {
-              teamId: first.id,
-              kind: "pod" as const,
-              label: `Pod ${pod} winner`,
-              amount: null,
-            },
-          ];
-    }),
+    ...[...new Set(archiveBase.entries.map((e) => e.pod))]
+      .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
+      .flatMap((pod) => {
+        const rows = archiveStandings.filter(
+          (r) =>
+            archiveBase.entries.find((e) => e.teamId === r.id)?.pod === pod,
+        );
+        const [first, second] = rows;
+        const tied =
+          first.won + first.tied / 2 === second.won + second.tied / 2 &&
+          first.points === second.points &&
+          first.holesWon === second.holesWon &&
+          first.netTotal === second.netTotal;
+        return tied
+          ? []
+          : [
+              {
+                teamId: first.id,
+                kind: "pod" as const,
+                label: `Pod ${pod} winner`,
+                amount: 150,
+                perPlayer: 75,
+              },
+            ];
+      }),
   ],
 };
 export function seasons(current: Match[]): SeasonRecord[] {
@@ -352,15 +360,19 @@ export function careerRows(
         };
         row.seasons++;
         row.titles += s.complete && s.champion === entry.teamId ? 1 : 0;
-        // Money belongs to the partnership; never infer an individual split.
-        if (kind === "teams")
-          row.earned =
-            row.earned === null || s.prizePool === null
-              ? null
-              : row.earned +
-                s.awards
-                  .filter((a) => a.teamId === entry.teamId)
-                  .reduce((n, a) => n + (a.amount ?? 0), 0);
+        const amounts = s.awards
+          .filter((a) => a.teamId === entry.teamId)
+          .map((a) => (kind === "teams" ? a.amount : (a.perPlayer ?? null)));
+        row.earned =
+          row.earned === null ||
+          s.prizePool === null ||
+          amounts.some((a) => a === null)
+            ? null
+            : row.earned +
+              amounts.reduce<number>(
+                (total, amount) => total + (amount ?? 0),
+                0,
+              );
         for (const g of s.games.filter(
           (g) =>
             (g.a === entry.teamId || g.b === entry.teamId) &&

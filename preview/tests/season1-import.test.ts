@@ -73,9 +73,7 @@ describe("preserved Season 1 public records", () => {
     const real = seasons(matches).filter((s) => !s.sample);
     expect(real).toHaveLength(1);
     const rows = careerRows(real, "teams");
-    expect(rows.every((r) => r.id.startsWith("s1-") && r.earned === null)).toBe(
-      true,
-    );
+    expect(rows.every((r) => r.id.startsWith("s1-"))).toBe(true);
     expect(rows.reduce((n, r) => n + r.played, 0)).toBe(50);
     const text = JSON.stringify(source);
     expect(text).not.toMatch(

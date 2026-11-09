@@ -71,7 +71,7 @@ export function routeMetadata(path: string[]): Metadata {
     if (game) {
       const pairing = `${entryName(archive2026, game.a)} vs ${entryName(archive2026, game.b)}`;
       title = `2026 ${game.round}: ${pairing}`;
-      description = `Official 2026 ${game.round} result: ${pairing}, ${game.score}. View the preserved match record and available scorecard.`;
+      description = `Official 2026 ${game.round} result: ${pairing}, ${game.score}. ${game.phase === "regular" ? "View the regular-season scorecard." : "View the final match-play result."}`;
     }
   } else if (path[0] === "players") {
     const player = players.find((p) => p.id === path[1]);

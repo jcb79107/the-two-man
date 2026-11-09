@@ -59,6 +59,18 @@ test("every official match and player remains reachable", async ({ page }) => {
       page.getByRole("heading", { name: "Page not found" }),
     ).toHaveCount(0);
     await expect(page.locator("main")).toContainText(game.score);
+    await expect(
+      page.getByRole("heading", { name: "Scorecard", exact: true }),
+    ).toHaveCount(game.phase === "regular" ? 1 : 0);
+    if (game.phase === "playoffs") {
+      await expect(page.getByText("Hole data not recorded")).toHaveCount(0);
+      await expect(
+        page.getByRole("button", { name: "Gross", exact: true }),
+      ).toHaveCount(0);
+      await expect(
+        page.locator('meta[name="description"]'),
+      ).not.toHaveAttribute("content", /scorecard/i);
+    }
   }
   const id = archive2026.entries[0].playerIds[0];
   await page.goto("/players/" + id);
@@ -173,6 +185,59 @@ test("graphic retry replaces stale failure with loading before download", async 
   await expectGraphicRetry(page, "Download Instagram graphic");
   await page.screenshot({
     path: test.info().outputPath("graphic-recovered.png"),
+    fullPage: true,
+  });
+});
+
+test("Season 1 payouts show confirmed player splits and stacked career awards", async ({
+  page,
+}) => {
+  if (test.info().project.name === "mobile")
+    await page.setViewportSize({ width: 320, height: 740 });
+  await page.goto("/history/2026");
+  await expect(page.locator(".season-stats")).toContainText("$3,600");
+  const awards = page.locator(".archive-honors > div");
+  await expect(awards).toHaveCount(8);
+  await expect(awards.nth(0)).toContainText(
+    "$1,800 per team · $900 per player",
+  );
+  await expect(awards.nth(1)).toContainText("$900 per team · $450 per player");
+  for (let pod = 1; pod <= 6; pod++) {
+    await expect(awards.nth(pod + 1)).toContainText(`Pod ${pod} winner`);
+    await expect(awards.nth(pod + 1)).toContainText(
+      "$150 per team · $75 per player",
+    );
+  }
+  await expect(page.locator("main")).not.toContainText(
+    "Prize amount not recorded",
+  );
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+  await page.screenshot({
+    path: test.info().outputPath("season-one-payouts.png"),
+    fullPage: true,
+  });
+  await awards.nth(1).getByRole("link").click();
+  await expect(page.locator(".season-stats")).toContainText("$1,050");
+  const runner = archive2026.entries.find(
+    (e) => e.teamId === archive2026.runnerUp,
+  )!;
+  await page.goto(`/players/${runner.playerIds[0]}`);
+  await expect(
+    page.getByText("Awards earned:", { exact: false }),
+  ).toContainText("$525");
+  await page.goto("/records?kind=players");
+  await expect(
+    page.getByRole("columnheader", { name: "Earned", exact: true }),
+  ).toBeVisible();
+  await page.getByRole("searchbox").fill(runner.playerNames[0]);
+  await expect(page.locator(".record-table tbody")).toContainText("$525");
+  await page.goto("/history/2026/matches/final");
+  await page.screenshot({
+    path: test.info().outputPath("playoff-final.png"),
     fullPage: true,
   });
 });

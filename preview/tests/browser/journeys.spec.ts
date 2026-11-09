@@ -21,7 +21,10 @@ test("official history, final, career and record filters survive reload", async 
       .getByRole("heading", { name: "Barron & Loewenstein", exact: true }),
   ).toBeVisible();
   await expect(page.getByText("4 & 2", { exact: true })).toBeVisible();
-  await expect(page.getByText("Hole data not recorded")).toBeVisible();
+  await expect(page.getByText("Hole data not recorded")).toHaveCount(0);
+  await expect(
+    page.getByRole("heading", { name: "Scorecard", exact: true }),
+  ).toHaveCount(0);
   await page.getByRole("link", { name: "Barron & Loewenstein career" }).click();
   await expect(
     page.getByRole("heading", { name: "Barron & Loewenstein", exact: true }),
