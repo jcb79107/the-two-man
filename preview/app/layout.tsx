@@ -20,15 +20,27 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: "/favicon.ico", sizes: "any" },
-      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
-      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/favicon.ico?v=two-ball-1", sizes: "any" },
+      {
+        url: "/favicon-16x16.png?v=two-ball-1",
+        sizes: "16x16",
+        type: "image/png",
+      },
+      {
+        url: "/favicon-32x32.png?v=two-ball-1",
+        sizes: "32x32",
+        type: "image/png",
+      },
     ],
     apple: [
-      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+      {
+        url: "/apple-touch-icon.png?v=two-ball-1",
+        sizes: "180x180",
+        type: "image/png",
+      },
     ],
   },
-  manifest: "/site.webmanifest",
+  manifest: "/site.webmanifest?v=two-ball-1",
   robots: { index: offseason, follow: offseason },
 };
 export default function Layout({ children }: { children: React.ReactNode }) {
