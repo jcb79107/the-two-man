@@ -406,7 +406,6 @@ export function SeasonArchive({ year }: { year: number }) {
 }
 function ArchiveResults({ season: s }: { season: SeasonRecord }) {
   const params = useSearchParams();
-  const router = useRouter();
   const searchInput = useRef<HTMLInputElement>(null);
   const scopeInput = useRef<HTMLSelectElement>(null);
   const q = params.get("q") ?? "";
@@ -428,13 +427,13 @@ function ArchiveResults({ season: s }: { season: SeasonRecord }) {
     })
     .sort((a, b) => b.date.localeCompare(a.date));
   function change(key: "q" | "phase", value: string) {
-    const next = new URLSearchParams(params);
+    const next = new URLSearchParams(window.location.search);
     next.set("view", "results");
     if (!value || (value === "all" && key === "phase")) next.delete(key);
     else next.set(key, value);
     const href = `/history/${s.year}?${next}`;
-    if (key === "q") router.replace(href, { scroll: false });
-    else router.push(href, { scroll: false });
+    if (key === "q") window.history.replaceState(null, "", href);
+    else window.history.pushState(null, "", href);
   }
   return (
     <>
@@ -554,8 +553,7 @@ export function RecordBook() {
   const { matches } = usePreview();
   const searchInput = useRef<HTMLInputElement>(null);
   const scopeInput = useRef<HTMLSelectElement>(null);
-  const params = useSearchParams(),
-    router = useRouter();
+  const params = useSearchParams();
   const kind = params.get("kind") === "players" ? "players" : "teams";
   const phase =
     params.get("phase") === "regular"
@@ -595,10 +593,10 @@ export function RecordBook() {
     row.name.toLowerCase().includes(q.trim().toLowerCase()),
   );
   function change(key: string, value: string) {
-    const next = new URLSearchParams(params);
+    const next = new URLSearchParams(window.location.search);
     next.set(key, value);
-    if (key === "q") router.replace(`/records?${next}`, { scroll: false });
-    else router.push(`/records?${next}`, { scroll: false });
+    if (key === "q") window.history.replaceState(null, "", `/records?${next}`);
+    else window.history.pushState(null, "", `/records?${next}`);
   }
   return (
     <>

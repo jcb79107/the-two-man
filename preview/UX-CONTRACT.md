@@ -116,3 +116,12 @@ player names, and preserves newest-first ordering with unknown dates last.
 Clear search preserves scope; Show all matches preserves search. Both restore
 focus to their corresponding control. Browser Back from a match restores the
 filtered results. Official scores and archive data remain unchanged.
+
+## Local filter reliability
+
+Archive results and record-book filters operate on already-loaded data. Use
+Next-integrated native history updates for query-only changes, reading the
+current URL for every edit so consecutive changes preserve each other. Search
+replaces history, selections push it, and Back/Forward restores the controls.
+Filtering must not request route data or depend on connectivity after loading.
+Actual navigation to another season or detail page still uses the router.
