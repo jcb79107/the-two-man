@@ -2364,13 +2364,15 @@ summary {
 .archive-pods {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 32px;
+  gap: 24px;
   margin-top: 24px;
 }
 .archive-pods h2 {
   font-size: 19px;
-  padding: 16px 0;
-  border-top: 2px solid var(--pine);
+  margin: 0;
+  padding: 14px 16px;
+  background: var(--pine);
+  color: var(--paper);
 }
 .archive-table {
   width: 100%;
@@ -2381,18 +2383,34 @@ summary {
 .archive-table th,
 .archive-table td {
   text-align: left;
-  padding: 18px 14px;
+  padding: 16px 14px;
   border-bottom: 1px solid var(--line);
   white-space: nowrap;
 }
 .archive-table thead th {
-  background: var(--mist);
-  font: 11px var(--mono);
+  background: #edf2ee;
+  font: 12px var(--body);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 .archive-table tbody th {
   font-weight: 600;
+}
+.archive-table tbody {
+  background: var(--paper);
+}
+.archive-table tbody tr:nth-child(even) {
+  background: #f0f2eb;
+}
+.archive-table td {
+  text-align: right;
+}
+.archive-table thead th:not(:first-child) {
+  text-align: right;
+}
+.record-table thead th:nth-child(2),
+.record-table td:first-child {
+  text-align: left;
 }
 .archive-table a:hover {
   text-decoration: underline;
@@ -2411,7 +2429,7 @@ summary {
 }
 .archive-games {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 20px;
 }
 .archive-game {
@@ -2423,15 +2441,30 @@ summary {
 .archive-game:hover {
   border-color: var(--pine);
 }
-.archive-game > div {
-  display: grid;
-  gap: 10px;
+.archive-game > .eyebrow {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--line);
+  background: #edf2ee;
 }
-.archive-game > div > span {
+.archive-pairings {
+  display: grid;
+  padding: 8px 0;
+}
+.archive-pairings > span {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+  gap: 10px;
+  min-height: 44px;
+  padding: 8px 16px;
+}
+.archive-team-name {
+  flex: 1;
+}
+.archive-team-points {
+  min-width: 34px;
+  text-align: right;
+  font-size: 22px;
+  font-variant-numeric: tabular-nums;
 }
 .archive-game .winner {
   font-weight: 600;
@@ -2442,11 +2475,20 @@ summary {
   font: 10px var(--mono);
   padding: 4px 6px;
 }
-.archive-game > strong {
-  font: 32px var(--display);
+.archive-result-footer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-top: 1px solid var(--line);
+  padding: 12px 16px;
+  font-size: 12px;
+  color: var(--muted);
 }
-.archive-game > .field-help {
-  margin: 0;
+.archive-result-footer strong {
+  margin-left: auto;
+  font-size: 18px;
+  color: var(--pine);
+  font-variant-numeric: tabular-nums;
 }
 .archive-games.compact {
   grid-template-columns: 1fr;
@@ -2549,7 +2591,8 @@ summary {
   gap: 24px;
   border-top: 2px solid var(--pine);
   border-bottom: 1px solid var(--line);
-  padding: 30px 0;
+  padding: 24px;
+  background: var(--paper);
 }
 .archived-result h2 {
   margin: 8px 0 0;
@@ -2773,7 +2816,7 @@ summary {
   overscroll-behavior-x: contain;
   border: 1px solid var(--line);
   background: var(--paper);
-  border-radius: 6px;
+  border-radius: 0;
 }
 .tournament-board {
   height: 600px;
@@ -2823,7 +2866,7 @@ summary {
   height: 156px;
   background: var(--paper);
   border: 1px solid var(--line);
-  border-radius: 4px;
+  border-radius: 0;
   overflow: hidden;
   scroll-margin-top: 24px;
 }
@@ -2866,11 +2909,11 @@ summary {
   align-items: center;
   padding: 0 10px;
   font: 10px var(--mono);
-  color: var(--muted);
-  background: var(--cream);
+  background: var(--pine);
+  color: var(--paper);
 }
 .tournament-match-meta strong {
-  color: var(--pine);
+  color: var(--paper);
 }
 .tournament-team {
   height: 44px;
@@ -3868,8 +3911,8 @@ details.fine-note > summary {
   letter-spacing: 0;
 }
 .archive-game {
-  padding: 24px;
-  gap: 16px;
+  padding: 0;
+  gap: 0;
 }
 .archive-season-row {
   padding-top: 32px;
@@ -4759,8 +4802,8 @@ main :where(a, button, input, select, textarea, summary) {
 }
 .history-winner {
   padding: 36px;
-  background: #083e34;
-  color: #f8f5eb;
+  background: var(--pine);
+  color: var(--paper);
 }
 .history-winner .eyebrow {
   color: #c8d6c9;
@@ -4832,9 +4875,10 @@ main :where(a, button, input, select, textarea, summary) {
 .offseason-champions {
   display: grid;
   grid-template-columns: 240px 1fr;
-  gap: 48px;
-  background: #083e34;
-  color: #f8f5eb;
+  gap: 40px;
+  border-top: 4px solid var(--brass);
+  background: var(--pine);
+  color: var(--paper);
   padding: 48px;
 }
 .offseason-year {
@@ -4860,6 +4904,22 @@ main :where(a, button, input, select, textarea, summary) {
   line-height: 1.12;
   margin: 12px 0 20px;
 }
+.offseason-final-score {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  border-top: 1px solid #53776d;
+  margin-top: 24px;
+  padding-top: 18px;
+}
+.offseason-final-score span {
+  font-size: 13px;
+}
+.offseason-final-score strong {
+  font: 42px var(--display);
+  white-space: nowrap;
+}
 .offseason-champions .text-link {
   margin-top: 28px;
 }
@@ -4883,13 +4943,17 @@ main :where(a, button, input, select, textarea, summary) {
   margin: 24px 0 40px;
   color: var(--muted);
 }
-.offseason-rule {
-  max-width: 820px;
+.rules-list > .offseason-rule {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) 2fr;
+  gap: 32px;
+  max-width: 980px;
   padding: 24px 0;
+  margin-bottom: 0;
   border-bottom: 1px solid var(--line);
 }
 .offseason-rule p {
-  margin-top: 12px;
+  margin: 9px 0 12px;
   color: var(--muted);
   line-height: 1.7;
 }
@@ -4917,6 +4981,10 @@ main :where(a, button, input, select, textarea, summary) {
   max-width: 520px;
 }
 @media (max-width: 600px) {
+  .rules-list > .offseason-rule {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
   .offseason-champions {
     grid-template-columns: 1fr;
     gap: 24px;
