@@ -14,10 +14,10 @@ export async function expectScorecardClarity(page: Page) {
   await expect(card.locator(".score-team-a .score-player")).toHaveCount(2);
   await expect(card.locator(".score-team-b .score-player")).toHaveCount(2);
   await expect(card.locator(".score-team-a .net-row")).toContainText(
-    "Better ball",
+    "Net better ball",
   );
   await expect(card.locator(".score-team-b .net-row")).toContainText(
-    "Better ball",
+    "Net better ball",
   );
   await expect(
     player("Jason Baer").locator(".score-number").nth(0),

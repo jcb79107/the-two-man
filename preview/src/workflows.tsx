@@ -368,8 +368,7 @@ export function Scorecard({
               {complete && (
                 <tr className="net-row">
                   <th scope="row">
-                    Better ball{" "}
-                    <small>Net · Team {side === 0 ? "A" : "B"}</small>
+                    Net better ball <small>Team {side === 0 ? "A" : "B"}</small>
                   </th>
                   {holes.map((h) => (
                     <td key={h}>{side === 0 ? r.a[h] : r.b[h]}</td>
