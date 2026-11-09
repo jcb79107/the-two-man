@@ -1079,8 +1079,18 @@ textarea {
 }
 .score-number.eagle,
 .score-number.double-bogey {
-  border-width: 3px;
-  border-style: double;
+  position: relative;
+  width: 34px;
+  height: 34px;
+}
+.score-number.eagle::after,
+.score-number.double-bogey::after {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border: 1px solid currentColor;
+  border-radius: inherit;
+  pointer-events: none;
 }
 .stroke-dot {
   position: absolute;
@@ -1149,6 +1159,11 @@ textarea {
   height: 23px;
   font-size: 11px;
   color: var(--ink);
+}
+.scorecard-legend .score-number.eagle,
+.scorecard-legend .score-number.double-bogey {
+  width: 27px;
+  height: 27px;
 }
 .scorecard-footnote {
   padding: 0 18px 14px;

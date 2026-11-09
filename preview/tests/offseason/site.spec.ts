@@ -1,6 +1,9 @@
 import { expectArchiveResultsJourney } from "../archive-results";
 import { expectGraphicRetry } from "../graphic-recovery";
-import { expectScorecardClarity } from "../scorecard-clarity";
+import {
+  expectScorecardClarity,
+  expectGrossScoresWithNetBetterBall,
+} from "../scorecard-clarity";
 import { expectRecordScopeJourney } from "../record-book";
 import { test, expect } from "@playwright/test";
 import { archive2026 } from "../../src/history-data";
@@ -309,4 +312,13 @@ test("archive search finds players and preserves filters through navigation", as
     path: test.info().outputPath("filtered-results.png"),
     fullPage: true,
   });
+});
+
+test("player scores stay gross while better ball applies recorded strokes", async ({
+  page,
+}) => {
+  await expectGrossScoresWithNetBetterBall(page);
+  await page
+    .locator(".scorecard")
+    .screenshot({ path: test.info().outputPath("simple-scorecard.png") });
 });

@@ -1,6 +1,9 @@
 import { expectArchiveResultsJourney } from "../archive-results";
 import { expectGraphicRetry } from "../graphic-recovery";
-import { expectScorecardClarity } from "../scorecard-clarity";
+import {
+  expectScorecardClarity,
+  expectGrossScoresWithNetBetterBall,
+} from "../scorecard-clarity";
 import { expectRecordScopeJourney } from "../record-book";
 import { test, expect } from "@playwright/test";
 import { archive2026 } from "../../src/history-data";
@@ -104,10 +107,9 @@ test("archive scorecard uses recorded course pars and genuine participants", asy
   await expect(
     page.getByRole("row", { name: /^Par / }).locator("td").first(),
   ).toHaveText(String(game.card!.pars![9]));
-  await page.getByRole("button", { name: "Net", exact: true }).click();
   await expect(
     page.getByRole("button", { name: "Net", exact: true }),
-  ).toHaveAttribute("aria-pressed", "true");
+  ).toHaveCount(0);
 });
 
 test("scenario fields stay open while correcting invalid input", async ({
@@ -137,6 +139,12 @@ test("commissioner correction persists a draft and requires review before public
   page,
 }) => {
   await page.goto("/review?match=m18");
+  await page.getByText("Full scorecard editor", { exact: true }).click();
+  const editor = page
+    .locator(".scorecard")
+    .filter({ hasText: "Draft scorecard" });
+  await expect(editor.getByRole("spinbutton")).toHaveCount(36);
+  expect(await editor.locator(".stroke-dot").count()).toBeGreaterThan(0);
   await page
     .getByLabel("Correction reason (required)")
     .fill("Verified original card again");
@@ -493,4 +501,13 @@ test("archive search finds players and preserves filters through navigation", as
     path: test.info().outputPath("filtered-results.png"),
     fullPage: true,
   });
+});
+
+test("player scores stay gross while better ball applies recorded strokes", async ({
+  page,
+}) => {
+  await expectGrossScoresWithNetBetterBall(page);
+  await page
+    .locator(".scorecard")
+    .screenshot({ path: test.info().outputPath("simple-scorecard.png") });
 });

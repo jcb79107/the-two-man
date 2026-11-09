@@ -203,7 +203,6 @@ export function Scorecard({
     setNine(value);
     if (scroll.current) scroll.current.scrollLeft = 0;
   }
-  const [mode, setMode] = useState<"gross" | "net">("gross");
   const r = result(m);
   const complete = validateCard(m.scores, m.strokes) === null;
   const teamLabels = labels?.teams ?? [nameOf(m.a), nameOf(m.b)];
@@ -217,21 +216,6 @@ export function Scorecard({
           <h2>{editable ? "Draft scorecard" : "Scorecard"}</h2>
         </div>
         <div className="scorecard-controls">
-          <div className="segmented" role="group" aria-label="Score type">
-            <button
-              aria-pressed={mode === "gross"}
-              onClick={() => setMode("gross")}
-            >
-              Gross
-            </button>
-            <button
-              disabled={!complete}
-              aria-pressed={mode === "net"}
-              onClick={() => setMode("net")}
-            >
-              Net
-            </button>
-          </div>
           <div className="segmented" role="group" aria-label="Scorecard nine">
             <button aria-pressed={nine === 0} onClick={() => changeNine(0)}>
               Front 9
@@ -249,8 +233,8 @@ export function Scorecard({
         </p>
       )}
       <p className="scorecard-mode-note">
-        {mode === "gross" ? "Gross scores" : "Net scores · strokes deducted"}
-        <span>• Handicap stroke</span>
+        Player scores: actual strokes
+        {editable && <span>• Handicap stroke</span>}
         <span className="scorecard-swipe">Swipe for more holes →</span>
       </p>
       <div
@@ -262,7 +246,7 @@ export function Scorecard({
       >
         <table className="score-table">
           <caption className="sr-only">
-            {teamLabels[0]} versus {teamLabels[1]} · {mode} scores ·{" "}
+            {teamLabels[0]} versus {teamLabels[1]} · Gross scores ·{" "}
             {nine === 0 ? "Front" : "Back"} nine
           </caption>
           <thead>
@@ -312,11 +296,10 @@ export function Scorecard({
                 <tr className="score-player" key={p}>
                   <th scope="row">
                     <span>{playerLabels[p]}</span>
-                    <small>{sum(m.strokes[p])} strokes</small>
+                    <small>{sum(m.strokes[p])} handicap strokes</small>
                   </th>
                   {holes.map((h) => {
-                    const score =
-                      mode === "gross" ? m.scores[p][h] : r.net[p][h];
+                    const score = m.scores[p][h];
                     const difference = score - cardPars[h];
                     const hasScore = m.scores[p][h] > 0;
                     const mark = !hasScore
@@ -339,7 +322,7 @@ export function Scorecard({
                     return (
                       <td key={h}>
                         <span className="score-entry">
-                          {editable && mode === "gross" ? (
+                          {editable ? (
                             <input
                               aria-label={`${playerLabels[p]} hole ${h + 1} gross score`}
                               type="number"
@@ -362,7 +345,7 @@ export function Scorecard({
                               {hasScore ? score : "—"}
                             </span>
                           )}
-                          {m.strokes[p][h] > 0 && (
+                          {editable && m.strokes[p][h] > 0 && (
                             <span
                               className="stroke-dot"
                               aria-label={`${m.strokes[p][h]} agreed strokes`}
@@ -375,26 +358,17 @@ export function Scorecard({
                     );
                   })}
                   <td className="score-total">
-                    {complete
-                      ? sum(
-                          holes.map((h) =>
-                            mode === "gross" ? m.scores[p][h] : r.net[p][h],
-                          ),
-                        )
-                      : "—"}
+                    {complete ? sum(holes.map((h) => m.scores[p][h])) : "—"}
                   </td>
                   <td className="score-total">
-                    {complete
-                      ? sum(mode === "gross" ? m.scores[p] : r.net[p])
-                      : "—"}
+                    {complete ? sum(m.scores[p]) : "—"}
                   </td>
                 </tr>
               ))}
               {complete && (
                 <tr className="net-row">
                   <th scope="row">
-                    Better ball{" "}
-                    <small>Net · Team {side === 0 ? "A" : "B"}</small>
+                    Net better ball <small>Team {side === 0 ? "A" : "B"}</small>
                   </th>
                   {holes.map((h) => (
                     <td key={h}>{side === 0 ? r.a[h] : r.b[h]}</td>

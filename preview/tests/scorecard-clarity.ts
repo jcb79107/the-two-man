@@ -14,10 +14,10 @@ export async function expectScorecardClarity(page: Page) {
   await expect(card.locator(".score-team-a .score-player")).toHaveCount(2);
   await expect(card.locator(".score-team-b .score-player")).toHaveCount(2);
   await expect(card.locator(".score-team-a .net-row")).toContainText(
-    "Better ball",
+    "Net better ball",
   );
   await expect(card.locator(".score-team-b .net-row")).toContainText(
-    "Better ball",
+    "Net better ball",
   );
   await expect(
     player("Jason Baer").locator(".score-number").nth(0),
@@ -36,8 +36,21 @@ export async function expectScorecardClarity(page: Page) {
   ).toHaveCSS("border-radius", "50%");
   await expect(player("Jason Baer").locator(".score-number").nth(1)).toHaveCSS(
     "border-top-style",
-    "double",
+    "solid",
   );
+  const doubleMark = player("Jason Baer").locator(".score-number").nth(1);
+  expect(
+    await doubleMark.evaluate(
+      (el) => getComputedStyle(el, "::after").borderTopWidth,
+    ),
+  ).toBe("1px");
+  expect(
+    await doubleMark.evaluate((el) => getComputedStyle(el, "::after").top),
+  ).toBe("3px");
+  const eagle = card.locator(".scorecard-legend .eagle");
+  expect(
+    await eagle.evaluate((el) => getComputedStyle(el, "::after").borderRadius),
+  ).toBe("50%");
   await expect(
     player("Brandon Grant").locator(".score-number").first(),
   ).toHaveText("5");
@@ -45,26 +58,17 @@ export async function expectScorecardClarity(page: Page) {
     "A 5.5 : 3.5 B",
   );
   await expect(card.locator(".hole-result td").last()).toHaveText("A 8 : 10 B");
-  await card.getByRole("button", { name: "Net", exact: true }).click();
+  await expect(card.getByRole("group", { name: "Score type" })).toHaveCount(0);
+  await expect(card.locator(".stroke-dot")).toHaveCount(0);
   await expect(card.locator(".scorecard-mode-note")).toContainText(
-    "strokes deducted",
+    "actual strokes",
   );
-  await expect(
-    player("Brandon Grant").locator(".score-number").first(),
-  ).toHaveText("4");
-  await expect(
-    player("Brandon Grant").locator(".score-number").first(),
-  ).toHaveClass(/\bpar\b/);
-  await expect(
-    player("Jack Cadden").locator(".score-number").first(),
-  ).toHaveClass(/\bbirdie\b/);
   await card.getByRole("button", { name: "Back 9", exact: true }).click();
   await expect(card.locator(".hole-result td").nth(9)).toHaveText(
     "A 2.5 : 6.5 B",
   );
   await expect(card.locator(".hole-result td").last()).toHaveText("A 8 : 10 B");
   await card.getByRole("button", { name: "Front 9", exact: true }).click();
-  await card.getByRole("button", { name: "Gross", exact: true }).click();
   // The full grid scrolls while player names remain visible.
   const scroll = card.getByRole("region");
   const name = player("Jason Baer").getByRole("rowheader");
@@ -82,4 +86,31 @@ export async function expectScorecardClarity(page: Page) {
       () => document.documentElement.scrollWidth <= innerWidth,
     ),
   ).toBe(true);
+}
+
+export async function expectGrossScoresWithNetBetterBall(page: Page) {
+  await page.goto("/history/2026/matches/de05c8eb11914228b9af4");
+  const card = page.locator(".scorecard");
+  const barsi = card
+    .locator(".score-player")
+    .filter({ hasText: "Peter Barsi" });
+  await expect(barsi.locator(".score-number").nth(3)).toHaveText("7");
+  await expect(barsi.locator(".score-number").nth(3)).toHaveClass(
+    /double-bogey/,
+  );
+  await expect(barsi.locator(".score-number").nth(4)).toHaveText("7");
+  await expect(card.locator(".score-team-a .net-row td").nth(4)).toHaveText(
+    "5",
+  );
+  await expect(
+    card.locator(".score-team-a .net-row .score-total").last(),
+  ).toHaveText("81");
+  await expect(
+    card.locator(".score-team-b .net-row .score-total").last(),
+  ).toHaveText("85");
+  await expect(card.locator(".hole-result td").last()).toHaveText("A 10 : 8 B");
+  await expect(card.getByRole("button", { name: /^(Gross|Net)$/ })).toHaveCount(
+    0,
+  );
+  await expect(card.locator(".stroke-dot")).toHaveCount(0);
 }
