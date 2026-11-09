@@ -71,10 +71,6 @@ function App() {
     document.addEventListener("keydown", dismiss);
     return () => document.removeEventListener("keydown", dismiss);
   }, [menu]);
-  const title = path === "/" ? "Clubhouse" : path.split("/")[1];
-  useEffect(() => {
-    document.title = `${title.charAt(0).toUpperCase() + title.slice(1)} • The Two-Man`;
-  }, [title]);
   return (
     <>
       <a href="#main" className="skip-link">
