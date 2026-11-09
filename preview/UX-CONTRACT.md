@@ -104,3 +104,13 @@ grid. Team A/B labels and edge colors identify partnerships without relying on
 color alone. Hole-point winners and nine/full-round totals remain separate from
 individual scoring symbols. Scoring rules, entered scores, and archive data are
 unchanged. Player names remain pinned when the table scrolls on a phone.
+
+## Archive match discovery
+
+Season results support player/partnership name search and all/regular/playoff
+filters. The URL owns q and phase; search replaces history and scope changes
+push history. Matching ignores case and surrounding whitespace, includes full
+player names, and preserves newest-first ordering with unknown dates last.
+Clear search preserves scope; Show all matches preserves search. Both restore
+focus to their corresponding control. Browser Back from a match restores the
+filtered results. Official scores and archive data remain unchanged.
