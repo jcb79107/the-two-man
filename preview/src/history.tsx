@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { useRef } from "react";
 import { offseason } from "./site-mode";
 import { useSearchParams, useRouter } from "next/navigation";
 import { usePreview } from "./store";
@@ -443,6 +444,8 @@ function recordLabel(r: CareerRow) {
 }
 export function RecordBook() {
   const { matches } = usePreview();
+  const searchInput = useRef<HTMLInputElement>(null);
+  const scopeInput = useRef<HTMLSelectElement>(null);
   const params = useSearchParams(),
     router = useRouter();
   const kind = params.get("kind") === "players" ? "players" : "teams";
@@ -472,9 +475,9 @@ export function RecordBook() {
           ? r.won / r.played
           : -1
         : r.won;
-  const all = careerRows(records, kind, phase).sort(
-    (a, b) => metric(b) - metric(a) || a.name.localeCompare(b.name),
-  );
+  const all = careerRows(records, kind, phase)
+    .filter((r) => phase === "all" || r.played > 0)
+    .sort((a, b) => metric(b) - metric(a) || a.name.localeCompare(b.name));
   const ranked = all.map((r, i) => ({
     row: r,
     rank: all.findIndex((x) => metric(x) === metric(r)) + 1,
@@ -486,7 +489,8 @@ export function RecordBook() {
   function change(key: string, value: string) {
     const next = new URLSearchParams(params);
     next.set(key, value);
-    router.replace(`/records?${next}`, { scroll: false });
+    if (key === "q") router.replace(`/records?${next}`, { scroll: false });
+    else router.push(`/records?${next}`, { scroll: false });
   }
   return (
     <>
@@ -515,6 +519,7 @@ export function RecordBook() {
         <label>
           Match scope
           <select
+            ref={scopeInput}
             value={phase}
             onChange={(e) => change("phase", e.target.value)}
           >
@@ -534,6 +539,7 @@ export function RecordBook() {
         <label className="record-search">
           Find a {kind === "teams" ? "team" : "player"}
           <input
+            ref={searchInput}
             type="search"
             value={q}
             onChange={(e) => change("q", e.target.value)}
@@ -543,7 +549,7 @@ export function RecordBook() {
           />
         </label>
       </div>
-      <p className="field-help">
+      <p className="field-help" role="status">
         {rows.length} of {all.length} {kind} ·{" "}
         {year === "all" ? records.map((s) => s.year).join(", ") : year} ·{" "}
         {phase === "all"
@@ -552,7 +558,9 @@ export function RecordBook() {
             ? "Regular season only"
             : "Playoffs only"}
       </p>
-      <p className="table-hint">Swipe the table to see every statistic.</p>
+      {rows.length > 0 && (
+        <p className="table-hint">Swipe the table to see every statistic.</p>
+      )}
       {rows.length ? (
         <div
           className="table-scroll"
@@ -614,22 +622,58 @@ export function RecordBook() {
           </table>
         </div>
       ) : (
-        <Empty title="No matching records.">
-          <button className="button outline" onClick={() => change("q", "")}>
-            Clear search
-          </button>
+        <Empty
+          title={
+            all.length
+              ? "No matching records."
+              : phase === "playoffs"
+                ? "No playoff results yet."
+                : phase === "regular"
+                  ? "No regular-season results yet."
+                  : "No records for this season."
+          }
+        >
+          <p>
+            {all.length
+              ? "Try another name or a different match scope."
+              : "Records appear after an official result is recorded."}
+          </p>
+          {all.length > 0 && q.trim() && (
+            <button
+              className="button outline"
+              onClick={() => {
+                change("q", "");
+                searchInput.current?.focus();
+              }}
+            >
+              Clear search
+            </button>
+          )}
+          {phase !== "all" && (
+            <button
+              className="button outline"
+              onClick={() => {
+                change("phase", "all");
+                scopeInput.current?.focus();
+              }}
+            >
+              Show all matches
+            </button>
+          )}
         </Empty>
       )}
       <details className="fine-note">
         <summary>Statistics definitions</summary>
         <p>
           Win percentage = wins ÷ official matches; ties are not wins. No
-          minimum appearances. Equal values share a rank. Match scope changes
-          W–L–T and win percentage; seasons, titles and awards cover the
-          selected seasons. Titles require a completed season. Player records
-          reflect their team’s match outcomes, not individual stroke-play wins.
-          Player earnings use confirmed splits only. Earned does not mean paid.
-          All seasons excludes the fictional Season 2 demo.
+          minimum appearances. Phase-specific rankings include only teams or
+          players with an official result in that phase. Equal values share a
+          rank. Match scope changes W–L–T and win percentage; seasons, titles
+          and awards cover the selected seasons. Titles require a completed
+          season. Player records reflect their team’s match outcomes, not
+          individual stroke-play wins. Player earnings use confirmed splits
+          only. Earned does not mean paid. All seasons excludes the fictional
+          Season 2 demo.
         </p>
       </details>
     </>

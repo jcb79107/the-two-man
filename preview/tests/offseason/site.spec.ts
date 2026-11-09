@@ -1,6 +1,17 @@
 import { expectGraphicRetry } from "../graphic-recovery";
+import { expectRecordScopeJourney } from "../record-book";
 import { test, expect } from "@playwright/test";
 import { archive2026 } from "../../src/history-data";
+
+test("record scopes rank participants and recover through browser navigation", async ({
+  page,
+}) => {
+  await expectRecordScopeJourney(page);
+  await page.screenshot({
+    path: test.info().outputPath("playoff-records.png"),
+    fullPage: true,
+  });
+});
 
 test("offseason journeys use only the official archive", async ({ page }) => {
   const errors: string[] = [];
