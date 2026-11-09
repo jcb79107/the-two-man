@@ -45,3 +45,12 @@ describe("commissioner graphics", () => {
     expect(bracket).not.toContain("Bennett");
   });
 });
+
+it("bounds long course labels and preserves their full accessible title", () => {
+  const input = structuredClone(matches);
+  const match = input.find((m) => m.status === "official")!;
+  match.course = "W".repeat(150) + " & Club";
+  const svg = graphicSvg(input, "result", match.id);
+  expect(svg).toContain(`<title>${"W".repeat(150)} &amp; Club</title>`);
+  expect(svg).toContain(`>${"W".repeat(31)}…</text>`);
+});

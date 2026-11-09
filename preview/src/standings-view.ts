@@ -101,10 +101,24 @@ export function scenarioError(score: ScenarioScore): string | null {
     return "Holes won must fit the selected score across 18 holes.";
   if (
     ![score.aNet, score.bNet].every(
-      (n) => Number.isInteger(n) && n >= 18 && n <= 360,
+      (n) => Number.isInteger(n) && n >= 0 && n <= 360,
     )
   )
-    return "Enter a whole-number net better-ball total between 18 and 360 for each team.";
+    return "Enter a whole-number net better-ball total between 0 and 360 for each team.";
+  // Each net hole score is 0..20 (gross 1..20, at most one stroke).
+  // A win requires at least one stroke of difference. These bounds describe
+  // the sums of win/loss triangles and tied-hole diagonals exactly; winning
+  // more holes does not necessarily mean a lower total.
+  const difference = score.bNet - score.aNet;
+  if (
+    score.aNet < bWins ||
+    score.aNet > 360 - score.holesWon ||
+    score.bNet < score.holesWon ||
+    score.bNet > 360 - bWins ||
+    difference < score.holesWon - 20 * bWins ||
+    difference > 20 * score.holesWon - bWins
+  )
+    return "Net totals must be possible for the selected holes won and halved.";
   return null;
 }
 export function simulateMatch(

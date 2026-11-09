@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { type Match, nameOf } from "./data";
 import { podWinner, qualified, standings } from "./domain";
 import {
@@ -22,6 +22,7 @@ export function PlayoffPicture({ matches }: { matches: Match[] }) {
     score: ScenarioScore;
   } | null>(null);
   const [error, setError] = useState("");
+  const correctionFields = useRef<HTMLDetailsElement>(null);
   const match = pending.find((m) => m.id === matchId) ?? pending[0];
   const current = projectField(standings(matches));
   // Recompute from published state; never persist a hypothetical score.
@@ -39,12 +40,19 @@ export function PlayoffPicture({ matches }: { matches: Match[] }) {
   }
   function apply() {
     if (!match) return;
+    if (!aNet.trim() || !bNet.trim()) {
+      if (correctionFields.current) correctionFields.current.open = true;
+      setError("Enter both net better-ball totals.");
+      setApplied(null);
+      return;
+    }
     const score = { points, holesWon, aNet: Number(aNet), bNet: Number(bNet) };
     try {
       simulateMatch(matches, match.id, score);
       setApplied({ id: match.id, score });
       setError("");
     } catch (e) {
+      if (correctionFields.current) correctionFields.current.open = true;
       setError((e as Error).message);
       setApplied(null);
     }
@@ -237,11 +245,12 @@ export function PlayoffPicture({ matches }: { matches: Match[] }) {
               </button>
             ))}
           </div>
-          <details className="scenario-details">
+          <details className="scenario-details" ref={correctionFields}>
             <summary>Tiebreak details</summary>
             <p>
               Starting assumptions: all holes decided and net 72 per team.
-              Adjust these for a closer projection.
+              Adjust the totals to fit your result; a sweep requires at least an
+              18-stroke difference.
             </p>
             <div className="scenario-fields">
               <label>
@@ -264,7 +273,7 @@ export function PlayoffPicture({ matches }: { matches: Match[] }) {
                 {nameOf(match.a)} net BB
                 <input
                   type="number"
-                  min="18"
+                  min="0"
                   max="360"
                   value={aNet}
                   onChange={(e) => {
@@ -277,7 +286,7 @@ export function PlayoffPicture({ matches }: { matches: Match[] }) {
                 {nameOf(match.b)} net BB
                 <input
                   type="number"
-                  min="18"
+                  min="0"
                   max="360"
                   value={bNet}
                   onChange={(e) => {
