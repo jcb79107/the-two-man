@@ -98,8 +98,10 @@ The scorecard follows a traditional hole-by-hole grid. Partners appear together,
 followed immediately by their net better-ball row. Individual cells have no
 best-ball highlight or badge. Circles denote birdies; double circles denote
 eagles or better. Squares denote bogeys; double squares denote double bogeys or
-worse. Par remains unmarked. Symbols follow the selected gross/net view, and
-handicap dots remain visible in both views. A compact symbol legend follows the
+worse. Par remains unmarked. Player scores and symbols always use actual gross strokes. There is no
+Gross/Net toggle. Handicap dots appear only in the full scorecard editor;
+public cards show each player’s total handicap strokes beside their name.
+Team better-ball rows always use net scores after recorded strokes. A compact symbol legend follows the
 grid. Team A/B labels and edge colors identify partnerships without relying on
 color alone. Hole-point winners and nine/full-round totals remain separate from
 individual scoring symbols. Scoring rules, entered scores, and archive data are
