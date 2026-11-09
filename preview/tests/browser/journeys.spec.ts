@@ -1,6 +1,32 @@
 import { expectGraphicRetry } from "../graphic-recovery";
+import { expectRecordScopeJourney } from "../record-book";
 import { test, expect } from "@playwright/test";
 import { archive2026 } from "../../src/history-data";
+
+test("record scopes rank participants and recover through browser navigation", async ({
+  page,
+}) => {
+  await expectRecordScopeJourney(page);
+});
+
+test("a season without playoff results offers useful recovery", async ({
+  page,
+}) => {
+  await page.goto("/records?season=2027&phase=playoffs");
+  await expect(
+    page.getByRole("heading", { name: "No playoff results yet." }),
+  ).toBeVisible();
+  await expect(page.getByRole("button", { name: "Clear search" })).toHaveCount(
+    0,
+  );
+  await page
+    .getByRole("button", { name: "Show all matches", exact: true })
+    .click();
+  await expect(page.getByRole("combobox", { name: /^Season/ })).toHaveValue(
+    "2027",
+  );
+  await expect(page.locator(".record-table tbody tr")).not.toHaveCount(0);
+});
 
 test("official history, final, career and record filters survive reload", async ({
   page,

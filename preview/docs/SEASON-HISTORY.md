@@ -16,7 +16,7 @@ The source tournament status still says ACTIVE, but the official championship is
 
 Regular-season standings use match points (win=1, tie=0.5), hole points, holes won, then cumulative net better-ball. Equal metrics retain a stable display order; they do not establish an unrecorded commissioner tiebreak. Career wins follow official outcomes; playoff points are excluded from regular-season point totals. Career earnings sum team awards or explicitly confirmed player splits; unknown amounts remain unknown. Match-scope filters do not change season earnings. Playoff pages show final match results only; scorecards and missing-card notices are restricted to regular-season matches.
 
-All-time records exclude the fictional 2027 season by default. Its explicit season filter remains available for testing. Current demo edits never change archived results. Filters stay in the URL; refresh and deep links preserve them.
+All-time records exclude the fictional 2027 season by default. Its explicit season filter remains available for testing. Current demo edits never change archived results. Phase-specific rankings include only participants with an official result in that phase, including losses and ties. All-matches records retain every entrant. Season totals and prizes remain independent of match scope. Filters stay in the URL; refresh and deep links preserve them. Dropdown changes create browser history entries; search edits replace the current entry. Empty phase views offer all-matches recovery without clearing the search or season.
 
 ## Current deployment boundary
 
