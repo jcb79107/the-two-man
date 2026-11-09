@@ -47,12 +47,53 @@ describe("season archive and career records", () => {
       careerRows([seasons(matches)[0]], "teams").every((r) => r.titles === 0),
     ).toBe(true);
     expect(
-      careerRows([archive2026], "players").every((r) => r.earned === 0),
-    ).toBe(true);
+      careerRows([seasons(matches)[0]], "players").filter(
+        (r) => r.earned === null,
+      ).length,
+    ).toBeGreaterThan(0);
+  });
+  it("reconciles confirmed Season 1 team and player payouts to the $3,600 pool", () => {
+    expect(archive2026.prizePool).toBe(3600);
+    expect(archive2026.awards.filter((a) => a.kind === "pod")).toHaveLength(6);
     expect(
-      careerRows([archive2026], "teams").every((r) => r.earned === null),
-    ).toBe(true);
-    expect(archive2026.prizePool).toBeNull();
+      archive2026.awards.filter((a) => a.kind === "pod").map((a) => a.label),
+    ).toEqual([1, 2, 3, 4, 5, 6].map((pod) => `Pod ${pod} winner`));
+    expect(archive2026.awards.every((a) => a.perPlayer! * 2 === a.amount)).toBe(
+      true,
+    );
+    expect(archive2026.awards.reduce((n, a) => n + a.amount!, 0)).toBe(3600);
+    const teams = careerRows([archive2026], "teams");
+    const players = careerRows([archive2026], "players");
+    expect(teams.reduce((n, r) => n + r.earned!, 0)).toBe(3600);
+    expect(players.reduce((n, r) => n + r.earned!, 0)).toBe(3600);
+    expect(teams.find((r) => r.id === archive2026.champion)?.earned).toBe(1800);
+    expect(teams.find((r) => r.id === archive2026.runnerUp)?.earned).toBe(1050);
+    const runnerUp = archive2026.entries.find(
+      (e) => e.teamId === archive2026.runnerUp,
+    )!;
+    for (const id of runnerUp.playerIds)
+      expect(players.find((r) => r.id === id)?.earned).toBe(525);
+    for (const row of careerRows([archive2026], "teams", "playoffs"))
+      expect(row.earned).toBe(teams.find((r) => r.id === row.id)?.earned);
+  });
+  it("does not turn unknown award amounts or player splits into zero", () => {
+    const unknown = {
+      ...archive2026,
+      awards: archive2026.awards.map((a) => ({
+        ...a,
+        amount: null,
+        perPlayer: undefined,
+      })),
+    };
+    expect(
+      careerRows([unknown], "teams").find((r) => r.id === unknown.champion)
+        ?.earned,
+    ).toBeNull();
+    expect(
+      careerRows([unknown], "players").find(
+        (r) => r.id === "s1-team-09-player-1",
+      )?.earned,
+    ).toBeNull();
   });
   it("honors the champion from the recorded final", () => {
     const final = archive2026.games.find((g) => g.round === "Final")!;

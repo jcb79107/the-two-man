@@ -270,7 +270,7 @@ export function SeasonArchive({ year }: { year: number }) {
             </div>
           </div>
           <section className="section">
-            <SectionTitle title="Season honors" />
+            <SectionTitle title="Season payouts" />
             {s.champion && (
               <p>
                 Champion: {entryName(s, s.champion)} · Runner-up:{" "}
@@ -287,14 +287,17 @@ export function SeasonArchive({ year }: { year: number }) {
                   <span>
                     {a.amount === null
                       ? "Prize amount not recorded"
-                      : `${money(a.amount)} earned`}
+                      : `${money(a.amount)} per team`}
+                    {a.perPlayer !== undefined &&
+                      ` · ${money(a.perPlayer)} per player`}
                   </span>
                 </div>
               ))}
             </div>
             <p className="field-help">
-              Awards belong to teams. Earned does not mean paid; individual
-              splits are not recorded.
+              Pod awards are added to playoff prizes. Amounts show awards
+              earned, not payment status. Per-player amounts appear only where
+              confirmed.
             </p>
           </section>
           {s.prizePool === null && (
@@ -317,53 +320,55 @@ export function SeasonArchive({ year }: { year: number }) {
             separate.
           </p>
           <div className="archive-pods">
-            {[...new Set(s.entries.map((e) => e.pod))].map((pod) => (
-              <section key={pod}>
-                <h2>Pod {pod}</h2>
-                <div
-                  className="table-scroll"
-                  tabIndex={0}
-                  role="region"
-                  aria-label={`Season ${year} Pod ${pod} standings`}
-                >
-                  <table className="archive-table">
-                    <caption className="sr-only">
-                      {year} Pod {pod} regular-season standings
-                    </caption>
-                    <thead>
-                      <tr>
-                        <th scope="col">Team</th>
-                        <th scope="col">W–L–T</th>
-                        <th scope="col">Pts</th>
-                        <th scope="col">Holes won</th>
-                        <th scope="col">Net BB</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {regularRows
-                        .filter(
-                          (r) =>
-                            s.entries.find((e) => e.teamId === r.id)?.pod ===
-                            pod,
-                        )
-                        .map((r) => (
-                          <tr key={r.id}>
-                            <th scope="row">
-                              <Link href={`/records/teams/${r.id}`}>
-                                {r.name}
-                              </Link>
-                            </th>
-                            <td>{recordLabel(r)}</td>
-                            <td>{r.points}</td>
-                            <td>{r.holesWon}</td>
-                            <td>{r.netTotal}</td>
-                          </tr>
-                        ))}
-                    </tbody>
-                  </table>
-                </div>
-              </section>
-            ))}
+            {[...new Set(s.entries.map((e) => e.pod))]
+              .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
+              .map((pod) => (
+                <section key={pod}>
+                  <h2>Pod {pod}</h2>
+                  <div
+                    className="table-scroll"
+                    tabIndex={0}
+                    role="region"
+                    aria-label={`Season ${year} Pod ${pod} standings`}
+                  >
+                    <table className="archive-table">
+                      <caption className="sr-only">
+                        {year} Pod {pod} regular-season standings
+                      </caption>
+                      <thead>
+                        <tr>
+                          <th scope="col">Team</th>
+                          <th scope="col">W–L–T</th>
+                          <th scope="col">Pts</th>
+                          <th scope="col">Holes won</th>
+                          <th scope="col">Net BB</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {regularRows
+                          .filter(
+                            (r) =>
+                              s.entries.find((e) => e.teamId === r.id)?.pod ===
+                              pod,
+                          )
+                          .map((r) => (
+                            <tr key={r.id}>
+                              <th scope="row">
+                                <Link href={`/records/teams/${r.id}`}>
+                                  {r.name}
+                                </Link>
+                              </th>
+                              <td>{recordLabel(r)}</td>
+                              <td>{r.points}</td>
+                              <td>{r.holesWon}</td>
+                              <td>{r.netTotal}</td>
+                            </tr>
+                          ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </section>
+              ))}
           </div>
         </>
       )}
@@ -567,7 +572,7 @@ export function RecordBook() {
                 <th scope="col">W–L–T</th>
                 <th scope="col">Win %</th>
                 <th scope="col">Titles</th>
-                {kind === "teams" && <th scope="col">Earned</th>}
+                <th scope="col">Earned</th>
               </tr>
             </thead>
             <tbody>
@@ -602,7 +607,7 @@ export function RecordBook() {
                       "0"
                     )}
                   </td>
-                  {kind === "teams" && <td>{money(r.earned)}</td>}
+                  <td>{money(r.earned)}</td>
                 </tr>
               ))}
             </tbody>
@@ -620,11 +625,11 @@ export function RecordBook() {
         <p>
           Win percentage = wins ÷ official matches; ties are not wins. No
           minimum appearances. Equal values share a rank. Match scope changes
-          W–L–T and win percentage; seasons, titles and team awards cover the
+          W–L–T and win percentage; seasons, titles and awards cover the
           selected seasons. Titles require a completed season. Player records
           reflect their team’s match outcomes, not individual stroke-play wins.
-          No prize split is assumed. All seasons excludes the fictional Season 2
-          demo.
+          Player earnings use confirmed splits only. Earned does not mean paid.
+          All seasons excludes the fictional Season 2 demo.
         </p>
       </details>
     </>
@@ -725,6 +730,12 @@ export function CareerProfile({
           </strong>
         </div>
       </div>
+      {kind === "players" && (
+        <p className="field-help">
+          Awards earned: <strong>{money(row.earned)}</strong> · Confirmed player
+          splits; not payment status.
+        </p>
+      )}
       {kind === "teams" && (
         <section className="section">
           <SectionTitle title="Head-to-head" />
@@ -909,25 +920,26 @@ export function ArchivedMatch({ year, id }: { year: number; id: string }) {
           ? "Regular-season hole points, first-listed team then second-listed team."
           : "Final match-play margin."}
       </p>
-      {g.card ? (
-        <Scorecard
-          match={g.card}
-          labels={{
-            teams: [entryName(s, g.a), entryName(s, g.b)],
-            players: [
-              ...s.entries.find((e) => e.teamId === g.a)!.playerNames,
-              ...s.entries.find((e) => e.teamId === g.b)!.playerNames,
-            ],
-          }}
-        />
-      ) : (
-        <div className="fine-note">
-          <strong>Hole data not recorded</strong>
-          <p>
-            Individual hole scores were not recorded in this archived result.
-          </p>
-        </div>
-      )}
+      {g.phase === "regular" &&
+        (g.card ? (
+          <Scorecard
+            match={g.card}
+            labels={{
+              teams: [entryName(s, g.a), entryName(s, g.b)],
+              players: [
+                ...s.entries.find((e) => e.teamId === g.a)!.playerNames,
+                ...s.entries.find((e) => e.teamId === g.b)!.playerNames,
+              ],
+            }}
+          />
+        ) : (
+          <div className="fine-note">
+            <strong>Hole data not recorded</strong>
+            <p>
+              Individual hole scores were not recorded in this archived result.
+            </p>
+          </div>
+        ))}
       <div className="archive-match-links">
         <Link href={`/records/teams/${g.a}`} className="button outline">
           {entryName(s, g.a)} career <Icon name="arrow" size={16} />

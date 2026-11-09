@@ -81,3 +81,13 @@ editing cannot retain attestation, and completion distinguishes visit-only resul
 from persisted results. Graphics use `graphic-state.ts`: each selection/retry owns
 its result; a retry replaces stale errors with loading until that attempt finishes.
 Storage formats, publication validation, public URLs and archive data are unchanged.
+
+## Season 1 payouts and playoff result presentation — November 9
+
+Commissioner-confirmed prizes total $3,600: champions $1,800 ($900/player),
+runner-up $900 ($450/player), and six pod winners $150 each ($75/player).
+Pod awards stack with playoff prizes. Show confirmed splits in season payouts
+and career earnings; earned amounts do not assert payment. The imported match
+archive and its fingerprint remain unchanged. Only regular-season matches show
+scorecards or missing-card notices. Playoff pages and metadata focus on the
+winning team and final match-play score.

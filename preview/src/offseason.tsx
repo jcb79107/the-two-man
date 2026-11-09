@@ -96,7 +96,7 @@ export function OffseasonRules() {
           ],
           [
             "Reporting results",
-            "For pod matches, send the full scorecard and the match result, hole points, holes won and net better-ball score to the commissioner. Post the match score to GHIN. Playoff history records the winner and final result; full playoff cards were not recorded.",
+            "For pod matches, send the full scorecard and the match result, hole points, holes won and net better-ball score to the commissioner. Post the match score to GHIN. For playoffs, report only the winning team and final match-play score. No scorecard or hole-by-hole scores are needed.",
           ],
           [
             "Forfeits",
