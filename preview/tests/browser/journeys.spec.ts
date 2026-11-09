@@ -1,3 +1,4 @@
+import { expectArchiveResultsJourney } from "../archive-results";
 import { expectGraphicRetry } from "../graphic-recovery";
 import { expectScorecardClarity } from "../scorecard-clarity";
 import { expectRecordScopeJourney } from "../record-book";
@@ -480,6 +481,16 @@ test("graphic retry replaces stale failure with loading before download", async 
   await expectGraphicRetry(page, "Download PNG");
   await page.screenshot({
     path: test.info().outputPath("graphic-recovered.png"),
+    fullPage: true,
+  });
+});
+
+test("archive search finds players and preserves filters through navigation", async ({
+  page,
+}) => {
+  await expectArchiveResultsJourney(page);
+  await page.screenshot({
+    path: test.info().outputPath("filtered-results.png"),
     fullPage: true,
   });
 });

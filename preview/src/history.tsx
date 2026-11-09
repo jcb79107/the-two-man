@@ -383,17 +383,7 @@ export function SeasonArchive({ year }: { year: number }) {
           </div>
         </>
       )}
-      {view === "results" && (
-        <>
-          <h2 className="archive-section-heading">
-            All {s.games.length} official results
-          </h2>
-          <GameList
-            season={s}
-            games={[...s.games].sort((a, b) => b.date.localeCompare(a.date))}
-          />
-        </>
-      )}
+      {view === "results" && <ArchiveResults season={s} />}
       {view === "playoffs" &&
         (s.complete ? (
           <>
@@ -411,6 +401,106 @@ export function SeasonArchive({ year }: { year: number }) {
             </Link>
           </Empty>
         ))}
+    </>
+  );
+}
+function ArchiveResults({ season: s }: { season: SeasonRecord }) {
+  const params = useSearchParams();
+  const router = useRouter();
+  const searchInput = useRef<HTMLInputElement>(null);
+  const scopeInput = useRef<HTMLSelectElement>(null);
+  const q = params.get("q") ?? "";
+  const phase =
+    params.get("phase") === "regular"
+      ? "regular"
+      : params.get("phase") === "playoffs"
+        ? "playoffs"
+        : "all";
+  const query = q.trim().toLowerCase();
+  const games = s.games
+    .filter((game) => {
+      if (phase !== "all" && game.phase !== phase) return false;
+      const names = [game.a, game.b].flatMap((id) => {
+        const entry = s.entries.find((team) => team.teamId === id);
+        return [entryName(s, id), ...(entry?.playerNames ?? [])];
+      });
+      return names.some((name) => name.toLowerCase().includes(query));
+    })
+    .sort((a, b) => b.date.localeCompare(a.date));
+  function change(key: "q" | "phase", value: string) {
+    const next = new URLSearchParams(params);
+    next.set("view", "results");
+    if (!value || (value === "all" && key === "phase")) next.delete(key);
+    else next.set(key, value);
+    const href = `/history/${s.year}?${next}`;
+    if (key === "q") router.replace(href, { scroll: false });
+    else router.push(href, { scroll: false });
+  }
+  return (
+    <>
+      <div className="record-controls archive-result-controls">
+        <label>
+          Find a player or team
+          <input
+            ref={searchInput}
+            type="search"
+            value={q}
+            onChange={(event) => change("q", event.target.value)}
+            placeholder="Search names"
+          />
+        </label>
+        <label>
+          Match scope
+          <select
+            ref={scopeInput}
+            value={phase}
+            onChange={(event) => change("phase", event.target.value)}
+          >
+            <option value="all">All matches</option>
+            <option value="regular">Regular season</option>
+            <option value="playoffs">Playoffs</option>
+          </select>
+        </label>
+      </div>
+      <p className="field-help" role="status">
+        {games.length} of {s.games.length} official results
+      </p>
+      {(query || phase !== "all") && (
+        <div className="archive-result-actions">
+          {query && (
+            <button
+              className="button outline"
+              onClick={() => {
+                change("q", "");
+                searchInput.current?.focus();
+              }}
+            >
+              Clear search
+            </button>
+          )}
+          {phase !== "all" && (
+            <button
+              className="button outline"
+              onClick={() => {
+                change("phase", "all");
+                scopeInput.current?.focus();
+              }}
+            >
+              Show all matches
+            </button>
+          )}
+        </div>
+      )}
+      {games.length ? (
+        <GameList season={s} games={games} />
+      ) : (
+        <Empty title="No matching results">
+          <p>
+            Try another name or show all matches to include both the regular
+            season and playoffs.
+          </p>
+        </Empty>
+      )}
     </>
   );
 }

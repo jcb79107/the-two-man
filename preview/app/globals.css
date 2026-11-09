@@ -2506,6 +2506,24 @@ summary {
   font-size: 12px;
   min-width: 0;
 }
+.record-controls.archive-result-controls {
+  grid-template-columns: minmax(0, 2fr) minmax(140px, 1fr);
+  max-width: 720px;
+}
+.archive-result-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 16px 0;
+}
+.archive-result-controls ~ .archive-games {
+  margin-top: 24px;
+}
+@media (max-width: 560px) {
+  .record-controls.archive-result-controls {
+    grid-template-columns: 1fr;
+  }
+}
 .record-table {
   min-width: 760px;
 }
