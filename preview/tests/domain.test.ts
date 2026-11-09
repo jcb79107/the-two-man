@@ -5,7 +5,7 @@ import {
   standings,
   qualified,
   podWinner,
-  approveMatch,
+  publishDraft,
   approvalError,
   validateCard,
   validSnapshot,
@@ -19,7 +19,7 @@ describe("staged tournament integrity", () => {
     ]) {
       const candidate = { ...matches[0], ...changed };
       expect(approvalError(candidate)).not.toBeNull();
-      expect(approveMatch([candidate], candidate.id)[0].status).toBe("review");
+      expect(() => publishDraft([candidate], candidate)).toThrow();
     }
   });
   it("rejects malformed saved score arrays without crashing", () => {
@@ -42,7 +42,7 @@ describe("staged tournament integrity", () => {
   it("excludes draft scores and awards until approved", () => {
     expect(standings(matches).find((r) => r.team.id === "t1")?.played).toBe(1);
     expect(podWinner(matches, "A")).toBeNull();
-    const next = approveMatch(matches, "m1");
+    const next = publishDraft(matches, matches[0]);
     expect(standings(next).find((r) => r.team.id === "t1")?.played).toBe(2);
     expect(podWinner(next, "A")).toBeNull();
   });
@@ -54,8 +54,10 @@ describe("staged tournament integrity", () => {
     expect(qualified(next)).toEqual([]);
   });
   it("approves once and does not duplicate a fixture", () => {
-    const once = approveMatch(matches, "m1");
-    expect(approveMatch(once, "m1")).toEqual(once);
+    const once = publishDraft(matches, matches[0]);
+    expect(publishDraft(once, { ...once[0], note: "Confirmed card" })).toEqual(
+      once.map((m, i) => (i === 0 ? { ...m, note: "Confirmed card" } : m)),
+    );
     expect(once).toHaveLength(18);
   });
   it("uses supplied hole strokes and conserves 18 points", () => {
@@ -77,7 +79,7 @@ describe("staged tournament integrity", () => {
     ).toBeNull();
     expect(approvalError({ ...matches[0], lockedAt: null })).toBeNull();
   });
-  it("rejects more than one stroke per hole under the Season 1 allowance", () => {
+  it("rejects more than one stroke per hole under the tournament allowance", () => {
     const strokes = matches[0].strokes.map((row) => [...row]);
     strokes[0][0] = 2;
     expect(validateCard(matches[0].scores, strokes)).not.toBeNull();

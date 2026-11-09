@@ -1,4 +1,8 @@
 "use client";
+import { offseason } from "./site-mode";
+import { OffseasonHome, OffseasonRules } from "./offseason";
+import { ArchiveGraphics } from "./archive-graphics";
+import { publication } from "./publication";
 import Link from "next/link";
 import { usePathname, useSearchParams, useRouter } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
@@ -30,12 +34,18 @@ import {
 import { StandingsTable } from "./standings-table";
 import { PlayoffPicture } from "./playoff-picture";
 import { RULES_JUDGE_URL } from "./rules-judge";
-const nav = [
-  ["/", "Home", "home"],
-  ["/matches", "Matches", "calendar"],
-  ["/standings", "Standings", "table"],
-  ["/bracket", "Bracket", "cup"],
-];
+const nav = offseason
+  ? [
+      ["/", "Home", "home"],
+      ["/history/2026", "Season 1", "cup"],
+      ["/history", "History", "calendar"],
+    ]
+  : [
+      ["/", "Home", "home"],
+      ["/matches", "Matches", "calendar"],
+      ["/standings", "Standings", "table"],
+      ["/bracket", "Bracket", "cup"],
+    ];
 export function PreviewApp() {
   return (
     <Suspense fallback={<div className="loading">Opening the clubhouse…</div>}>
@@ -47,7 +57,6 @@ function App() {
   const path = usePathname();
   const store = usePreview();
   const router = useRouter();
-  const archiveYear = path.startsWith("/history/") ? path.split("/")[2] : "";
   const [resetOpen, setResetOpen] = useState(false);
   const [menu, setMenu] = useState(false);
   const menuButton = useRef<HTMLButtonElement>(null);
@@ -62,29 +71,27 @@ function App() {
     document.addEventListener("keydown", dismiss);
     return () => document.removeEventListener("keydown", dismiss);
   }, [menu]);
-  const title = path === "/" ? "Clubhouse" : path.split("/")[1];
-  useEffect(() => {
-    document.title = `${title.charAt(0).toUpperCase() + title.slice(1)} • The Two-Man preview`;
-  }, [title]);
   return (
     <>
       <a href="#main" className="skip-link">
         Skip to content
       </a>
-      <div className="preview-strip">
-        <span>
-          <span className="preview-dot" /> Preview · Sample data{" "}
-          <span className="strip-detail">· Fictional data · June 24, 2027</span>
-        </span>
-        <div>
-          <button
-            onClick={() => setResetOpen(!resetOpen)}
-            aria-expanded={resetOpen}
-          >
-            Reset demo
-          </button>
+      {!offseason && (
+        <div className="preview-strip">
+          <span>
+            <span className="preview-dot" /> Season 2 preview{" "}
+            <span className="strip-detail">· Sample current season</span>
+          </span>
+          <div>
+            <button
+              onClick={() => setResetOpen(!resetOpen)}
+              aria-expanded={resetOpen}
+            >
+              Reset demo
+            </button>
+          </div>
         </div>
-      </div>
+      )}
       {resetOpen && (
         <div className="reset-panel">
           <p>
@@ -120,7 +127,16 @@ function App() {
               key={href}
               href={href}
               aria-current={
-                (href === "/" ? path === "/" : path.startsWith(href))
+                (
+                  href === "/"
+                    ? path === "/"
+                    : href === "/history" && offseason
+                      ? path === "/history" ||
+                        path.startsWith("/records") ||
+                        path.startsWith("/players") ||
+                        path === "/champions"
+                      : path.startsWith(href)
+                )
                   ? "page"
                   : undefined
               }
@@ -128,32 +144,46 @@ function App() {
               {label}
             </Link>
           ))}
-          <Link
-            href="/earnings"
-            aria-current={path === "/earnings" ? "page" : undefined}
-          >
-            The purse
-          </Link>
-          <Link
-            href="/history"
-            aria-current={
-              path.startsWith("/history") ||
-              path.startsWith("/records") ||
-              path.startsWith("/players") ||
-              path === "/champions"
-                ? "page"
-                : undefined
-            }
-          >
-            History
-          </Link>
+          {!offseason && (
+            <>
+              <Link
+                href="/earnings"
+                aria-current={path === "/earnings" ? "page" : undefined}
+              >
+                The purse
+              </Link>
+              <Link
+                href="/history"
+                aria-current={
+                  path.startsWith("/history") ||
+                  path.startsWith("/records") ||
+                  path.startsWith("/players") ||
+                  path === "/champions"
+                    ? "page"
+                    : undefined
+                }
+              >
+                History
+              </Link>
+            </>
+          )}
         </nav>
         <div className="header-end">
-          <Link className="button small outline" href="/rules">
-            Rules
+          <Link className="text-link header-rules" href="/rules">
+            <Icon name="book" size={18} /> <span>Rules</span>
           </Link>
           <a
-            className="text-link"
+            className="text-link header-ai"
+            href={RULES_JUDGE_URL}
+            target="_blank"
+            rel="noreferrer"
+            aria-label="AI rules judge (opens in a new tab)"
+          >
+            <Icon name="ai" size={18} />
+            <span>AI rules judge</span>
+          </a>
+          <a
+            className="text-link header-instagram"
             href="https://www.instagram.com/twomantournament/"
             target="_blank"
             rel="noreferrer"
@@ -181,11 +211,8 @@ function App() {
         >
           {[
             ["/history", "Season history"],
-            ["/records", "All-time records"],
-            ["/champions", "Champions"],
-            ["/earnings", "The purse"],
+            ...(offseason ? [] : [["/earnings", "The purse"]]),
             ["/rules", "Format & rules"],
-            ["/review", "Commissioner demo"],
           ].map(([href, label]) => (
             <Link key={href} href={href} onClick={() => setMenu(false)}>
               {label}
@@ -194,32 +221,21 @@ function App() {
           ))}
         </nav>
       )}
-      <div className="season-line">
-        <Link href="/rules">
-          Regular season · 2027
-          <Icon name="arrow" size={14} />
-        </Link>
-        <label className="season-jump">
-          <span className="sr-only">Browse season</span>
-          <select
-            value={archiveYear}
-            onChange={(e) => router.push(`/history/${e.target.value}`)}
-          >
-            <option value="" disabled>
-              Browse seasons
-            </option>
-            <option value="2027">2027 · Current season</option>
-            <option value="2026">2026 · Season archive</option>
-          </select>
-        </label>
-      </div>
-      <main id="main" className="main" tabIndex={-1}>
+      <main
+        id="main"
+        className={path === "/review" ? "main commissioner-main" : "main"}
+        tabIndex={-1}
+      >
         {!store.ready ? (
           <div className="loading" role="status">
             Loading your sample season…
           </div>
         ) : path === "/" ? (
-          <Home />
+          offseason ? (
+            <OffseasonHome />
+          ) : (
+            <Home />
+          )
         ) : path === "/history" || path === "/champions" ? (
           <HistoryHome champions={path === "/champions"} />
         ) : path.startsWith("/history/") && path.includes("/matches/") ? (
@@ -239,6 +255,8 @@ function App() {
           <Standings />
         ) : path === "/matches" ? (
           <Matches />
+        ) : path.startsWith("/playoffs/") ? (
+          <PlayoffDetail id={path.split("/")[2]} />
         ) : path.startsWith("/matches/") ? (
           <MatchDetail id={path.split("/")[2]} />
         ) : path.startsWith("/teams/") ? (
@@ -248,7 +266,11 @@ function App() {
         ) : path === "/earnings" ? (
           <Earnings />
         ) : path === "/rules" ? (
-          <Rules />
+          offseason ? (
+            <OffseasonRules />
+          ) : (
+            <Rules />
+          )
         ) : path === "/submit" ? (
           <Empty title="Send your card to the commissioner.">
             <p>
@@ -259,7 +281,11 @@ function App() {
             <Link href="/rules">Read the checklist</Link>
           </Empty>
         ) : path === "/review" ? (
-          <Commissioner />
+          offseason ? (
+            <ArchiveGraphics />
+          ) : (
+            <Commissioner />
+          )
         ) : (
           <Empty title="Page not found">
             <Link href="/">Return to the clubhouse</Link>
@@ -271,8 +297,6 @@ function App() {
           THE TWO-MAN
         </Link>
         <nav aria-label="Footer">
-          <Link href="/history">Season history</Link>
-          <Link href="/champions">Champions</Link>
           <Link href="/rules">Format & rules</Link>
           <a
             href="https://www.instagram.com/twomantournament/"
@@ -281,16 +305,27 @@ function App() {
           >
             <Icon name="instagram" size={18} /> Instagram
           </a>
-          <Link href="/review">Commissioner demo</Link>
         </nav>
       </footer>
-      <nav className="mobile-nav" aria-label="Mobile navigation">
+      <nav
+        className={offseason ? "mobile-nav offseason-nav" : "mobile-nav"}
+        aria-label="Mobile navigation"
+      >
         {nav.map(([href, label, icon]) => (
           <Link
             key={href}
             href={href}
             aria-current={
-              (href === "/" ? path === "/" : path.startsWith(href))
+              (
+                href === "/"
+                  ? path === "/"
+                  : href === "/history" && offseason
+                    ? path === "/history" ||
+                      path.startsWith("/records") ||
+                      path.startsWith("/players") ||
+                      path === "/champions"
+                    : path.startsWith(href)
+              )
                 ? "page"
                 : undefined
             }
@@ -308,7 +343,8 @@ function App() {
 }
 function Home() {
   const { matches } = usePreview();
-  const [limit, setLimit] = useState(8);
+  const [limit, setLimit] = useState(4);
+  const pending = matches.filter((m) => m.status !== "official");
   const official = matches
     .filter((m) => m.status === "official")
     .sort(
@@ -317,20 +353,29 @@ function Home() {
     );
   return (
     <div className="feed-home">
-      <div className="feed-heading">
+      <header className="clubhouse-heading">
         <div>
-          <p className="feed-season">2027 regular season</p>
-          <h1>Results</h1>
-          <p>{official.length} of 18 matches final</p>
+          <h1>The Two-Man</h1>
         </div>
-        <a
-          className="button outline"
-          href={RULES_JUDGE_URL}
-          target="_blank"
-          rel="noreferrer"
-        >
-          <Icon name="judge" size={20} /> AI rules judge
-        </a>
+        <div className="clubhouse-mark" aria-hidden="true">
+          <Mark />
+        </div>
+      </header>
+      <div className="clubhouse-progress">
+        <p>
+          <strong>
+            {official.length} of {matches.length}
+          </strong>{" "}
+          matches final
+        </p>
+        <progress
+          value={official.length}
+          max={matches.length || 1}
+          aria-label="Regular-season matches completed"
+        />
+        <Link href="/standings?view=qualification">
+          Playoff picture <Icon name="arrow" size={16} />
+        </Link>
       </div>
       <nav className="feed-shortcuts" aria-label="Season shortcuts">
         <Link href="/standings">
@@ -343,59 +388,112 @@ function Home() {
           Upcoming matches <Icon name="arrow" size={14} />
         </Link>
       </nav>
-      <ol className="activity-timeline">
-        {official.slice(0, limit).map((m) => {
-          const r = result(m);
-          return (
-            <li key={m.id}>
-              <div className="feed-meta">
-                <time dateTime={m.date}>{dateLabel(m.date)}</time>
-                <span>Final</span>
-              </div>
-              <div className="feed-scoreboard">
-                <div className="feed-score-label">
-                  <span>Pod {m.pod}</span>
-                  <span>Hole points</span>
-                </div>
-                <Link className="feed-result" href={`/matches/${m.id}`}>
-                  {[
-                    { id: m.a, points: r.aPoints },
-                    { id: m.b, points: r.bPoints },
-                  ].map(({ id, points }) => (
-                    <span
-                      key={id}
-                      className={r.winner === id ? "feed-winner" : undefined}
-                    >
-                      <span className="feed-team">
-                        {nameOf(id)}
-                        {r.winner === id && <small>Won</small>}
-                      </span>
-                      <b>
-                        <span className="sr-only">Hole points: </span>
-                        {points}
-                      </b>
-                    </span>
-                  ))}
-                </Link>
-              </div>
-              <p className="feed-detail">{m.course}</p>
-              <Link className="text-link" href={`/matches/${m.id}`}>
-                Scorecard <Icon name="arrow" size={14} />
+      <div className="clubhouse-columns">
+        <section className="clubhouse-results" aria-label="Recent results">
+          <SectionTitle
+            title="Recent results"
+            href="/matches?filter=official"
+            label="All results"
+          />
+          <ol className="activity-timeline">
+            {official.slice(0, limit).map((m) => {
+              const r = result(m);
+              return (
+                <li key={m.id}>
+                  <div className="feed-meta">
+                    <time dateTime={m.date}>{dateLabel(m.date)}</time>
+                    <span>Final</span>
+                  </div>
+                  <div className="feed-scoreboard">
+                    <div className="feed-score-label">
+                      <span>Pod {m.pod}</span>
+                      <span>Hole points</span>
+                    </div>
+                    <Link className="feed-result" href={`/matches/${m.id}`}>
+                      {[
+                        { id: m.a, points: r.aPoints },
+                        { id: m.b, points: r.bPoints },
+                      ].map(({ id, points }) => (
+                        <span
+                          key={id}
+                          className={
+                            r.winner === id ? "feed-winner" : undefined
+                          }
+                        >
+                          <span className="feed-team">
+                            {nameOf(id)}
+                            {r.winner === id && <small>Won</small>}
+                          </span>
+                          <b>
+                            <span className="sr-only">Hole points: </span>
+                            {points}
+                          </b>
+                        </span>
+                      ))}
+                    </Link>
+                  </div>
+                  <p className="feed-detail">{m.course}</p>
+                  <Link className="text-link" href={`/matches/${m.id}`}>
+                    Scorecard <Icon name="arrow" size={14} />
+                  </Link>
+                </li>
+              );
+            })}
+          </ol>
+          {!official.length && (
+            <Empty title="No results yet">
+              Results appear after the commissioner posts them.
+            </Empty>
+          )}
+          {official.length > limit && (
+            <button
+              className="button outline"
+              onClick={() => setLimit(limit + 4)}
+            >
+              Earlier results
+            </button>
+          )}
+        </section>
+        <aside className="clubhouse-aside" aria-label="Around the tournament">
+          <section aria-label="Matches still to play">
+            <SectionTitle
+              title="Still to play"
+              href="/matches?filter=upcoming"
+              label="Fixtures"
+            />
+            <p className="clubhouse-note">
+              {pending.length
+                ? `${pending.length} matches awaiting a final result.`
+                : "Every regular-season result is in."}
+            </p>
+            <div className="clubhouse-fixtures">
+              {pending.slice(0, 3).map((m) => (
+                <MatchRow key={m.id} match={m} />
+              ))}
+            </div>
+            {pending.length > 3 && (
+              <Link className="text-link" href="/matches?filter=upcoming">
+                View all {pending.length} remaining matches{" "}
+                <Icon name="arrow" size={16} />
               </Link>
-            </li>
-          );
-        })}
-      </ol>
-      {!official.length && (
-        <Empty title="No results yet">
-          Results appear after the commissioner posts them.
-        </Empty>
-      )}
-      {official.length > limit && (
-        <button className="button outline" onClick={() => setLimit(limit + 8)}>
-          Earlier results
-        </button>
-      )}
+            )}
+          </section>
+          <section className="clubhouse-rules">
+            <h2>On the course</h2>
+            <Link className="text-link" href="/rules">
+              Tournament format & rules <Icon name="arrow" size={16} />
+            </Link>
+            <a
+              className="text-link"
+              href={RULES_JUDGE_URL}
+              target="_blank"
+              rel="noreferrer"
+            >
+              <Icon name="ai" size={18} /> AI rules judge
+            </a>
+          </section>
+        </aside>
+      </div>
     </div>
   );
 }
@@ -656,27 +754,15 @@ function Bracket() {
   const seeds = qualified(matches);
   return (
     <>
-      <PageHeading
-        eyebrow="The knockout rounds"
-        title="Bracket"
-        action={
-          <Link
-            className="button outline"
-            href={scenario ? "/bracket" : "/history/2026?view=playoffs"}
-          >
-            {scenario ? "Back to current season" : "2026 bracket"}
-            <Icon name="arrow" />
-          </Link>
-        }
-      />
+      <PageHeading eyebrow="The knockout rounds" title="Bracket" />
       {scenario ? (
         <div className="notice">
           <Icon name="image" />
           <div>
-            <strong>Completed 2026 sample archive</strong>
+            <strong>Official 2026 archive</strong>
             <p>
-              This is the existing fictional archive, separate from the active
-              season. No current-season champion is implied.
+              Preserved Season 1 results, separate from the sample current
+              season.
             </p>
           </div>
         </div>
@@ -691,8 +777,12 @@ function Bracket() {
         )
       )}
       <ConnectedBracket
-        seedIds={seeds.map((r) => r.team.id)}
-        games={scenario ? archive2026.games : []}
+        seedIds={
+          publication.seeds.length
+            ? publication.seeds
+            : seeds.map((r) => r.team.id)
+        }
+        games={scenario ? archive2026.games : publication.games}
         baseHref={scenario ? "/bracket?scenario=final" : "/bracket"}
         label={scenario ? "2026 sample archive" : "Current season"}
       />
@@ -703,7 +793,10 @@ function Earnings() {
   const { matches } = usePreview();
   const winners = pods.map((p) => ({ pod: p, team: podWinner(matches, p) }));
   const earnedCount = winners.filter((w) => w.team).length;
-  const earned = earnedCount * season.podAward;
+  const final = publication.games.find((g) => g.id === "final");
+  const earned =
+    earnedCount * season.podAward +
+    (final ? season.championAward + season.runnerUpAward : 0);
   return (
     <div className="earnings-page">
       <PageHeading eyebrow="2027 season" title="Prize money" />
@@ -726,7 +819,7 @@ function Earnings() {
           <dt>Earned so far</dt>
           <dd>
             {money(earned)}
-            <span>Official pod outcomes only</span>
+            <span>Published outcomes only</span>
           </dd>
         </div>
       </dl>
@@ -783,7 +876,7 @@ function Earnings() {
               </dt>
               <dd>
                 {money(season.championAward)}
-                <span>Not yet earned</span>
+                <span>{final ? nameOf(final.winner!) : "Not yet earned"}</span>
               </dd>
             </div>
             <div>
@@ -792,7 +885,11 @@ function Earnings() {
               </dt>
               <dd>
                 {money(season.runnerUpAward)}
-                <span>Not yet earned</span>
+                <span>
+                  {final
+                    ? nameOf(final.a === final.winner ? final.b : final.a)
+                    : "Not yet earned"}
+                </span>
               </dd>
             </div>
             <div>
@@ -819,15 +916,15 @@ function Rules() {
       <PageHeading
         eyebrow="The way we play"
         title="Rules"
-        description="Season 2 · Proposals labeled below."
+        description="Season 2 tournament rules. Format to be confirmed."
         action={
           <a
-            className="button outline"
+            className="text-link"
             href={RULES_JUDGE_URL}
             target="_blank"
             rel="noreferrer"
           >
-            <Icon name="judge" size={20} /> AI rules judge
+            <Icon name="ai" size={20} /> AI rules judge
           </a>
         }
       />
@@ -835,59 +932,78 @@ function Rules() {
         <div className="rules-list">
           {[
             {
-              n: "01",
               title: "Format",
-              tag: "Confirmed direction",
-              body: "Three teams per pod in this sample format. Play both opponents before elimination. Six pod winners and two wild cards move on; expanded field details are still to be decided.",
+              body: "Format TBD. The final field, regular-season structure and playoff qualification will be announced before Season 2 begins.",
             },
             {
-              n: "02",
               title: "Set strokes in GHIN before you tee off",
-              tag: "Confirmed rule",
-              body: "GHIN is the source of truth. Select the course and each player’s tees, using the four-ball match-play setup with a 90% Course Handicap allowance. The lowest player plays off zero; the others receive the difference, allocated by the scorecard handicap row, with a maximum of one stroke per hole. Confirm the strokes together before the first tee shot—even at the tee box.",
+              body: "Every player must have an active GHIN number and an accurate, up-to-date Handicap Index. At least one person in each group must have the GHIN app. Before teeing off, select the correct course and tees for every player and use the four-ball match-play setup with a 90% handicap allowance. Use the strokes GHIN assigns, capped at one stroke per hole under our tournament rules. No other negotiated adjustments. Review the allocation together and save a screenshot for the commissioner.",
             },
             {
-              n: "03",
               title: "Regular season: turn in the full card",
-              tag: "Confirmed workflow",
               body: "Play and record all 18 holes. Turn in gross scores for all four players, with each player’s strokes clearly labeled and the best ball used by each team clearly marked on every hole. Include names, date, course, tees and GHIN evidence. These full cards determine hole points and tiebreakers, including cumulative net better-ball. Text or email the card to the commissioner.",
             },
             {
-              n: "04",
               title: "Playoffs: report the winner and result",
-              tag: "Confirmed workflow",
               body: "Report which team won and the match-play result, such as 2 & 1 or 1 up. No scorecard or hole-by-hole scores are required for the bracket. Playoff matches cannot finish tied; settle the winner on the course and report the final result.",
             },
             {
-              n: "05",
               title: "Scheduling",
-              tag: "Proposed scheduling policy",
-              body: "Optional April early play. May and June for regular-season matches. Contact opponents early. Request any extension before the deadline with a new date both sides accept. Penalties and exception rules are not finalized.",
+              body: "Optional April early play. May and June for regular-season matches. Contact opponents early. Request any extension before the deadline with a new date both sides accept.",
             },
             {
-              n: "06",
               title: "Scoring & seeding",
-              tag: "Sample competition format",
-              body: "Net better-ball on each hole. Win a hole for one point; halve it for half a point each. Regular-season ranking uses match record, hole points, holes won and cumulative net better-ball. Remaining ties need a recorded decision.",
+              body: "Scoring and seeding will be confirmed with the Season 2 format. The current preview demonstrates net better-ball, hole points and standings tiebreakers; these sample calculations do not set the final tournament rules.",
             },
             {
-              n: "07",
               title: "Prize money",
-              tag: "Amounts still to be decided",
               body: "Pod winners, champions and runners-up have their awards displayed. Earned money and paid money are different. Sample amounts shown in this preview are per team and stack.",
             },
+            {
+              title: "If a partner must withdraw",
+              body: "For a medical emergency or another serious reason, contact the commissioner before the next match. With approval, the remaining player may play two separately marked balls on six holes in that match: three on the front nine and three on the back nine, declared to the opponents before tee-off.\n\nPlay each ball independently from tee to hole and count the better net score, using the remaining player’s GHIN-assigned strokes, capped at one stroke per hole, for both. This is not a scramble: do not switch balls or replay a shot. Play one ball on the other 12 holes and on every extra playoff hole. The allowance applies only to the next match; any later participation needs a new commissioner decision.\n\nThis is a tournament-specific emergency exception, not standard four-ball play. Ask the handicap committee whether the modified round is eligible for handicap posting. If a regular-season card is required, report the exception and both scores on the six nominated holes directly to the commissioner.",
+            },
           ].map((r) => (
-            <section key={r.n}>
-              <span className="rule-number">{r.n}</span>
+            <section key={r.title}>
               <div>
-                <p className="eyebrow">{r.tag}</p>
                 <h2>{r.title}</h2>
-                <p>{r.body}</p>
+                {r.body.split("\n\n").map((paragraph) => (
+                  <p key={paragraph}>{paragraph}</p>
+                ))}
               </div>
             </section>
           ))}
         </div>
       </div>
+    </>
+  );
+}
+
+function PlayoffDetail({ id }: { id: string }) {
+  const game = publication.games.find((g) => g.id === id);
+  if (!game)
+    return (
+      <Empty title="Result not published">
+        <Link href="/bracket">View bracket</Link>
+      </Empty>
+    );
+  return (
+    <>
+      <PageHeading
+        eyebrow={game.round}
+        title={`${nameOf(game.winner!)} win`}
+        description={game.score}
+      />
+      <p>
+        {nameOf(game.a)} vs {nameOf(game.b)}
+      </p>
+      <p>
+        {game.course} · {game.date}
+      </p>
+      <p>{game.next ? "Advances to the next round." : "Season 2 champions."}</p>
+      <Link className="text-link" href="/bracket">
+        View bracket <Icon name="arrow" />
+      </Link>
     </>
   );
 }

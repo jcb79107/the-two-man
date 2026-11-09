@@ -15,7 +15,7 @@ export function Commissioner() {
   const params = useSearchParams();
   const id = params.get("match");
   const match = store.matches.find((m) => m.id === id);
-  const graphics = params.get("tab") === "graphics";
+  const graphics = !id && params.get("tab") !== "results";
   const published = store.matches
     .filter((m) => m.status === "official")
     .sort((a, b) => b.date.localeCompare(a.date));
@@ -47,71 +47,48 @@ export function Commissioner() {
               Make graphic
             </Link>
           )}
-          {(score || store.drafts[m.id]) && (
-            <Link className="text-link" href={`/review?match=${m.id}`}>
-              {store.drafts[m.id] ? "Resume draft" : "Correct result"}
-            </Link>
-          )}
+          <Link className="text-link" href={`/review?match=${m.id}`}>
+            {store.drafts[m.id]
+              ? "Resume draft"
+              : score
+                ? "Correct result"
+                : "Enter result"}
+          </Link>
         </div>
       </li>
     );
   }
   return (
     <>
-      <PageHeading eyebrow="Season 2" title="Commissioner" />
+      <PageHeading
+        eyebrow="Commissioner"
+        title={graphics ? "Match graphics" : "Results"}
+      />
       <p className="fine-note">
-        Sample workspace · Saved in this browser only. No login or private
-        storage; use fictional data only.
+        Sample season · Manual edits are browser-only.
       </p>
       <nav className="tabs" aria-label="Commissioner sections">
-        <Link href="/review" aria-current={!graphics ? "page" : undefined}>
-          Results
+        <Link href="/review" aria-current={graphics ? "page" : undefined}>
+          Graphics
         </Link>
         <Link
-          href="/review?tab=graphics"
-          aria-current={graphics ? "page" : undefined}
+          href="/review?tab=results"
+          aria-current={!graphics ? "page" : undefined}
         >
-          Instagram graphics
+          Results & corrections
         </Link>
       </nav>
       {graphics ? (
         <CommissionerGraphics matches={store.matches} />
       ) : id && !match ? (
         <p>
-          Match not found. <Link href="/review">Back to results</Link>
+          Match not found.{" "}
+          <Link href="/review?tab=results">Back to results</Link>
         </p>
       ) : match ? (
         <Entry key={match.id} match={match} />
       ) : (
         <div className="commissioner-results">
-          <details className="desk-manual">
-            <summary>Enter a result manually</summary>
-            <p className="field-help">
-              Regular-season cards: all four players, all 18 holes. Published
-              results stay unchanged until you review and publish.
-            </p>
-            <nav
-              className="queue-nav"
-              aria-label="Choose a match for manual entry"
-            >
-              {pending.map((m) => (
-                <Link href={`/review?match=${m.id}`} key={m.id}>
-                  <span>
-                    {nameOf(m.a)} vs {nameOf(m.b)}
-                  </span>
-                  <span>
-                    {store.drafts[m.id] ? "Resume draft" : "Enter card"}
-                  </span>
-                </Link>
-              ))}
-            </nav>
-            {!pending.length && (
-              <p>
-                All regular-season results are published. Use Correct result
-                below for changes.
-              </p>
-            )}
-          </details>
           <section>
             <h2>
               Still to report{" "}
@@ -255,10 +232,13 @@ function Entry({ match: original }: { match: Match }) {
               </div>
             </div>
           )}
-          <Link className="button primary" href={`/matches/${draft.id}`}>
+          <Link className="button primary" href={`/review?result=${draft.id}`}>
+            Get Instagram graphic
+          </Link>{" "}
+          <Link className="button outline" href={`/matches/${draft.id}`}>
             View published scorecard
           </Link>{" "}
-          <Link className="button outline" href="/review">
+          <Link className="button outline" href="/review?tab=results">
             Choose another match
           </Link>
         </div>
@@ -271,7 +251,7 @@ function Entry({ match: original }: { match: Match }) {
   const r = result(draft);
   return (
     <>
-      <Link className="back-link" href="/review">
+      <Link className="back-link" href="/review?tab=results">
         All matches · draft retained
       </Link>
       <div className="review-top">
@@ -294,10 +274,7 @@ function Entry({ match: original }: { match: Match }) {
         <>
           <section className="form-panel">
             <h3>Match record</h3>
-            <p>
-              Copy the agreed match details. Times are Chicago daylight time;
-              this form does not schedule or lock matches.
-            </p>
+            <p>Copy the played date, course and tees from the card.</p>
             <div className="commissioner-fields">
               <label>
                 Course
@@ -316,14 +293,16 @@ function Entry({ match: original }: { match: Match }) {
                 />
               </label>
               <label>
-                Tee time (CDT)
+                Date played
                 <input
-                  type="datetime-local"
-                  value={draft.date.slice(0, 16)}
+                  type="date"
+                  value={draft.date.slice(0, 10)}
                   onChange={(e) =>
                     update({
                       ...draft,
-                      date: e.target.value ? `${e.target.value}:00-05:00` : "",
+                      date: e.target.value
+                        ? `${e.target.value}T12:00:00-05:00`
+                        : "",
                     })
                   }
                 />

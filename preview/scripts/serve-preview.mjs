@@ -45,6 +45,7 @@ const server = http.createServer(async (req, res) => {
     res.end("Invalid request");
   }
 });
-server.listen(3027, "127.0.0.1", () =>
-  console.log("Staged preview: http://127.0.0.1:3027"),
+const port = Number(process.env.PORT || 3027);
+server.listen(port, "127.0.0.1", () =>
+  console.log(`Staged preview: http://127.0.0.1:${port}`),
 );

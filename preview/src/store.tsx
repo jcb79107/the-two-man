@@ -1,16 +1,21 @@
 "use client";
+import { offseason } from "./site-mode";
 import {
   createContext,
   useContext,
   useEffect,
   useState,
+  useRef,
   useCallback,
   type ReactNode,
 } from "react";
-import { matches as initial, type Match } from "./data";
+import { type Match } from "./data";
+import { publication } from "./publication";
+const initial = publication.matches;
 import { validSnapshot } from "./domain";
-const DRAFT_KEY = "two-man-commissioner-drafts-v1";
-const KEY = "two-man-season2-preview-v1";
+const revisionSuffix = publication.revision ? `-r${publication.revision}` : "";
+const DRAFT_KEY = "two-man-commissioner-drafts-v1" + revisionSuffix;
+const KEY = "two-man-season2-preview-v1" + revisionSuffix;
 export type ReviewDraft = { match: Match; note: string };
 type Store = {
   matches: Match[];
@@ -24,10 +29,12 @@ type Store = {
 const Context = createContext<Store | null>(null);
 export function PreviewProvider({ children }: { children: ReactNode }) {
   const [matches, setMatches] = useState<Match[]>(initial);
-  const [ready, setReady] = useState(false);
+  const [ready, setReady] = useState(offseason);
   const [notice, setNotice] = useState("");
   const [drafts, setDrafts] = useState<Record<string, ReviewDraft>>({});
+  const draftsEdited = useRef(false);
   const setDraft = useCallback((id: string, draft: ReviewDraft | null) => {
+    draftsEdited.current = true;
     setDrafts((current) => {
       const next = { ...current };
       if (draft) next[id] = draft;
@@ -36,6 +43,7 @@ export function PreviewProvider({ children }: { children: ReactNode }) {
     });
   }, []);
   useEffect(() => {
+    if (offseason) return;
     try {
       const rawDrafts = localStorage.getItem(DRAFT_KEY);
       if (rawDrafts) {
@@ -102,7 +110,7 @@ export function PreviewProvider({ children }: { children: ReactNode }) {
     setReady(true);
   }, []);
   useEffect(() => {
-    if (!ready) return;
+    if (!ready || !draftsEdited.current) return;
     try {
       localStorage.setItem(DRAFT_KEY, JSON.stringify(drafts));
     } catch {
@@ -127,6 +135,7 @@ export function PreviewProvider({ children }: { children: ReactNode }) {
   }, []);
   const reset = () => {
     save(initial, "Sample season restored.");
+    draftsEdited.current = true;
     setDrafts({});
   };
   return (

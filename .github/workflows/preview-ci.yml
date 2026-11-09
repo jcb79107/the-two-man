@@ -8,6 +8,7 @@ on:
   push:
     branches:
       - 'codex/**'
+      - main
     paths:
       - 'preview/**'
       - '.github/workflows/preview-ci.yml'
@@ -40,3 +41,7 @@ jobs:
       - run: npm run lint
       - run: npm run typecheck
       - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:browser
+      - run: npm run build:live
+      - run: npm run test:offseason

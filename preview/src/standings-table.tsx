@@ -40,78 +40,82 @@ export function StandingsTable({
     router.replace("/standings?" + params, { scroll: false });
   }
   return (
-    <div
-      className="table-scroll"
-      tabIndex={0}
-      role="region"
-      aria-label={label + ", scroll for all columns"}
-    >
-      <table className="standings-table">
-        <caption className="sr-only">
-          {label}. Column buttons sort the table; rank remains competition rank.
-        </caption>
-        <thead>
-          <tr>
-            {columns.map(([key, text]) => (
-              <th
-                key={key}
-                scope="col"
-                aria-sort={
-                  sort === key
-                    ? direction === "asc"
-                      ? "ascending"
-                      : "descending"
-                    : "none"
-                }
-              >
-                <button
-                  className="column-sort"
-                  onClick={() => change(key)}
-                  aria-label={"Sort by " + text}
+    <>
+      <p className="table-hint">Swipe the table for all ranking statistics.</p>
+      <div
+        className="table-scroll"
+        tabIndex={0}
+        role="region"
+        aria-label={label + ", scroll for all columns"}
+      >
+        <table className="standings-table">
+          <caption className="sr-only">
+            {label}. Column buttons sort the table; rank remains competition
+            rank.
+          </caption>
+          <thead>
+            <tr>
+              {columns.map(([key, text]) => (
+                <th
+                  key={key}
+                  scope="col"
+                  aria-sort={
+                    sort === key
+                      ? direction === "asc"
+                        ? "ascending"
+                        : "descending"
+                      : "none"
+                  }
                 >
-                  {text}
-                  <span aria-hidden="true">
-                    {sort === key ? (
-                      direction === "asc" ? (
-                        "↑"
+                  <button
+                    className="column-sort"
+                    onClick={() => change(key)}
+                    aria-label={"Sort by " + text}
+                  >
+                    {text}
+                    <span aria-hidden="true">
+                      {sort === key ? (
+                        direction === "asc" ? (
+                          "↑"
+                        ) : (
+                          "↓"
+                        )
                       ) : (
-                        "↓"
-                      )
-                    ) : (
-                      <Icon name="sort" size={14} />
-                    )}
-                  </span>
-                </button>
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {sorted.map((r) => (
-            <tr key={r.team.id}>
-              <th scope="row">
-                <span
-                  className="rank"
-                  aria-label={"Competition rank " + (rows.indexOf(r) + 1)}
-                >
-                  {rows.indexOf(r) + 1}
-                </span>
-                <TeamAvatar id={r.team.id} />
-                <TeamName id={r.team.id} />
-              </th>
-              <td>
-                {r.won}–{r.lost}–{r.tied}
-              </td>
-              <td>
-                <strong>{r.points.toFixed(1)}</strong>
-              </td>
-              <td>{r.holesWon}</td>
-              <td>{r.net}</td>
-              <td>{r.played}/2</td>
+                        <Icon name="sort" size={14} />
+                      )}
+                    </span>
+                  </button>
+                </th>
+              ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody>
+            {sorted.map((r) => (
+              <tr key={r.team.id}>
+                <th scope="row">
+                  <span
+                    className="rank"
+                    aria-label={"Competition rank " + (rows.indexOf(r) + 1)}
+                  >
+                    {rows.indexOf(r) + 1}
+                  </span>
+                  <TeamAvatar id={r.team.id} />
+                  <TeamName id={r.team.id} />
+                </th>
+                <td>
+                  {r.won}–{r.lost}–{r.tied}
+                </td>
+                <td>
+                  <strong>{r.points.toFixed(1)}</strong>
+                </td>
+                <td>{r.holesWon}</td>
+                <td>{r.net}</td>
+                <td>{r.played}/2</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </>
   );
 }

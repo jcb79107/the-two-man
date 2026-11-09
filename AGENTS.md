@@ -1,47 +1,48 @@
-# Agent Operating Rules
+# Agent operating rules
 
-GitHub `origin/main` is the source of truth for this project.
+- Source: `origin/main` in `jcb79107/the-two-man`.
+- Canonical checkout: `/Users/jason/Developer/active/the-two-man`.
+- Live domain: https://www.thetwoman.site; existing Vercel project: `the_two_man`.
+- Inspect the canonical checkout and fetch main. Preserve unrelated local work;
+  use an isolated checkout when necessary. Never force-push main.
+- Work in `preview/`; read its AGENTS.md, DESIGN.md and UX-CONTRACT.md.
+  The old database app has been retired. Do not restore it as a shortcut.
+- Root dev/build/start target the public offseason site. The default build inside
+  `preview/` is the fictional Season 2 demo; never promote that build to production.
+- Preserve `preview/src/season1-public.json` and its pinned hash. No database
+  writes, resets, migrations, seeds or branch deletions are authorized by UI work.
+  See `docs/LEGACY-APP.md` for data preservation and code recovery.
+- Keep private cards, GHIN IDs, tokens and contact details out of Git and public UI.
+- Players use group texts and GHIN. Do not add scheduling forms or an in-app chat.
+  Preserve the tournament's one-stroke-per-hole cap.
+- Run root test, lint, typecheck, build and security:artifacts commands. Run the
+  relevant browser suites for both live and demo changes; preserve error handling,
+  storage failure recovery, accessibility and archive integrity coverage.
+- Commit only intended changes, push a branch, and merge through a PR after checks
+  pass. Deploy only clean, synced main code with `npm run deploy:prod`.
+- Follow `preview/docs/OFFSEASON-LAUNCH.md` for release checks and rollback.
 
-Canonical repo:
+## Project-scoped simplicity guidance
 
-- Local path: `/Users/jason/Developer/active/the-two-man`
-- GitHub remote: `https://github.com/jcb79107/the-two-man`
-- Production domain: `https://www.thetwoman.site`
-- Existing Vercel project: `the_two_man`
+Adapted from [Ponytail](https://github.com/DietrichGebert/ponytail),
+[core guidance](https://github.com/DietrichGebert/ponytail/blob/main/skills/ponytail/SKILL.md),
+reviewed 2026-10-21. Copyright (c) 2026 DietrichGebert, MIT;
+see [the preserved license](docs/ponytail-LICENSE.txt).
+This is instruction-only guidance for this repository; no plugins, hooks, or dashboards are required.
 
-These rules apply to Codex, OpenClaw, Claude, Telegram-driven agents, and any other automated coding path.
-
-## Isolated Season 2 preview work
-
-- When the task explicitly targets Season 2, verify and use `codex/season-2-preview`, not the older root app. Explicit task restrictions override the main/push/deploy workflow below.
-- Work in `preview/`; read its `DESIGN.md` and `UX-CONTRACT.md`. Trace fixtures, separate drafts, publication and derived views before changing them.
-- Reuse existing components and browser features. Simplify demonstrated duplication without removing validation, accessibility, storage-failure handling or tests.
-- Keep this fictional, browser-local demo free of real data, credentials and integrations. Do not infer recovery of uncommitted work from another machine.
-- From `preview/`, run tests, lint, typecheck and build; inspect changed UI at desktop and narrow phone widths, including draft/review navigation.
-
-## Shared AI Agent Rules
-
-- Prefer the smallest correct change that fully solves the task.
-- State material assumptions; for low-risk local details, proceed and note them.
-- Read the relevant files before editing.
-- Do not refactor, reformat, rename, or improve unrelated code.
-- Match the existing style and project patterns.
-- Remove only dead code introduced by your own change.
-- For bugs, reproduce the issue first when practical, then fix it.
-- Verify with the narrowest meaningful check: test, typecheck, lint, build, or
-  manual check.
-- If broader cleanup is useful but unrelated, mention it separately instead of
-  doing it.
-
-- Start every task from the canonical repo path above. Do not use the old `fairway-match` path for this project.
-- Before editing, run `git fetch origin main`, confirm the current branch is `main`, and confirm the working tree is clean.
-- If local `main` is behind `origin/main`, run `git pull --ff-only origin main` before editing.
-- If local `main` has uncommitted changes or diverges from `origin/main`, stop and report that instead of stacking new work on top.
-- End every code/config change by committing the intended files and pushing `main` to GitHub with `git push origin main`.
-- Commit and push code changes to GitHub before any production deploy.
-- Do not deploy a dirty worktree directly to Vercel.
-- Use `npm run deploy:prod` for production deploys; it refuses to deploy unless the current branch is clean and synced with GitHub.
-- Do not create a new Vercel project for this app.
-- If a schema changes, run the database migration or `npm run db:push` equivalent before promoting code that reads the new columns.
-- For score fixes, prefer correcting the official scorecard data and republishing/backfilling snapshots over adding one-off display patches.
-- For production data-only fixes, make the approved database change, report the exact row/result, and do not invent a Git commit unless code or config changed.
+- Trace the affected user flow and data boundaries before editing. Inspect callers,
+  existing components/helpers, tests, fixtures, configuration, and the working diff.
+- Reuse the project's established components and patterns first, then platform APIs
+  and installed dependencies. Add a dependency only for a demonstrated need.
+- Make the smallest readable change that completes the requested behavior across
+  its callers and tests. Avoid speculative wrappers, options, abstractions, and
+  unrelated rewrites; fewer lines alone are not a reason to change working code.
+- For requested cleanup, establish why code is redundant and preserve behavior,
+  ordering, edge cases, and public contracts. Leave uncertain simplifications alone.
+- Preserve trust-boundary validation, authorization, privacy, error handling,
+  accessibility, and existing test coverage. Never simplify away a safety check.
+- Use existing tests to verify equivalence; add focused regression coverage for
+  changed nontrivial logic. Run relevant checks, review the final diff, and report
+  exactly what ran, what was skipped, and any remaining risk.
+- Preserve unrelated local work. Task-specific instructions about branches,
+  committing, pushing, deployment, and data changes take precedence over defaults.

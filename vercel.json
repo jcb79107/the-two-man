@@ -1,4 +1,195 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "npx prisma generate && npx next build"
+  "framework": null,
+  "installCommand": "npm ci --prefix preview",
+  "buildCommand": "npm run build:live --prefix preview",
+  "outputDirectory": "preview/out",
+  "redirects": [
+    {
+      "source": "/matches",
+      "destination": "/history/2026?view=results",
+      "permanent": false
+    },
+    {
+      "source": "/standings",
+      "destination": "/history/2026?view=standings",
+      "permanent": false
+    },
+    {
+      "source": "/bracket",
+      "destination": "/history/2026?view=playoffs",
+      "permanent": false
+    },
+    {
+      "source": "/earnings",
+      "destination": "/history/2026",
+      "permanent": false
+    },
+    {
+      "source": "/tournament/:slug",
+      "destination": "/history/2026",
+      "permanent": true
+    },
+    {
+      "source": "/tournament/:slug/standings",
+      "destination": "/history/2026?view=standings",
+      "permanent": true
+    },
+    {
+      "source": "/tournament/:slug/bracket",
+      "destination": "/history/2026?view=playoffs",
+      "permanent": true
+    },
+    {
+      "source": "/tournament/:slug/rules",
+      "destination": "/rules",
+      "permanent": true
+    },
+    {
+      "source": "/tournament/:slug/matches/9d21d132165a4737add5c",
+      "destination": "/history/2026/matches/9d21d132165a4737add5c",
+      "permanent": true
+    },
+    {
+      "source": "/tournament/:slug/matches/a423992b1db24c0cb841d",
+      "destination": "/history/2026/matches/a423992b1db24c0cb841d",
+      "permanent": true
+    },
+    {
+      "source": "/tournament/:slug/matches/a9ba0d7cbda94ddda8a7a",
+      "destination": "/history/2026/matches/a9ba0d7cbda94ddda8a7a",
+      "permanent": true
+    },
+    {
+      "source": "/tournament/:slug/matches/0aa5a2b6c3fc419e9569c",
+      "destination": "/history/2026/matches/0aa5a2b6c3fc419e9569c",
+      "permanent": true
+    },
+    {
+      "source": "/tournament/:slug/matches/3f6fddaab09d4fc6801dc",
+      "destination": "/history/2026/matches/3f6fddaab09d4fc6801dc",
+      "permanent": true
+    },
+    {
+      "source": "/tournament/:slug/matches/f13e674887224826adc18",
+      "destination": "/history/2026/matches/f13e674887224826adc18",
+      "permanent": true
+    },
+    {
+      "source": "/tournament/:slug/matches/52605e69a51f416f8573d",
+      "destination": "/history/2026/matches/52605e69a51f416f8573d",
+      "permanent": true
+    },
+    {
+      "source": "/tournament/:slug/matches/a6a3fb81c1504652950e0",
+      "destination": "/history/2026/matches/a6a3fb81c1504652950e0",
+      "permanent": true
+    },
+    {
+      "source": "/tournament/:slug/matches/5e9a98c722994206b46c7",
+      "destination": "/history/2026/matches/5e9a98c722994206b46c7",
+      "permanent": true
+    },
+    {
+      "source": "/tournament/:slug/matches/5d58d0c0b37f4b87a570a",
+      "destination": "/history/2026/matches/5d58d0c0b37f4b87a570a",
+      "permanent": true
+    },
+    {
+      "source": "/tournament/:slug/matches/4ae767ca9cc94d1fb6782",
+      "destination": "/history/2026/matches/4ae767ca9cc94d1fb6782",
+      "permanent": true
+    },
+    {
+      "source": "/tournament/:slug/matches/cb8bf78bb65d474dbeafa",
+      "destination": "/history/2026/matches/cb8bf78bb65d474dbeafa",
+      "permanent": true
+    },
+    {
+      "source": "/tournament/:slug/matches/a35f0aca83c44ffcbe884",
+      "destination": "/history/2026/matches/a35f0aca83c44ffcbe884",
+      "permanent": true
+    },
+    {
+      "source": "/tournament/:slug/matches/790d2420711943629dafc",
+      "destination": "/history/2026/matches/790d2420711943629dafc",
+      "permanent": true
+    },
+    {
+      "source": "/tournament/:slug/matches/5432af36ecf04e77bddd4",
+      "destination": "/history/2026/matches/5432af36ecf04e77bddd4",
+      "permanent": true
+    },
+    {
+      "source": "/tournament/:slug/matches/090ab2d3f1b84cdfb3530",
+      "destination": "/history/2026/matches/090ab2d3f1b84cdfb3530",
+      "permanent": true
+    },
+    {
+      "source": "/tournament/:slug/matches/a33ade26035147989b239",
+      "destination": "/history/2026/matches/a33ade26035147989b239",
+      "permanent": true
+    },
+    {
+      "source": "/tournament/:slug/matches/de05c8eb11914228b9af4",
+      "destination": "/history/2026/matches/de05c8eb11914228b9af4",
+      "permanent": true
+    },
+    {
+      "source": "/tournament/:slug/matches/lAEMOIVtVS6vtM0xL9nxg",
+      "destination": "/history/2026/matches/q1",
+      "permanent": true
+    },
+    {
+      "source": "/tournament/:slug/matches/lRTmpDnbvVdWSaW8YpoT_",
+      "destination": "/history/2026/matches/q2",
+      "permanent": true
+    },
+    {
+      "source": "/tournament/:slug/matches/8if8yZD1FiM7HXx8Xa5_7",
+      "destination": "/history/2026/matches/q3",
+      "permanent": true
+    },
+    {
+      "source": "/tournament/:slug/matches/kNh3ocH756smkIAuPDD5E",
+      "destination": "/history/2026/matches/q4",
+      "permanent": true
+    },
+    {
+      "source": "/tournament/:slug/matches/uo649dv8CVlCVI_BDThyR",
+      "destination": "/history/2026/matches/s1",
+      "permanent": true
+    },
+    {
+      "source": "/tournament/:slug/matches/P7HSBf6wj37rtdru12Re7",
+      "destination": "/history/2026/matches/s2",
+      "permanent": true
+    },
+    {
+      "source": "/tournament/:slug/matches/BufYQT6H8brg6AExwW4UT",
+      "destination": "/history/2026/matches/final",
+      "permanent": true
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        }
+      ]
+    },
+    {
+      "source": "/review",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    }
+  ],
+  "cleanUrls": true
 }

@@ -24,8 +24,8 @@ describe("fast score entry", () => {
 describe("team path and permanent match links", () => {
   it("stops an eliminated team at its loss and follows champions to the final", () => {
     const nodes = bracketMatches([], archive2026.games);
-    expect(teamPath(nodes, "t5")).toEqual(["q1"]);
-    expect(teamPath(nodes, "t7")).toEqual(["q4", "s2", "final"]);
+    expect(teamPath(nodes, "s1-team-05")).toEqual(["q1"]);
+    expect(teamPath(nodes, "s1-team-09")).toEqual(["q1", "s1", "final"]);
     expect(teamPath(nodes, "missing")).toEqual([]);
   });
   it("aggregates only official games across years, preserving original result links", () => {

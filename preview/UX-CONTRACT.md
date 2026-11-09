@@ -8,14 +8,14 @@ Public browsing is identical for everyone. No role switch, player account, submi
 
 The commissioner demo at /review is openly accessible and explicitly has no authentication or private storage. Use fictional data only. Select a regular-season match, copy course/tees, match time and GHIN strokes, enter four players’ 18 gross scores and hole strokes, confirm evidence receipt, review the calculated outcome, attest and publish. Native date controls record the fictional June CDT times; they are not a production timezone implementation.
 
-Drafts use a separate browser storage key and survive navigation/reload. They never replace published matches. A correction requires a note, preserves the official result until publication and then recalculates current-season results. Original source fixtures and past seasons are immutable. Publishing replaces one fixture, not appends it. Back to editing clears attestation. Discard asks for confirmation and changes no published result. Storage failures are reported as visit-only persistence. No cross-tab concurrency guarantees.
+Drafts use a separate browser storage key and survive navigation/reload. They never replace published matches. A correction requires a note, preserves the official result until publication and then recalculates current-season results. Original sample fixtures and the official Season 1 archive are immutable. Publishing replaces one fixture, not appends it. Back to editing clears attestation. Discard asks for confirmation and changes no published result. Storage failures are reported as visit-only persistence. No cross-tab concurrency guarantees.
 
 No database, server actions, API routes, telemetry, credentials, uploads, payment, AI, GHIN or messaging integrations. Playoff administration is deliberately excluded pending rules and bracket correction decisions. Real implementation needs server authorization, private evidence, transactions, revision checks and audit history. Browser storage is never a privacy boundary.
 
 Keep semantic links, labels, buttons, keyboard focus and table-owned horizontal scrolling. Invalid input remains editable; review and publication show actionable errors. All routes support reload and browser navigation. Existing history/filter URL behavior is preserved.
 
 ## League history
-History navigation, the record book and career pages are owned by `src/history.tsx`; season snapshots and career aggregation by `src/history-data.ts`. Season identity belongs in the route, not a mutable global current-year variable. Search/ranking/entity/scope live in URL query parameters. Archive cards use the shared Scorecard with historical participant labels. Immutable sample history stays separate from editable current-season storage. Unknown playoff hole data renders an explicit unavailable state. See docs/SEASON-HISTORY.md for metric definitions and production migration boundaries.
+History navigation, the record book and career pages are owned by `src/history.tsx`; season snapshots and career aggregation by `src/history-data.ts`. Season identity belongs in the route, not a mutable global current-year variable. Search/ranking/entity/scope live in URL query parameters. Archive cards use the shared Scorecard with historical participant labels. Immutable official Season 1 history stays separate from editable current-season storage. Unknown playoff hole data renders an explicit unavailable state. See docs/SEASON-HISTORY.md for metric definitions and production migration boundaries.
 
 ## Connected bracket
 
@@ -60,3 +60,15 @@ GHIN is the stroke source: 90% Course Handicap, lowest player at zero, others re
 `/review` opens Results: pending matches, published results, correction links and saved-draft resume links. Manual regular-season entry is collapsed behind Enter a result manually. Existing match deep links, editor, draft persistence, validation, correction reasons, attestation and failed-publication retry behavior remain unchanged.
 
 Instagram graphics is the second tab. Result, standings and bracket templates generate local 1080 × 1350 PNGs with the Season 2 mascot. Selections persist in the URL. Only published results feed graphics; drafts and calculator scenarios are excluded. Current bracket seeds remain placeholders until qualification resolves. All exports retain a sample-data label. The preview and download share the same PNG; generation errors allow retry and no data writes occur. This does not connect the browser-local preview to an agent, production data or Instagram posting.
+
+## November 7 archive and audit update
+
+The user authorized importing public Season 1 results, superseding the earlier fictional-history-only restriction. Season 2 and commissioner entry remain a sample sandbox. The official archive is an allowlisted static snapshot, separate from browser storage; all-time records exclude sample seasons. Unknown dates, playoff cards and award amounts are shown honestly. See docs/SEASON-HISTORY.md for provenance and release limits. The AI rules helper never claims certification or assumes a local rule has been adopted.
+
+## Browser feedback — November 7
+
+The homepage omits the teams/pods/playoff-places sentence. The AI rules judge is available in the header and existing rules areas, using a sparkle icon; its prompt still identifies it as AI, not an official ruling. Public footer and More navigation omit commissioner access. The demo remains reachable directly at `/review`; this is unlisted, not authenticated or secret. Production requires authenticated commissioner access even if its URL is not advertised.
+
+## November 7: Codex-led commissioner workflow
+
+The default commissioner destination is now the graphic desk; Results/manual correction is secondary. Players schedule in group texts. Manual entry records a played date, not a booked tee time. The versioned Season 2 publication feeds the public app and graphics after deployment; browser edits are only rehearsal overrides isolated by publication revision. See `docs/CODEX-RESULTS.md`. Confirmed playoff results propagate into the bracket, result pages, current-season history and proposed awards. No production database or Season 1 write path was introduced.

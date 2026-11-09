@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { offseason } from "./site-mode";
 import { useSearchParams, useRouter } from "next/navigation";
 import { usePreview } from "./store";
 import { money, dateLabel } from "./data";
@@ -7,6 +8,7 @@ import {
   seasons,
   entryName,
   careerRows,
+  seasonStandings,
   careerGames,
   headToHead,
   players,
@@ -42,11 +44,13 @@ function ArchiveNav({ active }: { active: string }) {
     </nav>
   );
 }
-function SampleHistory() {
+function HistoryDisclosure() {
+  if (offseason) return null;
   return (
     <p className="archive-disclosure">
-      <strong>Sample archive.</strong> Fictional winners, results and awards.
-      Season 1 data has not been imported.
+      <strong>Season 1 official archive.</strong> Preserved 2026 results. Season
+      2 is a separate fictional demo; sample results are excluded from all-time
+      records.
     </p>
   );
 }
@@ -60,50 +64,80 @@ export function HistoryHome({ champions = false }: { champions?: boolean }) {
         eyebrow="The Two-Man / League history"
         title={champions ? "Champions" : "Season history"}
       />
-      <ArchiveNav active={champions ? "champions" : "seasons"} />
-      <SampleHistory />
       {champions ? (
-        <div className="champions-roll">
-          {completed.map((s) => (
-            <Champion key={s.year} season={s} />
-          ))}
-        </div>
-      ) : (
         <>
-          <div className="archive-season-list">
-            {records.map((s) => (
-              <Link
-                key={s.year}
-                href={`/history/${s.year}`}
-                className="archive-season-row"
-              >
-                <span className="archive-year">{s.year}</span>
-                <div>
-                  <p className="eyebrow">
-                    Season {String(s.number).padStart(2, "0")} ·{" "}
-                    {s.complete ? "Complete" : "In progress"}
-                  </p>
-                  <h2>
-                    {s.champion ? entryName(s, s.champion) : "Current season"}
-                  </h2>
-                  <p>
-                    {s.champion ? "Champions" : "In progress"} ·{" "}
-                    {s.entries.length} teams · {s.games.length} official matches
-                  </p>
-                </div>
-                <span className="archive-row-cta">
-                  View season <Icon name="arrow" />
-                </span>
-              </Link>
-            ))}
-          </div>
-          <section className="section">
-            <SectionTitle title="Champions" href="/champions" />
-            {completed.slice(0, 1).map((s) => (
+          <ArchiveNav active="champions" />
+          <div className="champions-roll">
+            {completed.map((s) => (
               <Champion key={s.year} season={s} />
             ))}
-          </section>
+          </div>
         </>
+      ) : (
+        <div className="history-library">
+          {completed
+            .filter((s) => !s.sample)
+            .map((s) => {
+              const final = s.games.find((g) => g.round === "Final");
+              return (
+                <article className="history-season" key={s.year}>
+                  <header className="history-season-heading">
+                    <div>
+                      <p className="eyebrow">
+                        Season {s.number} · Official archive
+                      </p>
+                      <h2>{s.year}</h2>
+                    </div>
+                    <p>
+                      {s.entries.length} teams · {s.games.length} matches
+                    </p>
+                  </header>
+                  <div className="history-winner">
+                    <p className="eyebrow">Champions</p>
+                    <h3>
+                      <Link href={`/records/teams/${s.champion}`}>
+                        {entryName(s, s.champion!)}
+                      </Link>
+                    </h3>
+                    {final && (
+                      <p>
+                        Defeated {entryName(s, s.runnerUp!)} · {final.score}
+                      </p>
+                    )}
+                    {final && (
+                      <Link className="text-link" href={final.href}>
+                        View final result <Icon name="arrow" size={16} />
+                      </Link>
+                    )}
+                  </div>
+                  <nav
+                    className="history-season-links"
+                    aria-label={`${s.year} archive`}
+                  >
+                    {(
+                      [
+                        ["results", "Match results"],
+                        ["standings", "Final standings"],
+                        ["playoffs", "Playoff bracket"],
+                      ] as const
+                    ).map(([view, label]) => (
+                      <Link key={view} href={`/history/${s.year}?view=${view}`}>
+                        {label}
+                        <Icon name="arrow" size={18} />
+                      </Link>
+                    ))}
+                  </nav>
+                </article>
+              );
+            })}
+          <Link className="history-records-link" href="/records">
+            <span>
+              <strong>All-time records</strong>
+              <span>Teams, players and head-to-head results</span>
+            </span>
+            <Icon name="arrow" />
+          </Link>
+        </div>
       )}
     </>
   );
@@ -162,10 +196,7 @@ export function SeasonArchive({ year }: { year: number }) {
         <Link href="/history">Browse seasons</Link>
       </Empty>
     );
-  const regularRows = careerRows([s], "teams", "regular").sort(
-    (a, b) =>
-      b.won - a.won || b.points - a.points || a.name.localeCompare(b.name),
-  );
+  const regularRows = seasonStandings(s);
   return (
     <>
       <Link href="/history" className="back-link">
@@ -185,7 +216,7 @@ export function SeasonArchive({ year }: { year: number }) {
                 router.push(`/history/${e.target.value}?view=${view}`)
               }
             >
-              <option value="2027">2027 · In progress</option>
+              {!offseason && <option value="2027">2027 · Sample season</option>}
               <option value="2026">2026 · Complete</option>
             </select>
           </label>
@@ -202,7 +233,7 @@ export function SeasonArchive({ year }: { year: number }) {
           </Link>
         ))}
       </nav>
-      <SampleHistory />
+      <HistoryDisclosure />
       {view === "overview" && (
         <>
           {s.champion ? (
@@ -230,7 +261,7 @@ export function SeasonArchive({ year }: { year: number }) {
               <strong>{s.games.length}</strong>
             </div>
             <div>
-              <span className="eyebrow">Sample prize pool</span>
+              <span className="eyebrow">Prize pool</span>
               <strong>{money(s.prizePool)}</strong>
             </div>
             <div>
@@ -240,6 +271,12 @@ export function SeasonArchive({ year }: { year: number }) {
           </div>
           <section className="section">
             <SectionTitle title="Season honors" />
+            {s.champion && (
+              <p>
+                Champion: {entryName(s, s.champion)} · Runner-up:{" "}
+                {entryName(s, s.runnerUp!)}
+              </p>
+            )}
             <div className="archive-honors">
               {s.awards.map((a) => (
                 <div key={`${a.teamId}-${a.kind}`}>
@@ -247,7 +284,11 @@ export function SeasonArchive({ year }: { year: number }) {
                   <Link href={`/records/teams/${a.teamId}`}>
                     {entryName(s, a.teamId)}
                   </Link>
-                  <span>{money(a.amount)} earned</span>
+                  <span>
+                    {a.amount === null
+                      ? "Prize amount not recorded"
+                      : `${money(a.amount)} earned`}
+                  </span>
                 </div>
               ))}
             </div>
@@ -256,6 +297,12 @@ export function SeasonArchive({ year }: { year: number }) {
               splits are not recorded.
             </p>
           </section>
+          {s.prizePool === null && (
+            <p className="fine-note">
+              Season 1 prize amounts and payment status are not recorded in the
+              preserved source.
+            </p>
+          )}
           <div className="fine-note">
             <strong>Season record</strong>
             <p>Three-team pods · Two matches per team · Eight-team playoffs.</p>
@@ -265,7 +312,8 @@ export function SeasonArchive({ year }: { year: number }) {
       {view === "standings" && (
         <>
           <p className="muted">
-            Regular season only · W–L–T and hole points. Playoff results are
+            Regular season only. Ranked by match record, hole points, holes won,
+            then lowest cumulative net better-ball. Playoff results are
             separate.
           </p>
           <div className="archive-pods">
@@ -287,6 +335,8 @@ export function SeasonArchive({ year }: { year: number }) {
                         <th scope="col">Team</th>
                         <th scope="col">W–L–T</th>
                         <th scope="col">Pts</th>
+                        <th scope="col">Holes won</th>
+                        <th scope="col">Net BB</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -305,6 +355,8 @@ export function SeasonArchive({ year }: { year: number }) {
                             </th>
                             <td>{recordLabel(r)}</td>
                             <td>{r.points}</td>
+                            <td>{r.holesWon}</td>
+                            <td>{r.netTotal}</td>
                           </tr>
                         ))}
                     </tbody>
@@ -398,12 +450,14 @@ export function RecordBook() {
   const sort = ["titles", "rate"].includes(params.get("sort") ?? "")
     ? params.get("sort")!
     : "wins";
-  const year = ["2026", "2027"].includes(params.get("season") ?? "")
+  const year = (offseason ? ["2026"] : ["2026", "2027"]).includes(
+    params.get("season") ?? "",
+  )
     ? params.get("season")!
     : "all";
   const q = params.get("q") ?? "";
-  const records = seasons(matches).filter(
-    (s) => year === "all" || String(s.year) === year,
+  const records = seasons(matches).filter((s) =>
+    year === "all" ? !s.sample : String(s.year) === year,
   );
   const metric = (r: CareerRow) =>
     sort === "titles"
@@ -433,7 +487,7 @@ export function RecordBook() {
     <>
       <PageHeading eyebrow="The record book" title="All-time records" />
       <ArchiveNav active="records" />
-      <SampleHistory />
+      <HistoryDisclosure />
       <div className="record-controls">
         <label>
           Records for
@@ -449,7 +503,7 @@ export function RecordBook() {
             onChange={(e) => change("season", e.target.value)}
           >
             <option value="all">All seasons</option>
-            <option value="2027">2027 · In progress</option>
+            {!offseason && <option value="2027">2027 · Sample season</option>}
             <option value="2026">2026 · Complete</option>
           </select>
         </label>
@@ -486,7 +540,7 @@ export function RecordBook() {
       </div>
       <p className="field-help">
         {rows.length} of {all.length} {kind} ·{" "}
-        {year === "all" ? "2026–2027; current season included" : year} ·{" "}
+        {year === "all" ? records.map((s) => s.year).join(", ") : year} ·{" "}
         {phase === "all"
           ? "Regular season + playoffs"
           : phase === "regular"
@@ -569,7 +623,8 @@ export function RecordBook() {
           W–L–T and win percentage; seasons, titles and team awards cover the
           selected seasons. Titles require a completed season. Player records
           reflect their team’s match outcomes, not individual stroke-play wins.
-          No prize split is assumed.
+          No prize split is assumed. All seasons excludes the fictional Season 2
+          demo.
         </p>
       </details>
     </>
@@ -616,7 +671,7 @@ export function CareerProfile({
             : "The record follows the player, even when the partner changes."
         }
       />
-      <SampleHistory />
+      <HistoryDisclosure />
       {row.titles > 0 && (
         <div className="career-honors">
           <Icon name="cup" size={26} />
@@ -838,7 +893,7 @@ export function ArchivedMatch({ year, id }: { year: number; id: string }) {
         title={`${entryName(s, g.a)}<br/>vs ${entryName(s, g.b)}`}
         description={`${dateLabel(g.date)} · ${g.course}`}
       />
-      <SampleHistory />
+      <HistoryDisclosure />
       <div className="archived-result">
         <Icon name="cup" size={30} />
         <div>
@@ -868,7 +923,9 @@ export function ArchivedMatch({ year, id }: { year: number; id: string }) {
       ) : (
         <div className="fine-note">
           <strong>Hole data not recorded</strong>
-          <p>No scorecard is available for this sample match.</p>
+          <p>
+            Individual hole scores were not recorded in this archived result.
+          </p>
         </div>
       )}
       <div className="archive-match-links">

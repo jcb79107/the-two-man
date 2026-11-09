@@ -44,11 +44,16 @@ export function ConnectedBracket({
     if (team) query.set("team", team);
     return `${pathname}?${query}${id ? `#bracket-${id}` : ""}`;
   };
+  const quarterSlots = nodes
+    .filter((n) => n.round === "semis")
+    .flatMap((n) => n.sources ?? []);
+  const layoutId = (m: BracketMatch) =>
+    m.round === "quarters" ? `q${quarterSlots.indexOf(m.id) + 1}` : m.id;
   const card = (m: BracketMatch, mobile = false) => (
     <article
       id={`${mobile ? "mobile-" : ""}bracket-${m.id}`}
       key={m.id}
-      className={`tournament-match match-${m.id}${m.winner ? " decided" : ""}${route.includes(m.id) ? " on-path" : ""}${selectedTeam && !route.includes(m.id) ? " off-path" : ""}`}
+      className={`tournament-match match-${layoutId(m)}${m.winner ? " decided" : ""}${route.includes(m.id) ? " on-path" : ""}${selectedTeam && !route.includes(m.id) ? " off-path" : ""}`}
       aria-label={`${m.label} ${m.winner ? "completed" : "not played"}`}
     >
       <div className="tournament-match-meta">
@@ -154,6 +159,9 @@ export function ConnectedBracket({
       )}
       {round === "all" || round === "overview" ? (
         <>
+          <p className="table-hint">
+            Swipe to follow the bracket, or choose a round above.
+          </p>
           <div
             className={`tournament-scroll${round === "overview" ? " responsive-board" : ""}`}
             role="region"
@@ -186,7 +194,14 @@ export function ConnectedBracket({
               </svg>
               {nodes.map((m) => card(m))}
               <p className="tournament-path-note">
-                QF1 + QF2 → SF1 → FINAL ← SF2 ← QF3 + QF4
+                {nodes
+                  .filter((n) => n.round === "semis")
+                  .map(
+                    (n) =>
+                      `${n.sources?.map((id) => nodes.find((x) => x.id === id)!.label).join(" + ")} → ${n.label}`,
+                  )
+                  .join(" · ")}{" "}
+                → Final
               </p>
             </div>
           </div>
