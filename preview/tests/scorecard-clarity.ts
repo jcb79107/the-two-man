@@ -36,8 +36,21 @@ export async function expectScorecardClarity(page: Page) {
   ).toHaveCSS("border-radius", "50%");
   await expect(player("Jason Baer").locator(".score-number").nth(1)).toHaveCSS(
     "border-top-style",
-    "double",
+    "solid",
   );
+  const doubleMark = player("Jason Baer").locator(".score-number").nth(1);
+  expect(
+    await doubleMark.evaluate(
+      (el) => getComputedStyle(el, "::after").borderTopWidth,
+    ),
+  ).toBe("1px");
+  expect(
+    await doubleMark.evaluate((el) => getComputedStyle(el, "::after").top),
+  ).toBe("3px");
+  const eagle = card.locator(".scorecard-legend .eagle");
+  expect(
+    await eagle.evaluate((el) => getComputedStyle(el, "::after").borderRadius),
+  ).toBe("50%");
   await expect(
     player("Brandon Grant").locator(".score-number").first(),
   ).toHaveText("5");
