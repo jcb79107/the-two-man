@@ -28,9 +28,11 @@ export function OffseasonHome() {
         <div>
           <p className="eyebrow">The champions</p>
           <h2 id="champions-heading">{entryName(s, s.champion!)}</h2>
-          <p>
-            Defeated {entryName(s, s.runnerUp!)} · {final.score}
-          </p>
+          <p>Defeated {entryName(s, s.runnerUp!)}</p>
+          <div className="offseason-final-score">
+            <span>Championship final</span>
+            <strong>{final.score}</strong>
+          </div>
           <Link className="text-link" href={final.href}>
             Revisit the final <Icon name="arrow" />
           </Link>

@@ -52,7 +52,7 @@ Public matches have two states: Pre-match and Completed. Internal draft/review s
 
 Standings columns sort in either direction with URL state; displayed rank remains the competition rank. Playoff picture projects six pod leaders and two wildcards from published results, lists the next four, and flags unresolved pod, seed and wildcard ties. The single-match calculator adds hypothetical points, holes won and net totals without changing scores or browser storage. Other pending matches remain unplayed. This is a scenario, not a probability forecast.
 
-GHIN is the stroke source: 90% Course Handicap, lowest player at zero, others receive the difference, capped at one stroke per hole. Players may agree at the tee. There is no required agreement timestamp. Regular-season evidence includes all four full scores, labeled strokes and marked team best ball; displayed cards mark both players when tied. Playoffs require only the winning team and match result, not a card. Playoff result entry remains outside this local preview's administration scope.
+GHIN is the stroke source: 90% Course Handicap, lowest player at zero, others receive the difference, capped at one stroke per hole. Players may agree at the tee. There is no required agreement timestamp. Regular-season evidence includes all four full scores, labeled strokes and marked team best ball; displayed cards show each team’s lower net score in a separate better-ball row, counting ties once. Playoffs require only the winning team and match result, not a card. Playoff result entry remains outside this local preview's administration scope.
 
 
 ## Simplified commissioner workspace
@@ -91,3 +91,16 @@ and career earnings; earned amounts do not assert payment. The imported match
 archive and its fingerprint remain unchanged. Only regular-season matches show
 scorecards or missing-card notices. Playoff pages and metadata focus on the
 winning team and final match-play score.
+
+## Traditional four-ball scorecard — November 9
+
+The scorecard follows a traditional hole-by-hole grid. Partners appear together,
+followed immediately by their net better-ball row. Individual cells have no
+best-ball highlight or badge. Circles denote birdies; double circles denote
+eagles or better. Squares denote bogeys; double squares denote double bogeys or
+worse. Par remains unmarked. Symbols follow the selected gross/net view, and
+handicap dots remain visible in both views. A compact symbol legend follows the
+grid. Team A/B labels and edge colors identify partnerships without relying on
+color alone. Hole-point winners and nine/full-round totals remain separate from
+individual scoring symbols. Scoring rules, entered scores, and archive data are
+unchanged. Player names remain pinned when the table scrolls on a phone.

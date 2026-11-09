@@ -78,3 +78,14 @@ The scorebook identity overrides marketing-oriented skill defaults: no promotion
 
 ## Desktop clubhouse revision — November 7
 The homepage now opens with the tournament name and existing mascot, followed by derived regular-season progress. Recent results remain the primary content; remaining fixtures occupy a secondary desktop column and follow the initial four results on mobile. The AI helper lives with the rules links. Season 1 recognition reads from the preserved archive. This supersedes the earlier results-only homepage composition; keep the page factual and avoid promotional slogans.
+
+## Tournament scorebook refinement — November 9
+
+Ryder Cup scoring and Presidents Cup leaderboards inform the hierarchy: compact
+match headers, paired team rows, aligned points, explicit final results, and
+strong table headings. Retain The Two-Man pine, cream, and brass identity.
+Archive result cards show each team's hole points beside its name; playoff
+cards show the final match-play result. Standings and career tables use tabular
+numbers, alternating paper rows, and aligned numeric columns. Bracket round
+headers use pine; the home championship result receives its own score line.
+No reference branding, external assets, new dependencies, or scoring changes.

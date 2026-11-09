@@ -1,7 +1,17 @@
 import { expectGraphicRetry } from "../graphic-recovery";
+import { expectScorecardClarity } from "../scorecard-clarity";
 import { expectRecordScopeJourney } from "../record-book";
 import { test, expect } from "@playwright/test";
 import { archive2026 } from "../../src/history-data";
+
+test("four-ball scorecard uses traditional symbols and grouped team scores", async ({
+  page,
+}) => {
+  await expectScorecardClarity(page);
+  await page
+    .locator(".scorecard")
+    .screenshot({ path: test.info().outputPath("scorecard.png") });
+});
 
 test("record scopes rank participants and recover through browser navigation", async ({
   page,
@@ -251,4 +261,41 @@ test("Season 1 payouts show confirmed player splits and stacked career awards", 
     path: test.info().outputPath("playoff-final.png"),
     fullPage: true,
   });
+});
+
+test("tournament pages keep paired scores readable across screen sizes", async ({
+  page,
+}) => {
+  for (const [name, route] of [
+    ["home", "/"],
+    ["results", "/history/2026?view=results"],
+    ["standings", "/history/2026?view=standings"],
+    ["bracket", "/history/2026?view=playoffs"],
+    ["records", "/records"],
+    ["rules", "/rules"],
+  ]) {
+    await page.goto(route);
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
+    if (name === "results") {
+      const game = archive2026.games.find((g) => g.points)!;
+      const card = page.locator(`.archive-game[href="${game.href}"]`);
+      await expect(card.locator(".archive-team-points")).toHaveText(
+        game.points!.map(String),
+      );
+      await expect(card.locator(".archive-result-footer")).toContainText(
+        game.score,
+      );
+      await expect(page.locator(".archive-game")).toHaveCount(
+        archive2026.games.length,
+      );
+    }
+    await page.screenshot({
+      path: test.info().outputPath(`${name}.png`),
+      fullPage: true,
+    });
+  }
 });

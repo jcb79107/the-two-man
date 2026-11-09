@@ -205,8 +205,18 @@ export function SeasonArchive({ year }: { year: number }) {
         All seasons
       </Link>
       <PageHeading
-        eyebrow={`SEASON ${String(s.number).padStart(2, "0")} · ${s.complete ? "FINAL ARCHIVE" : "IN PROGRESS"}`}
-        title={`${year}`}
+        eyebrow={`${year} · SEASON ${String(s.number).padStart(2, "0")} · ${s.complete ? "FINAL ARCHIVE" : "IN PROGRESS"}`}
+        title={
+          view === "results"
+            ? "Match results"
+            : view === "standings"
+              ? s.complete
+                ? "Final standings"
+                : "Standings"
+              : view === "playoffs"
+                ? "Playoff bracket"
+                : `${year}`
+        }
         action={
           <label className="archive-picker">
             Season
@@ -420,20 +430,28 @@ function GameList({
           <span className="eyebrow">
             {g.round} · {dateLabel(g.date)}
           </span>
-          <div>
-            <span className={g.winner === g.a ? "winner" : ""}>
-              {entryName(s, g.a)}
-              {g.winner === g.a && <span className="winner-tag">W</span>}
-            </span>
-            <span className={g.winner === g.b ? "winner" : ""}>
-              {entryName(s, g.b)}
-              {g.winner === g.b && <span className="winner-tag">W</span>}
-            </span>
+          <div className="archive-pairings">
+            {[g.a, g.b].map((team, index) => (
+              <span className={g.winner === team ? "winner" : ""} key={team}>
+                <span className="archive-team-name">{entryName(s, team)}</span>
+                {g.winner === team && <span className="winner-tag">W</span>}
+                {g.points && (
+                  <strong className="archive-team-points">
+                    {g.points[index]}
+                  </strong>
+                )}
+              </span>
+            ))}
           </div>
-          <strong>{g.score}</strong>
-          <span className="field-help">
-            {g.phase === "regular" ? "Hole points · A–B" : "Match-play result"}
-          </span>
+          <div className="archive-result-footer">
+            <span>
+              {g.phase === "regular"
+                ? "Final · Hole points"
+                : "Final · Match play"}
+            </span>
+            <strong>{g.score}</strong>
+            <Icon name="arrow" size={16} />
+          </div>
         </Link>
       ))}
     </div>

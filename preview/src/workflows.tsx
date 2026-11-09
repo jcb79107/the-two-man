@@ -248,8 +248,10 @@ export function Scorecard({
           strokes are valid.
         </p>
       )}
-      <p className="table-hint">
-        Swipe the scorecard for all nine holes and totals.
+      <p className="scorecard-mode-note">
+        {mode === "gross" ? "Gross scores" : "Net scores · strokes deducted"}
+        <span>• Handicap stroke</span>
+        <span className="scorecard-swipe">Swipe for more holes →</span>
       </p>
       <div
         ref={scroll}
@@ -271,8 +273,8 @@ export function Scorecard({
                   {h + 1}
                 </th>
               ))}
-              <th scope="col">{nine === 0 ? "Out" : "In"}</th>
-              <th scope="col">Total</th>
+              <th scope="col">{nine === 0 ? "Front 9" : "Back 9"}</th>
+              <th scope="col">18 holes</th>
             </tr>
           </thead>
           <tbody>
@@ -292,126 +294,180 @@ export function Scorecard({
               <td>—</td>
               <td>—</td>
             </tr>
-            {playerLabels.map((name, p) => (
-              <tr className={p === 2 ? "team-break" : ""} key={name}>
-                <th scope="row">
-                  <span>{name}</span>
-                  <small>
-                    {p < 2 ? "Team A" : "Team B"} · {sum(m.strokes[p])} strokes
-                  </small>
+          </tbody>
+          {[0, 1].map((side) => (
+            <tbody
+              className={`score-team score-team-${side === 0 ? "a" : "b"}`}
+              key={side}
+            >
+              <tr className="score-team-heading">
+                <th scope="rowgroup" colSpan={12}>
+                  <span className="score-team-letter">
+                    {side === 0 ? "A" : "B"}
+                  </span>
+                  {teamLabels[side]}
                 </th>
-                {holes.map((h) => (
-                  <td
-                    key={h}
-                    className={
-                      complete && r.net[p][h] === (p < 2 ? r.a[h] : r.b[h])
-                        ? "best-ball-cell"
-                        : undefined
-                    }
-                  >
-                    {complete && r.net[p][h] === (p < 2 ? r.a[h] : r.b[h]) && (
-                      <span className="sr-only">Team best ball: </span>
-                    )}
-                    {editable && mode === "gross" ? (
-                      <input
-                        aria-label={`${name} hole ${h + 1} gross score`}
-                        type="number"
-                        inputMode="numeric"
-                        min="1"
-                        max="20"
-                        value={m.scores[p][h] || ""}
-                        onChange={(e) => {
-                          const rows = m.scores.map((r) => [...r]);
-                          rows[p][h] = Number(e.target.value);
-                          onChange?.(rows);
-                        }}
-                      />
-                    ) : (
-                      <span
-                        className={`score-number ${(mode === "gross" ? m.scores[p][h] : r.net[p][h]) < cardPars[h] ? "birdie" : (mode === "gross" ? m.scores[p][h] : r.net[p][h]) > cardPars[h] ? "bogey" : ""}`}
-                      >
-                        {mode === "gross" ? m.scores[p][h] : r.net[p][h]}
-                      </span>
-                    )}
-                    {m.strokes[p][h] > 0 && (
-                      <span
-                        className="stroke-dot"
-                        aria-label={`${m.strokes[p][h]} agreed strokes`}
-                      >
-                        {m.strokes[p][h] === 1 ? "•" : m.strokes[p][h]}
-                      </span>
-                    )}
-                  </td>
-                ))}
-                <td className="score-total">
-                  {!complete
-                    ? "—"
-                    : sum(
-                        holes.map((h) =>
-                          mode === "gross" ? m.scores[p][h] : r.net[p][h],
-                        ),
-                      )}
-                </td>
-                <td className="score-total">
-                  {complete
-                    ? sum(mode === "gross" ? m.scores[p] : r.net[p])
-                    : "—"}
-                </td>
               </tr>
-            ))}
-            {complete && (
-              <>
-                {[r.a, r.b].map((row, i) => (
-                  <tr className="net-row" key={i}>
-                    <th scope="row">Team {i === 0 ? "A" : "B"} · Best net</th>
-                    {holes.map((h) => (
-                      <td key={h}>{row[h]}</td>
-                    ))}
-                    <td>{sum(holes.map((h) => row[h]))}</td>
-                    <td>{sum(row)}</td>
-                  </tr>
-                ))}
-                <tr className="hole-result">
-                  <th scope="row">Hole point</th>
-                  {holes.map((h) => (
-                    <td key={h}>
-                      <span
-                        className={r.holes[h]}
-                        title={
-                          r.holes[h] === "tie"
-                            ? "Half a point each"
-                            : `${r.holes[h] === "a" ? teamLabels[0] : teamLabels[1]} wins hole`
-                        }
-                      >
-                        {r.holes[h] === "tie" ? "½" : r.holes[h].toUpperCase()}
-                      </span>
-                    </td>
-                  ))}
-                  <td colSpan={2}>
-                    A {r.aPoints} : {r.bPoints} B
+              {[side * 2, side * 2 + 1].map((p) => (
+                <tr className="score-player" key={p}>
+                  <th scope="row">
+                    <span>{playerLabels[p]}</span>
+                    <small>{sum(m.strokes[p])} strokes</small>
+                  </th>
+                  {holes.map((h) => {
+                    const score =
+                      mode === "gross" ? m.scores[p][h] : r.net[p][h];
+                    const difference = score - cardPars[h];
+                    const hasScore = m.scores[p][h] > 0;
+                    const mark = !hasScore
+                      ? ""
+                      : difference <= -2
+                        ? "eagle"
+                        : difference === -1
+                          ? "birdie"
+                          : difference === 1
+                            ? "bogey"
+                            : difference >= 2
+                              ? "double-bogey"
+                              : "par";
+                    const description =
+                      mark === "eagle"
+                        ? "eagle or better"
+                        : mark === "double-bogey"
+                          ? "double bogey or worse"
+                          : mark;
+                    return (
+                      <td key={h}>
+                        <span className="score-entry">
+                          {editable && mode === "gross" ? (
+                            <input
+                              aria-label={`${playerLabels[p]} hole ${h + 1} gross score`}
+                              type="number"
+                              inputMode="numeric"
+                              min="1"
+                              max="20"
+                              value={m.scores[p][h] || ""}
+                              onChange={(e) => {
+                                const rows = m.scores.map((row) => [...row]);
+                                rows[p][h] = Number(e.target.value);
+                                onChange?.(rows);
+                              }}
+                            />
+                          ) : (
+                            <span
+                              className={`score-number ${mark}`}
+                              role="img"
+                              aria-label={`${hasScore ? score : "Not entered"}${description ? `, ${description}` : ""}`}
+                            >
+                              {hasScore ? score : "—"}
+                            </span>
+                          )}
+                          {m.strokes[p][h] > 0 && (
+                            <span
+                              className="stroke-dot"
+                              aria-label={`${m.strokes[p][h]} agreed strokes`}
+                            >
+                              {m.strokes[p][h] === 1 ? "•" : m.strokes[p][h]}
+                            </span>
+                          )}
+                        </span>
+                      </td>
+                    );
+                  })}
+                  <td className="score-total">
+                    {complete
+                      ? sum(
+                          holes.map((h) =>
+                            mode === "gross" ? m.scores[p][h] : r.net[p][h],
+                          ),
+                        )
+                      : "—"}
+                  </td>
+                  <td className="score-total">
+                    {complete
+                      ? sum(mode === "gross" ? m.scores[p] : r.net[p])
+                      : "—"}
                   </td>
                 </tr>
-              </>
-            )}
-          </tbody>
+              ))}
+              {complete && (
+                <tr className="net-row">
+                  <th scope="row">
+                    Better ball{" "}
+                    <small>Net · Team {side === 0 ? "A" : "B"}</small>
+                  </th>
+                  {holes.map((h) => (
+                    <td key={h}>{side === 0 ? r.a[h] : r.b[h]}</td>
+                  ))}
+                  <td className="score-total">
+                    {sum(holes.map((h) => (side === 0 ? r.a[h] : r.b[h])))}
+                  </td>
+                  <td className="score-total">{sum(side === 0 ? r.a : r.b)}</td>
+                </tr>
+              )}
+            </tbody>
+          ))}
+          {complete && (
+            <tfoot>
+              <tr className="hole-result">
+                <th scope="row">Hole point</th>
+                {holes.map((h) => (
+                  <td key={h}>
+                    <span
+                      className={r.holes[h]}
+                      aria-label={
+                        r.holes[h] === "tie"
+                          ? "Half a point each"
+                          : `${r.holes[h] === "a" ? teamLabels[0] : teamLabels[1]} wins hole`
+                      }
+                    >
+                      {r.holes[h] === "tie" ? "½" : r.holes[h].toUpperCase()}
+                    </span>
+                  </td>
+                ))}
+                <td>
+                  A{" "}
+                  {sum(
+                    holes.map((h) =>
+                      r.holes[h] === "a" ? 1 : r.holes[h] === "tie" ? 0.5 : 0,
+                    ),
+                  )}{" "}
+                  :{" "}
+                  {sum(
+                    holes.map((h) =>
+                      r.holes[h] === "b" ? 1 : r.holes[h] === "tie" ? 0.5 : 0,
+                    ),
+                  )}{" "}
+                  B
+                </td>
+                <td>
+                  A {r.aPoints} : {r.bPoints} B
+                </td>
+              </tr>
+            </tfoot>
+          )}
         </table>
       </div>
-      <div className="scorecard-legend">
-        <span>
-          <i className="legend-circle" /> Birdie or better
-        </span>
-        <span>
-          <i className="legend-square" /> Bogey or worse
-        </span>
-        <span>• Agreed stroke</span>
-        <span>
-          <i className="legend-best-ball" /> Team best ball (both marked when
-          tied)
-        </span>
-        <span>
-          A = {teamLabels[0]} · B = {teamLabels[1]}
-        </span>
+      <div className="scorecard-legend" aria-label="Score symbols">
+        {[
+          ["eagle", "Eagle or better", "−2"],
+          ["birdie", "Birdie", "−1"],
+          ["par", "Par", "E"],
+          ["bogey", "Bogey", "+1"],
+          ["double-bogey", "Double or worse", "+2"],
+        ].map(([mark, label, value]) => (
+          <span key={mark}>
+            <i className={`score-number ${mark}`} aria-hidden="true">
+              {value}
+            </i>
+            {label}
+          </span>
+        ))}
       </div>
+      <p className="scorecard-footnote">
+        Better ball = the lower net score of the partners. Hole point: A or B
+        wins 1; ½ each when tied.
+      </p>
     </section>
   );
 }
