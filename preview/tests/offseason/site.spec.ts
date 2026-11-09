@@ -95,3 +95,73 @@ test("archive graphics download and invalid result never substitutes another mat
     /noindex/,
   );
 });
+
+test("search metadata, sharing images and install icons survive navigation", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const homeTitle = await page.title();
+  const homeDescription = await page
+    .locator('meta[name="description"]')
+    .getAttribute("content");
+  const cta = page.getByRole("link", { name: "Revisit the final" });
+  await expect(cta).toBeInViewport();
+  await cta.click();
+  await expect(page).toHaveTitle(/2026 Final/);
+  await expect(page.locator('meta[name="description"]')).not.toHaveAttribute(
+    "content",
+    homeDescription!,
+  );
+  await expect(page.locator('meta[property="og:title"]')).toHaveAttribute(
+    "content",
+    /2026 Final/,
+  );
+  const ogImage = await page
+    .locator('meta[property="og:image"]')
+    .getAttribute("content");
+  expect((await page.request.get(new URL(ogImage!).pathname)).status()).toBe(
+    200,
+  );
+  await expect(page.locator('meta[property="og:image:alt"]')).toHaveAttribute(
+    "content",
+    /mascot/,
+  );
+  for (const icon of await page
+    .locator('link[rel="icon"], link[rel="apple-touch-icon"]')
+    .evaluateAll((links) => links.map((link) => link.getAttribute("href")!))) {
+    expect((await page.request.get(icon)).status()).toBe(200);
+  }
+  const manifestUrl = await page
+    .locator('link[rel="manifest"]')
+    .getAttribute("href");
+  const manifest = await (await page.request.get(manifestUrl!)).json();
+  for (const icon of manifest.icons)
+    expect((await page.request.get(icon.src)).status()).toBe(200);
+  await page.goBack();
+  await expect(page).toHaveTitle(homeTitle);
+  const robots = await page.request.get("/robots.txt");
+  expect(await robots.text()).toContain(
+    "https://www.thetwoman.site/sitemap.xml",
+  );
+  const sitemap = await page.request.get("/sitemap.xml");
+  expect(await sitemap.text()).toContain("/champions");
+  expect(await sitemap.text()).not.toContain("/review");
+  const response = await page.goto("/not-a-tournament-page");
+  expect(response?.status()).toBe(404);
+  await page.getByRole("link", { name: "Back to the clubhouse" }).click();
+  await expect(page).toHaveTitle(homeTitle);
+});
+
+test("detail titles survive hydration and reload", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/history/2026/matches/final");
+  await page
+    .getByRole("button", { name: "More navigation", exact: true })
+    .click();
+  await expect(page).toHaveTitle(/2026 Final/);
+  await page.reload();
+  await page
+    .getByRole("button", { name: "More navigation", exact: true })
+    .click();
+  await expect(page).toHaveTitle(/2026 Final/);
+});

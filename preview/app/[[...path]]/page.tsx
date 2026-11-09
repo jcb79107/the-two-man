@@ -1,3 +1,4 @@
+import { routeMetadata } from "../../src/route-metadata";
 import { offseason } from "../../src/site-mode";
 import { PreviewApp } from "../../src/app";
 import { teams, matches } from "../../src/data";
@@ -61,11 +62,5 @@ export async function generateMetadata({
   params: Promise<{ path?: string[] }>;
 }) {
   const { path = [] } = await params;
-  const route = "/" + path.join("/");
-  return {
-    ...(offseason ? { alternates: { canonical: route } } : {}),
-    ...(path[0] === "review"
-      ? { robots: { index: false, follow: false } }
-      : {}),
-  };
+  return routeMetadata(path);
 }
