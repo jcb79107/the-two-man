@@ -13,7 +13,7 @@ export async function expectArchiveResultsJourney(page: Page) {
   await expect(search).toHaveValue("  jAsOn BaEr  ");
   await expect(cards).toHaveCount(2);
   await cards.filter({ hasText: "Grant & Rausch" }).click();
-  await expect(page).toHaveURL(/matches\/9d21d132165a4737add5c$/);
+  await expect(page).toHaveURL(/matches\/9d21d132165a4737add5c\?/);
   await page.goBack();
   await expect(cards).toHaveCount(2);
   await expect(search).toHaveValue("  jAsOn BaEr  ");

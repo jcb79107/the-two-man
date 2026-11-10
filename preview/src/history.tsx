@@ -513,10 +513,17 @@ function GameList({
   games: HistoricalGame[];
   compact?: boolean;
 }) {
+  const params = useSearchParams();
+  const resultQuery = new URLSearchParams(params.toString());
+  resultQuery.set("from", "results");
   return (
     <div className={`archive-games ${compact ? "compact" : ""}`}>
       {games.map((g) => (
-        <Link className="archive-game" href={g.href} key={g.id}>
+        <Link
+          className="archive-game"
+          href={`${g.href}?${resultQuery}`}
+          key={g.id}
+        >
           <span className="eyebrow">
             {g.round} · {dateLabel(g.date)}
           </span>
@@ -590,6 +597,8 @@ export function RecordBook() {
     rank: all.findIndex((x) => metric(x) === metric(r)) + 1,
     i,
   }));
+  const profileQuery = new URLSearchParams(params.toString());
+  profileQuery.set("from", "records");
   const query = q.trim().toLowerCase();
   const rows = ranked.filter(
     ({ row }) =>
@@ -710,11 +719,7 @@ export function RecordBook() {
                   <td>{rank}</td>
                   <th scope="row">
                     <Link
-                      href={
-                        kind === "teams"
-                          ? `/records/teams/${r.id}`
-                          : `/players/${r.id}`
-                      }
+                      href={`${kind === "teams" ? `/records/teams/${r.id}` : `/players/${r.id}`}?${profileQuery}`}
                     >
                       {r.name}
                     </Link>
@@ -809,6 +814,12 @@ export function CareerProfile({
 }) {
   const { matches } = usePreview();
   const records = seasons(matches);
+  const params = useSearchParams();
+  const backQuery = new URLSearchParams(
+    params.get("from") === "records" ? params.toString() : "",
+  );
+  backQuery.delete("from");
+  backQuery.set("kind", kind);
   const row = careerRows(records, kind).find((r) => r.id === id);
   if (!row)
     return (
@@ -824,7 +835,7 @@ export function CareerProfile({
   const games = careerGames(records, kind, id);
   return (
     <>
-      <Link href={`/records?kind=${kind}`} className="back-link">
+      <Link href={`/records?${backQuery}`} className="back-link">
         <Icon name="back" size={16} />
         The record book
       </Link>
@@ -1048,6 +1059,7 @@ export function CareerProfile({
 }
 export function ArchivedMatch({ year, id }: { year: number; id: string }) {
   const { matches } = usePreview();
+  const params = useSearchParams();
   const s = seasons(matches).find((s) => s.year === year);
   const g = s?.games.find((g) => g.id === id);
   if (!s || !g)
@@ -1056,12 +1068,19 @@ export function ArchivedMatch({ year, id }: { year: number; id: string }) {
         <Link href="/history">Browse seasons</Link>
       </Empty>
     );
+  const backQuery = new URLSearchParams(
+    params.get("from") === "results" ? params.toString() : "",
+  );
+  backQuery.delete("from");
+  backQuery.set(
+    "view",
+    params.get("from") === "results" || g.phase === "regular"
+      ? "results"
+      : "playoffs",
+  );
   return (
     <>
-      <Link
-        href={`/history/${year}?view=${g.phase === "playoffs" ? "playoffs" : "results"}`}
-        className="back-link"
-      >
+      <Link href={`/history/${year}?${backQuery}`} className="back-link">
         <Icon name="back" size={16} />
         {year} season archive
       </Link>
