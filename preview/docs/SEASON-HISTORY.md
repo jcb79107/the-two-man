@@ -37,3 +37,8 @@ recorded; archived match detail retains its original paired team order.
 Record-book team search matches partnership names and either player’s full name
 within the selected seasons. Search filters already-ranked rows, preserving rank
 and the query when switching between team and player records.
+
+Links from filtered records and archive results carry the listing query into the
+detail URL. The detail’s return link restores that list after reload or opening
+in another tab. Direct detail links retain their default record-book or season
+archive destination. Return destinations are fixed local routes, not supplied URLs.

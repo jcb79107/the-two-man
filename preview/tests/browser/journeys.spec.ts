@@ -1,3 +1,4 @@
+import { expectListReturn } from "../list-return";
 import { expectCareerScorePerspective } from "../career-scores";
 import { expectLocalFilters } from "../local-filters";
 import { expectArchiveResultsJourney } from "../archive-results";
@@ -520,4 +521,10 @@ test("loaded filters work without network requests", async ({ page }) => {
 
 test("career scores show the featured team first", async ({ page }) => {
   await expectCareerScorePerspective(page);
+});
+
+test("detail return links preserve filtered lists after reload", async ({
+  page,
+}) => {
+  await expectListReturn(page);
 });

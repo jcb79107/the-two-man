@@ -1,3 +1,4 @@
+import { expectListReturn } from "../list-return";
 import { expectCareerScorePerspective } from "../career-scores";
 import { expectLocalFilters } from "../local-filters";
 import { expectArchiveResultsJourney } from "../archive-results";
@@ -288,7 +289,7 @@ test("tournament pages keep paired scores readable across screen sizes", async (
     ).toBe(true);
     if (name === "results") {
       const game = archive2026.games.find((g) => g.points)!;
-      const card = page.locator(`.archive-game[href="${game.href}"]`);
+      const card = page.locator(`.archive-game[href^="${game.href}?"]`);
       await expect(card.locator(".archive-team-points")).toHaveText(
         game.points!.map(String),
       );
@@ -331,4 +332,10 @@ test("loaded filters work without network requests", async ({ page }) => {
 
 test("career scores show the featured team first", async ({ page }) => {
   await expectCareerScorePerspective(page);
+});
+
+test("detail return links preserve filtered lists after reload", async ({
+  page,
+}) => {
+  await expectListReturn(page);
 });
