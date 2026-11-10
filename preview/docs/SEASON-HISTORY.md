@@ -33,3 +33,7 @@ a substitute for those private database records.
 Career match history and head-to-head results show regular-season hole points
 with the featured player’s team or partnership first. Playoff margins remain as
 recorded; archived match detail retains its original paired team order.
+
+Record-book team search matches partnership names and either player’s full name
+within the selected seasons. Search filters already-ranked rows, preserving rank
+and the query when switching between team and player records.

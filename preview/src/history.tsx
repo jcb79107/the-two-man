@@ -590,8 +590,20 @@ export function RecordBook() {
     rank: all.findIndex((x) => metric(x) === metric(r)) + 1,
     i,
   }));
-  const rows = ranked.filter(({ row }) =>
-    row.name.toLowerCase().includes(q.trim().toLowerCase()),
+  const query = q.trim().toLowerCase();
+  const rows = ranked.filter(
+    ({ row }) =>
+      row.name.toLowerCase().includes(query) ||
+      (kind === "teams" &&
+        records.some((season) =>
+          season.entries.some(
+            (entry) =>
+              entry.teamId === row.id &&
+              entry.playerNames.some((name) =>
+                name.toLowerCase().includes(query),
+              ),
+          ),
+        )),
   );
   function change(key: string, value: string) {
     const next = new URLSearchParams(window.location.search);
@@ -651,7 +663,9 @@ export function RecordBook() {
             value={q}
             onChange={(e) => change("q", e.target.value)}
             placeholder={
-              kind === "teams" ? "Search partnerships" : "Search players"
+              kind === "teams"
+                ? "Search team or player names"
+                : "Search players"
             }
           />
         </label>

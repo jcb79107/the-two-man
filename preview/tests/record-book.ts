@@ -1,4 +1,4 @@
-import { expect, type Page } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
 export async function expectRecordScopeJourney(page: Page) {
   await page.goto("/records?season=2026");
@@ -49,6 +49,32 @@ export async function expectRecordScopeJourney(page: Page) {
   await page.getByRole("button", { name: "Clear search", exact: true }).click();
   await expect(rows).toHaveCount(8);
   await expect(page.getByRole("searchbox")).toBeFocused();
+  await page.getByLabel("Match scope").selectOption("all");
+  const originalRank = await rows
+    .filter({ hasText: "Baer & Cadden" })
+    .locator("td")
+    .first()
+    .innerText();
+  await page.getByRole("searchbox").fill("Jack Cadden");
+  await expect(rows).toHaveCount(1);
+  await expect(rows).toContainText("Baer & Cadden");
+  await page.getByRole("searchbox").fill("  jAsOn BaEr  ");
+  await expect(rows).toHaveCount(1);
+  await expect(rows).toContainText("Baer & Cadden");
+  await expect(rows.locator("td").first()).toHaveText(originalRank);
+  await page.reload();
+  await expect(rows).toHaveCount(1);
+  await expect(page.getByRole("searchbox")).toHaveValue("  jAsOn BaEr  ");
+  await page.getByLabel("Records for").selectOption("players");
+  await expect(rows).toHaveCount(1);
+  await expect(rows).toContainText("Jason Baer");
+  await page.goBack();
+  await expect(page.getByLabel("Records for")).toHaveValue("teams");
+  await expect(rows).toContainText("Baer & Cadden");
+  await page.screenshot({
+    path: test.info().outputPath("record-name-search.png"),
+    fullPage: true,
+  });
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= innerWidth,
