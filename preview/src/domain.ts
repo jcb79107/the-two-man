@@ -129,6 +129,25 @@ export function approvalError(m: Match): string | null {
   if (!m.evidence) return "A scorecard is required before approval.";
   return validateCard(m.scores, m.strokes);
 }
+export function validCourseData(value: {
+  pars?: unknown;
+  strokeIndexes?: unknown;
+}) {
+  return (
+    (value.pars === undefined ||
+      (Array.isArray(value.pars) &&
+        value.pars.length === 18 &&
+        value.pars.every((n) => Number.isInteger(n) && n >= 1 && n <= 6))) &&
+    (value.strokeIndexes === undefined ||
+      (Array.isArray(value.strokeIndexes) &&
+        value.strokeIndexes.length === 18 &&
+        new Set(value.strokeIndexes).size === 18 &&
+        value.strokeIndexes.every(
+          (n) => Number.isInteger(n) && n >= 1 && n <= 18,
+        )))
+  );
+}
+
 export function validSnapshot(value: unknown): value is Match[] {
   if (!Array.isArray(value) || value.length !== 18) return false;
   return value.every((m, i) => {
@@ -147,6 +166,7 @@ export function validSnapshot(value: unknown): value is Match[] {
       Array.isArray(m.strokes) &&
       m.strokes.every(Array.isArray) &&
       validateCard(m.scores, m.strokes) === null &&
+      validCourseData(m) &&
       typeof m.date === "string" &&
       (!m.date || Number.isFinite(Date.parse(m.date))) &&
       (m.lockedAt === null ||

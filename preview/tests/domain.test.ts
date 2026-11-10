@@ -115,3 +115,17 @@ describe("saved fixture identity", () => {
     expect(changed[0]).not.toEqual(matches[0]);
   });
 });
+
+it("rejects malformed optional course data in saved snapshots", () => {
+  for (const metadata of [
+    { pars: "damaged" },
+    { pars: [] },
+    { pars: Array(18).fill(0) },
+    { strokeIndexes: {} },
+    { strokeIndexes: Array(18).fill(1) },
+  ]) {
+    const saved = structuredClone(matches);
+    Object.assign(saved[0], metadata);
+    expect(validSnapshot(saved)).toBe(false);
+  }
+});

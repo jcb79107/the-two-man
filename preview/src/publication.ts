@@ -66,18 +66,7 @@ export function loadPublication(raw: unknown) {
     if (
       !matches.some((m) => m.id === item.id) ||
       !validSnapshot(candidate) ||
-      !validPlayedDate(item.date) ||
-      (item.pars !== undefined &&
-        (!Array.isArray(item.pars) ||
-          item.pars.length !== 18 ||
-          item.pars.some((n) => !Number.isInteger(n) || n < 1 || n > 6))) ||
-      (item.strokeIndexes !== undefined &&
-        (!Array.isArray(item.strokeIndexes) ||
-          item.strokeIndexes.length !== 18 ||
-          new Set(item.strokeIndexes).size !== 18 ||
-          item.strokeIndexes.some(
-            (n) => !Number.isInteger(n) || n < 1 || n > 18,
-          )))
+      !validPlayedDate(item.date)
     )
       throw new Error(
         "Regular-season cards require valid scores, capped strokes and a 2027 played date.",

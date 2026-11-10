@@ -247,7 +247,7 @@ export function Empty({
     <div className="empty">
       <Icon name="flag" size={30} />
       <h3>{title}</h3>
-      <p>{children}</p>
+      <div className="empty-content">{children}</div>
     </div>
   );
 }

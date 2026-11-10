@@ -26,7 +26,7 @@ fits the behavior, not that it has a formal proof of correctness.
 | Machine | States and transitions | Owner / durable source | Decision and invariant |
 | --- | --- | --- | --- |
 | Site mode and route availability | Build selects offseason or fictional demo; route resolves content or 404 | `src/site-mode.ts`, `app/[[...path]]`, `src/app.tsx` | Keep build-time mode. Root build is live; demo build must never be promoted. No runtime role/auth switch. |
-| Browser restoration | Initial fixture → loading → validated saved season or fallback; draft restoration succeeds/fails separately | `src/store.tsx`; revision-scoped season and draft keys | Keep `ready` gate. Do not overwrite unreadable drafts merely by mounting; only user edits trigger draft persistence. Offseason skips browser restoration. |
+| Browser restoration | Initial fixture → loading → validated saved season or fallback; draft restoration succeeds/fails separately | `src/store.tsx`; revision-scoped season and draft keys | Keep `ready` gate. Preserve rejected entries while other drafts are edited. Unreadable storage stays untouched even after edits (visit-only until explicit reset); replacing/discarding a specific draft removes its rejected entry. Offseason skips browser restoration. |
 | Draft persistence | Absent → edited/retained → persisted or visit-only; resume; discard | `src/store.tsx`, `src/commissioner.tsx` | Keep drafts separate from official matches. Storage warnings are not success. Local storage is not private or cross-device storage. |
 | Review and attestation | Edit → validation error or review/unconfirmed → review/confirmed; back/edit clears attestation | `src/review-state.ts`, `src/commissioner.tsx` | Explicit union/reducer. Validation stays in `approvalError` and the review handler. Attestation cannot coexist with edit or done. |
 | Publication and retry | Confirmed review → domain error, done/visit-only, or done/persisted; successful retry promotes visit-only to persisted | `src/review-state.ts`, `src/domain.ts`, `src/store.tsx` | Explicit completion state. Only persist success clears the draft. Retry saves the existing season; it does not append or republish a result. |
@@ -88,3 +88,6 @@ before publication side effects; reducer guards alone cannot secure a write.
 The audit does not add cross-tab concurrency, cross-device storage, authenticated
 publication or a durable background service. Those require a separate product and
 storage design. Browser-only completion and its recovery limits remain explicit.
+
+See [the platform audit](PLATFORM-AUDIT.md) for the subsequent two-pass audit,
+recovery regressions, historical ordering and tied-rank checks.

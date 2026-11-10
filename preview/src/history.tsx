@@ -12,6 +12,7 @@ import {
   seasonStandings,
   careerGames,
   careerScore,
+  compareHistoricalGames,
   headToHead,
   players,
   type SeasonRecord,
@@ -426,7 +427,7 @@ function ArchiveResults({ season: s }: { season: SeasonRecord }) {
       });
       return names.some((name) => name.toLowerCase().includes(query));
     })
-    .sort((a, b) => b.date.localeCompare(a.date));
+    .sort(compareHistoricalGames);
   function change(key: "q" | "phase", value: string) {
     const next = new URLSearchParams(window.location.search);
     next.set("view", "results");
@@ -927,12 +928,15 @@ export function CareerProfile({
                     {opponent.won}–{opponent.lost}–{opponent.tied}{" "}
                     <small>W–L–T</small>
                   </strong>
-                  <span>{opponent.games.length} matches</span>
+                  <span>
+                    {opponent.games.length}{" "}
+                    {opponent.games.length === 1 ? "match" : "matches"}
+                  </span>
                 </summary>
                 <div className="rivalry-results">
                   {opponent.games
                     .slice()
-                    .sort((a, b) => Date.parse(b.date) - Date.parse(a.date))
+                    .sort(compareHistoricalGames)
                     .map((g) => (
                       <Link key={`${g.year}-${g.id}`} href={g.href}>
                         <span>

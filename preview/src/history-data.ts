@@ -414,6 +414,24 @@ export function careerScore(game: HistoricalGame, teamId: string) {
   return teamId === game.a ? `${a} – ${b}` : `${b} – ${a}`;
 }
 
+// Canonical playoff IDs encode rounds even when a played date is missing.
+export function compareHistoricalGames(a: HistoricalGame, b: HistoricalGame) {
+  const stage = (g: HistoricalGame) =>
+    g.phase === "regular"
+      ? 0
+      : g.id === "final"
+        ? 3
+        : /^s[12]$/.test(g.id)
+          ? 2
+          : 1;
+  return (
+    b.year - a.year ||
+    stage(b) - stage(a) ||
+    (Date.parse(b.date) || 0) - (Date.parse(a.date) || 0) ||
+    a.id.localeCompare(b.id)
+  );
+}
+
 export function careerGames(
   records: SeasonRecord[],
   kind: "teams" | "players",
@@ -434,7 +452,7 @@ export function careerGames(
           teamId: ids.find((t) => t === game.a || t === game.b)!,
         }));
     })
-    .sort((a, b) => b.game.date.localeCompare(a.game.date));
+    .sort((a, b) => compareHistoricalGames(a.game, b.game));
 }
 
 // Team identities persist across seasons; include only recorded official games.

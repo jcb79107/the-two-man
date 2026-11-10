@@ -711,7 +711,7 @@ textarea {
 .empty h3 {
   margin-bottom: 10px;
 }
-.empty p {
+.empty-content {
   color: var(--muted);
   font-size: 14px;
 }
@@ -2680,7 +2680,7 @@ summary {
     font-size: 70px;
   }
   .archive-pods {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .archive-honors {
     grid-template-columns: 1fr;
