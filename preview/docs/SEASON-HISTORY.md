@@ -29,3 +29,7 @@ The legacy database app has been removed from the active repository. Its recover
 tag and full-data preservation branches are recorded in
 [Season 1 preservation](../../docs/LEGACY-APP.md). Do not treat this public JSON as
 a substitute for those private database records.
+
+Career match history and head-to-head results show regular-season hole points
+with the featured player’s team or partnership first. Playoff margins remain as
+recorded; archived match detail retains its original paired team order.

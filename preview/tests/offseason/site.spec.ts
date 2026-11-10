@@ -1,3 +1,4 @@
+import { expectCareerScorePerspective } from "../career-scores";
 import { expectLocalFilters } from "../local-filters";
 import { expectArchiveResultsJourney } from "../archive-results";
 import { expectGraphicRetry } from "../graphic-recovery";
@@ -326,4 +327,8 @@ test("player scores stay gross while better ball applies recorded strokes", asyn
 
 test("loaded filters work without network requests", async ({ page }) => {
   await expectLocalFilters(page);
+});
+
+test("career scores show the featured team first", async ({ page }) => {
+  await expectCareerScorePerspective(page);
 });
