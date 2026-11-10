@@ -3,7 +3,7 @@ import type { GraphicResult } from "./graphic-state";
 import NextImage from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { archive2026, entryName } from "./history-data";
+import { archive2026, entryName, compareHistoricalGames } from "./history-data";
 import { PageHeading } from "./ui";
 import { dateLabel } from "./data";
 
@@ -116,7 +116,7 @@ export function ArchiveGraphics() {
               }
             >
               {!game && <option value={id}>Result unavailable</option>}
-              {[...archive2026.games].reverse().map((g) => (
+              {[...archive2026.games].sort(compareHistoricalGames).map((g) => (
                 <option key={g.id} value={g.id}>
                   {g.round} · {entryName(archive2026, g.a)} vs{" "}
                   {entryName(archive2026, g.b)}

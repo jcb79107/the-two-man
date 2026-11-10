@@ -2,12 +2,15 @@
 import Link from "next/link";
 import { useRef, useState } from "react";
 import { type Match, nameOf } from "./data";
-import { podWinner, qualified, standings } from "./domain";
+import { podWinner, qualified } from "./domain";
 import {
   projectField,
+  qualificationField,
+  cutoffReason,
   simulateMatch,
   type ScenarioScore,
 } from "./standings-view";
+import { publication } from "./publication";
 import { Icon } from "./ui";
 
 export function PlayoffPicture({ matches }: { matches: Match[] }) {
@@ -24,14 +27,19 @@ export function PlayoffPicture({ matches }: { matches: Match[] }) {
   const [error, setError] = useState("");
   const correctionFields = useRef<HTMLDetailsElement>(null);
   const match = pending.find((m) => m.id === matchId) ?? pending[0];
-  const current = projectField(standings(matches));
+  const current = qualificationField(matches, publication.seeds);
   // Recompute from published state; never persist a hypothetical score.
   const scenarioRows =
     applied && pending.some((m) => m.id === applied.id)
       ? simulateMatch(matches, applied.id, applied.score)
       : null;
   const picture = scenarioRows ? projectField(scenarioRows) : current;
-  const official = qualified(matches);
+  const official = publication.seeds.length
+    ? publication.seeds
+    : qualified(matches);
+  const confirmed = publication.seeds.length === 8 && !scenarioRows;
+  const cut = picture.field[7];
+  const outside = picture.bubble[0];
   const selectedIn = (id: string, field: typeof current.field) =>
     field.find((r) => r.team.id === id);
   function update() {
@@ -64,9 +72,11 @@ export function PlayoffPicture({ matches }: { matches: Match[] }) {
           <p className="eyebrow">
             {scenarioRows
               ? "Your scenario"
-              : official.length
-                ? "Qualified field"
-                : "If the season ended today"}
+              : confirmed
+                ? "Confirmed playoff field"
+                : official.length
+                  ? "Qualified field"
+                  : "If the season ended today"}
           </p>
           <h2>
             {scenarioRows
@@ -83,7 +93,7 @@ export function PlayoffPicture({ matches }: { matches: Match[] }) {
           View bracket <Icon name="arrow" />
         </Link>
       </div>
-      {!current.field.length ? (
+      {!picture.field.length ? (
         <p className="notice">
           The playoff picture starts with the first completed match.
         </p>
@@ -113,11 +123,13 @@ export function PlayoffPicture({ matches }: { matches: Match[] }) {
                         </Link>
                         <span>
                           Pod {row.team.pod} ·{" "}
-                          {locked
-                            ? "Pod winner · Qualified"
-                            : row.route === "Pod winner"
-                              ? "Pod leader"
-                              : row.route}
+                          {confirmed
+                            ? `${row.route} · Qualified`
+                            : locked
+                              ? "Pod winner · Qualified"
+                              : row.route === "Pod winner"
+                                ? "Pod leader"
+                                : row.route}
                           {movedIn ? " · Moves in" : ""}
                         </span>
                       </div>
@@ -131,8 +143,16 @@ export function PlayoffPicture({ matches }: { matches: Match[] }) {
               </ol>
             </section>
             <section>
-              <h3>Next four out</h3>
-              <p className="field-help">The wild-card bubble</p>
+              <h3>
+                {official.length && !scenarioRows
+                  ? "Outside the playoff field"
+                  : "Next four out"}
+              </h3>
+              <p className="field-help">
+                {official.length && !scenarioRows
+                  ? "Regular-season finish"
+                  : "The wild-card bubble"}
+              </p>
               <ol className="bubble-ledger">
                 {picture.bubble.map((row) => (
                   <li key={row.team.id}>
@@ -160,6 +180,36 @@ export function PlayoffPicture({ matches }: { matches: Match[] }) {
               </p>
             </section>
           </div>
+          {cut && outside && (
+            <div className="notice">
+              <div>
+                <strong>
+                  {confirmed
+                    ? "Confirmed qualification"
+                    : "At the wild-card cut"}
+                </strong>
+                <p>
+                  {confirmed
+                    ? "The commissioner-confirmed seeds decide the field and bracket order."
+                    : `${nameOf(cut.team.id)} / ${nameOf(outside.team.id)} — ${cutoffReason(cut, outside)}.`}
+                </p>
+                {confirmed && (
+                  <p>
+                    {nameOf(cut.team.id)} / {nameOf(outside.team.id)} — Recorded
+                    comparison:{" "}
+                    {cutoffReason(cut, outside).replace(
+                      "; commissioner decision required",
+                      "; resolved by the confirmed seeds",
+                    )}
+                    .
+                  </p>
+                )}
+                <Link href="/standings?view=field">
+                  Compare all ranking statistics
+                </Link>
+              </div>
+            </div>
+          )}
           {picture.ties.length > 0 && (
             <div className="tie-watch">
               <strong>Tiebreak needed</strong>

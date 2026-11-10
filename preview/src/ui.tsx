@@ -197,10 +197,16 @@ export function SectionTitle({
     </div>
   );
 }
-export function MatchRow({ match: m }: { match: Match }) {
+export function MatchRow({
+  match: m,
+  href = `/matches/${m.id}`,
+}: {
+  match: Match;
+  href?: string;
+}) {
   if (m.status !== "official")
     return (
-      <Link className="match-row pending-match" href={`/matches/${m.id}`}>
+      <Link className="match-row pending-match" href={href}>
         <span className="eyebrow">Pod {m.pod}</span>
         <span className="pending-pair">
           <strong>{nameOf(m.a)}</strong>
@@ -212,7 +218,7 @@ export function MatchRow({ match: m }: { match: Match }) {
     );
   const r = result(m);
   return (
-    <Link className="match-row" href={`/matches/${m.id}`}>
+    <Link className="match-row" href={href}>
       <div className="match-meta">
         <span className="eyebrow">Pod {m.pod}</span>
         <Badge status={m.status} />
@@ -247,7 +253,7 @@ export function Empty({
     <div className="empty">
       <Icon name="flag" size={30} />
       <h3>{title}</h3>
-      <p>{children}</p>
+      <div className="empty-content">{children}</div>
     </div>
   );
 }

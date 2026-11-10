@@ -7,6 +7,7 @@ import {
   careerRows,
   careerGames,
   careerScore,
+  compareHistoricalGames,
   type SeasonRecord,
 } from "../src/history-data";
 
@@ -42,16 +43,16 @@ describe("season archive and career records", () => {
     );
     expect(rows.every((r) => r.won + r.lost + r.tied === r.played)).toBe(true);
   });
-  it("does not fabricate an active season title or individual prize split", () => {
+  it("does not fabricate an active season title and labels sample splits through sample records", () => {
     expect(seasons(matches)[0].champion).toBeNull();
     expect(
       careerRows([seasons(matches)[0]], "teams").every((r) => r.titles === 0),
     ).toBe(true);
+    const sample = seasons(matches)[0];
+    expect(sample.sample).toBe(true);
     expect(
-      careerRows([seasons(matches)[0]], "players").filter(
-        (r) => r.earned === null,
-      ).length,
-    ).toBeGreaterThan(0);
+      sample.awards.every((a) => a.perPlayer === (a.amount ?? 0) / 2),
+    ).toBe(true);
   });
   it("reconciles confirmed Season 1 team and player payouts to the $3,600 pool", () => {
     expect(archive2026.prizePool).toBe(3600);
@@ -186,4 +187,45 @@ describe("career score perspective", () => {
       expect(JSON.stringify(game)).toBe(original);
     }
   });
+});
+
+it("keeps the undated quarterfinal ahead of regular-season career results", () => {
+  const before = JSON.stringify(archive2026);
+  for (const [kind, id] of [
+    ["teams", "s1-team-13"],
+    ["players", "s1-team-13-player-1"],
+  ] as const) {
+    const games = careerGames([archive2026], kind, id);
+    expect(games[0].game.id).toBe("q3");
+    expect(games[0].game.date).toBe("");
+  }
+  expect(JSON.stringify(archive2026)).toBe(before);
+});
+
+it("orders history by season, round and played time without relying on source order", () => {
+  const games = [...archive2026.games].sort(compareHistoricalGames);
+  expect(games[0].id).toBe("final");
+  expect(
+    games
+      .slice(1, 3)
+      .map((g) => g.id)
+      .sort(),
+  ).toEqual(["s1", "s2"]);
+  expect(
+    games
+      .slice(3, 7)
+      .map((g) => g.id)
+      .sort(),
+  ).toEqual(["q1", "q2", "q3", "q4"]);
+  expect([...archive2026.games].reverse().sort(compareHistoricalGames)).toEqual(
+    games,
+  );
+  const regular = games.filter((g) => g.phase === "regular");
+  expect(regular.map((g) => Date.parse(g.date))).toEqual(
+    regular.map((g) => Date.parse(g.date)).sort((a, b) => b - a),
+  );
+  const nextSeason = { ...regular[0], year: 2028, date: "" };
+  expect([games[0], nextSeason].sort(compareHistoricalGames)[0]).toBe(
+    nextSeason,
+  );
 });

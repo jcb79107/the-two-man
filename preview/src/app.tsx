@@ -8,7 +8,7 @@ import { usePathname, useSearchParams, useRouter } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
 import { usePreview } from "./store";
 import { teams, pods, nameOf, money, season, dateLabel } from "./data";
-import { standings, podWinner, qualified, result } from "./domain";
+import { standings, podWinner, qualified } from "./domain";
 import {
   Icon,
   Mark,
@@ -23,16 +23,24 @@ import {
 import { MatchDetail } from "./workflows";
 import { Commissioner } from "./commissioner";
 import { ConnectedBracket } from "./bracket";
-import { archive2026 } from "./history-data";
+import {
+  archive2026,
+  currentSeason,
+  compareHistoricalGames,
+  careerRows,
+} from "./history-data";
 import {
   HistoryHome,
   SeasonArchive,
   RecordBook,
   CareerProfile,
   ArchivedMatch,
+  GameList,
 } from "./history";
 import { StandingsTable } from "./standings-table";
 import { PlayoffPicture } from "./playoff-picture";
+import { matchReturn } from "./match-return";
+import { bracketMatches, type BracketMatch } from "./bracket-model";
 import { RULES_JUDGE_URL } from "./rules-judge";
 const nav = offseason
   ? [
@@ -345,12 +353,14 @@ function Home() {
   const { matches } = usePreview();
   const [limit, setLimit] = useState(4);
   const pending = matches.filter((m) => m.status !== "official");
-  const official = matches
-    .filter((m) => m.status === "official")
-    .sort(
-      (a, b) =>
-        Date.parse(b.date) - Date.parse(a.date) || a.id.localeCompare(b.id),
-    );
+  const record = currentSeason(matches);
+  const official = [...record.games].sort(compareHistoricalGames);
+  const regularCount = matches.length - pending.length;
+  const playoffNodes = bracketMatches(publication.seeds, publication.games);
+  const upcomingPlayoffs = playoffNodes.filter(
+    (n) => !n.winner && n.slots.every((s) => s.id),
+  );
+  const nextRound = upcomingPlayoffs[0]?.round;
   return (
     <div className="feed-home">
       <header className="clubhouse-heading">
@@ -364,12 +374,12 @@ function Home() {
       <div className="clubhouse-progress">
         <p>
           <strong>
-            {official.length} of {matches.length}
+            {regularCount} of {matches.length}
           </strong>{" "}
-          matches final
+          regular-season matches final
         </p>
         <progress
-          value={official.length}
+          value={regularCount}
           max={matches.length || 1}
           aria-label="Regular-season matches completed"
         />
@@ -377,6 +387,64 @@ function Home() {
           Playoff picture <Icon name="arrow" size={16} />
         </Link>
       </div>
+      <label className="team-finder">
+        Find your team
+        <select
+          defaultValue=""
+          onChange={(e) => {
+            if (e.target.value)
+              window.location.assign(`/teams/${e.target.value}`);
+          }}
+        >
+          <option value="" disabled>
+            Select your partnership
+          </option>
+          {teams.map((t) => (
+            <option key={t.id} value={t.id}>
+              {nameOf(t.id)}
+            </option>
+          ))}
+        </select>
+      </label>
+      {record.champion ? (
+        <section className="notice season-moment">
+          <Icon name="cup" />
+          <div>
+            <h2>{nameOf(record.champion)} · Season 2 champions</h2>
+            <p>{record.games.find((g) => g.id === "final")?.score} · Final</p>
+            <Link href="/playoffs/final">View championship result</Link> ·{" "}
+            <Link href="/earnings">Final awards</Link>
+          </div>
+        </section>
+      ) : nextRound ? (
+        <section className="notice season-moment">
+          <Icon name="cup" />
+          <div>
+            <h2>
+              {nextRound === "final"
+                ? "Championship"
+                : nextRound === "semis"
+                  ? "Semifinals"
+                  : "Quarterfinals"}{" "}
+              · Next up
+            </h2>
+            <Link href={`/bracket?round=${nextRound}`}>See the pairings</Link>
+          </div>
+        </section>
+      ) : !regularCount ? (
+        <section className="notice season-moment">
+          <Icon name="calendar" />
+          <div>
+            <h2>Ready for the first round</h2>
+            <p>
+              Coordinate with your opponents in the group text. Season 2 dates
+              and format are not yet confirmed.
+            </p>
+            <Link href="/matches?filter=upcoming">Find your fixtures</Link> ·{" "}
+            <Link href="/rules#strokes">Before you tee off</Link>
+          </div>
+        </section>
+      ) : null}
       <nav className="feed-shortcuts" aria-label="Season shortcuts">
         <Link href="/standings">
           Standings <Icon name="arrow" size={14} />
@@ -384,11 +452,14 @@ function Home() {
         <Link href="/bracket">
           Bracket <Icon name="arrow" size={14} />
         </Link>
-        <Link href="/matches?filter=upcoming">
-          Upcoming matches <Icon name="arrow" size={14} />
+        <Link href={record.complete ? "/earnings" : "/matches?filter=upcoming"}>
+          {record.complete ? "Final awards" : "Upcoming matches"}{" "}
+          <Icon name="arrow" size={14} />
         </Link>
       </nav>
-      <div className="clubhouse-columns">
+      <div
+        className={`clubhouse-columns${!regularCount ? " before-first-result" : ""}`}
+      >
         <section className="clubhouse-results" aria-label="Recent results">
           <SectionTitle
             title="Recent results"
@@ -397,7 +468,6 @@ function Home() {
           />
           <ol className="activity-timeline">
             {official.slice(0, limit).map((m) => {
-              const r = result(m);
               return (
                 <li key={m.id}>
                   <div className="feed-meta">
@@ -406,44 +476,54 @@ function Home() {
                   </div>
                   <div className="feed-scoreboard">
                     <div className="feed-score-label">
-                      <span>Pod {m.pod}</span>
-                      <span>Hole points</span>
+                      <span>{m.round}</span>
+                      <span>
+                        {m.phase === "regular" ? "Hole points" : "Match play"}
+                      </span>
                     </div>
-                    <Link className="feed-result" href={`/matches/${m.id}`}>
+                    <Link
+                      className={`feed-result${m.phase === "playoffs" ? " playoff-feed-result" : ""}`}
+                      href={m.href}
+                    >
                       {[
-                        { id: m.a, points: r.aPoints },
-                        { id: m.b, points: r.bPoints },
+                        { id: m.a, points: m.points?.[0] },
+                        { id: m.b, points: m.points?.[1] },
                       ].map(({ id, points }) => (
                         <span
                           key={id}
                           className={
-                            r.winner === id ? "feed-winner" : undefined
+                            m.winner === id ? "feed-winner" : undefined
                           }
                         >
                           <span className="feed-team">
                             {nameOf(id)}
-                            {r.winner === id && <small>Won</small>}
+                            {m.winner === id && <small>Won</small>}
                           </span>
                           <b>
-                            <span className="sr-only">Hole points: </span>
-                            {points}
+                            <span className="sr-only">
+                              {m.phase === "regular"
+                                ? "Hole points: "
+                                : "Match result: "}
+                            </span>
+                            {points ?? (m.winner === id ? m.score : "—")}
                           </b>
                         </span>
                       ))}
                     </Link>
                   </div>
                   <p className="feed-detail">{m.course}</p>
-                  <Link className="text-link" href={`/matches/${m.id}`}>
-                    Scorecard <Icon name="arrow" size={14} />
+                  <Link className="text-link" href={m.href}>
+                    {m.phase === "regular" ? "Scorecard" : "View result"}{" "}
+                    <Icon name="arrow" size={14} />
                   </Link>
                 </li>
               );
             })}
           </ol>
           {!official.length && (
-            <Empty title="No results yet">
-              Results appear after the commissioner posts them.
-            </Empty>
+            <p className="clubhouse-note">
+              Results appear here after the commissioner posts the first match.
+            </p>
           )}
           {official.length > limit && (
             <button
@@ -455,29 +535,34 @@ function Home() {
           )}
         </section>
         <aside className="clubhouse-aside" aria-label="Around the tournament">
-          <section aria-label="Matches still to play">
-            <SectionTitle
-              title="Still to play"
-              href="/matches?filter=upcoming"
-              label="Fixtures"
-            />
-            <p className="clubhouse-note">
-              {pending.length
-                ? `${pending.length} matches awaiting a final result.`
-                : "Every regular-season result is in."}
-            </p>
-            <div className="clubhouse-fixtures">
-              {pending.slice(0, 3).map((m) => (
-                <MatchRow key={m.id} match={m} />
-              ))}
-            </div>
-            {pending.length > 3 && (
-              <Link className="text-link" href="/matches?filter=upcoming">
-                View all {pending.length} remaining matches{" "}
-                <Icon name="arrow" size={16} />
-              </Link>
-            )}
-          </section>
+          {(pending.length > 0 || upcomingPlayoffs.length > 0) && (
+            <section aria-label="Matches still to play">
+              <SectionTitle
+                title="Still to play"
+                href="/matches?filter=upcoming"
+                label="Fixtures"
+              />
+              <p className="clubhouse-note">
+                {pending.length
+                  ? `${pending.length} matches awaiting a final result.`
+                  : `${upcomingPlayoffs.length} playoff matches ready to play.`}
+              </p>
+              <div className="clubhouse-fixtures">
+                {pending.slice(0, 3).map((m) => (
+                  <MatchRow key={m.id} match={m} />
+                ))}
+                {upcomingPlayoffs.map((m) => (
+                  <PlayoffPairing key={m.id} match={m} />
+                ))}
+              </div>
+              {pending.length > 3 && (
+                <Link className="text-link" href="/matches?filter=upcoming">
+                  View all {pending.length} remaining matches{" "}
+                  <Icon name="arrow" size={16} />
+                </Link>
+              )}
+            </section>
+          )}
           <section className="clubhouse-rules">
             <h2>On the course</h2>
             <Link className="text-link" href="/rules">
@@ -500,25 +585,49 @@ function Home() {
 function Matches() {
   const { matches } = usePreview();
   const query = useSearchParams();
-  const router = useRouter();
   const requestedFilter = query.get("filter");
   const filter =
-    requestedFilter === "review" ? "upcoming" : (requestedFilter ?? "all");
+    requestedFilter === "review"
+      ? "upcoming"
+      : ["all", "upcoming", "official"].includes(requestedFilter ?? "")
+        ? requestedFilter!
+        : "all";
   const search = query.get("q") ?? "";
-  const filtered = matches.filter(
-    (m) =>
-      (filter === "all" ||
-        (filter === "upcoming" && m.status !== "official") ||
-        (filter === "official" && m.status === "official")) &&
-      `${nameOf(m.a)} ${nameOf(m.b)} ${m.course}`
-        .toLowerCase()
-        .includes(search.toLowerCase()),
-  );
+  const record = currentSeason(matches);
+  const matchesSearch = (a: string, b: string, course = "") =>
+    `${nameOf(a)} ${nameOf(b)} ${course}`
+      .toLowerCase()
+      .includes(search.trim().toLowerCase());
+  const games =
+    filter === "upcoming"
+      ? []
+      : record.games
+          .filter((g) => matchesSearch(g.a, g.b, g.course))
+          .sort(compareHistoricalGames);
+  const pending =
+    filter === "official"
+      ? []
+      : matches.filter(
+          (m) => m.status !== "official" && matchesSearch(m.a, m.b),
+        );
+  const playoffFixtures = bracketMatches(
+    publication.seeds,
+    publication.games,
+  ).filter((n) => !n.winner && n.slots.every((s) => s.id));
+  const upcoming =
+    filter === "official"
+      ? []
+      : playoffFixtures.filter((n) =>
+          matchesSearch(n.slots[0].id!, n.slots[1].id!),
+        );
+  const count = games.length + pending.length + upcoming.length;
+  const returnQuery = new URLSearchParams(query.toString());
+  returnQuery.set("from", "matches");
   const update = (key: string, value: string) => {
-    const p = new URLSearchParams(query);
+    const p = new URLSearchParams(window.location.search);
     if (value) p.set(key, value);
     else p.delete(key);
-    router.replace(`/matches?${p}`, { scroll: false });
+    window.history.replaceState(null, "", `/matches?${p}`);
   };
   return (
     <>
@@ -564,16 +673,37 @@ function Matches() {
         </div>
       </div>
       <p className="result-count">
-        {filtered.length} of {matches.length} matches · Regular season
+        {count} of{" "}
+        {matches.length + publication.games.length + playoffFixtures.length}{" "}
+        matches · Regular season & playoffs
       </p>
+      {games.length > 0 && (
+        <GameList season={record} games={games} from="matches" />
+      )}
       <div className="match-grid">
-        {filtered.map((m) => (
-          <MatchRow key={m.id} match={m} />
+        {pending.map((m) => (
+          <MatchRow
+            key={m.id}
+            match={m}
+            href={`/matches/${m.id}?${returnQuery}`}
+          />
+        ))}
+        {upcoming.map((m) => (
+          <PlayoffPairing key={m.id} match={m} />
         ))}
       </div>
-      {filtered.length === 0 && (
+      {count === 0 && (
         <Empty title="No matches found">
-          Try a different team name or clear the filter.
+          <p>Try a different team name or clear the filter.</p>
+          <button
+            className="button outline"
+            onClick={() => {
+              window.history.pushState(null, "", "/matches");
+              document.getElementById("match-search")?.focus();
+            }}
+          >
+            Show all matches
+          </button>
         </Empty>
       )}
     </>
@@ -668,7 +798,28 @@ function TeamDetail({ id }: { id: string }) {
       </Empty>
     );
   const row = standings(matches).find((r) => r.team.id === id)!;
-  const won = podWinner(matches, t.pod) === id;
+  const record = currentSeason(matches);
+  const awards = record.awards.filter((a) => a.teamId === id);
+  const earned = awards.reduce((total, a) => total + (a.amount ?? 0), 0);
+  const games = record.games
+    .filter((g) => g.a === id || g.b === id)
+    .sort(compareHistoricalGames);
+  const upcoming = bracketMatches(publication.seeds, publication.games).filter(
+    (n) => !n.winner && n.slots.some((s) => s.id === id),
+  );
+  const lastPlayoff = games.find((g) => g.phase === "playoffs");
+  const finish =
+    record.champion === id
+      ? "Season 2 champions"
+      : record.runnerUp === id
+        ? "Season 2 runners-up"
+        : lastPlayoff && lastPlayoff.winner !== id
+          ? `Finished in the ${lastPlayoff.round.toLowerCase()}`
+          : upcoming.length
+            ? "Still in the playoffs"
+            : publication.seeds.length && !publication.seeds.includes(id)
+              ? "Regular season complete · Did not qualify"
+              : null;
   return (
     <>
       <Link href="/standings" className="back-link">
@@ -715,34 +866,58 @@ function TeamDetail({ id }: { id: string }) {
         <Link href="/earnings">
           <span className="eyebrow">Earned · sample awards</span>
           <strong>
-            {money(won ? season.podAward : 0)}
+            {money(earned)}
             <Icon name="arrow" />
           </strong>
         </Link>
       </div>
-      <section className="section">
-        <SectionTitle title="The matches" />
-        <div className="match-grid">
-          {matches
-            .filter((m) => m.a === id || m.b === id)
-            .map((m) => (
-              <MatchRow key={m.id} match={m} />
-            ))}
-        </div>
-      </section>
-      {won && (
+      {finish && (
         <div className="notice">
           <Icon name="cup" />
           <div>
-            <strong>
-              Pod {t.pod} winner · {money(season.podAward)} earned
-            </strong>
+            <strong>{finish}</strong>
             <p>
-              This is an earned award in the sample season, not a payment
-              confirmation.
+              <Link href={`/bracket?team=${id}`}>Follow the playoff path</Link>
             </p>
           </div>
         </div>
+      )}
+      <section className="section">
+        <SectionTitle title="The matches" />
+        {upcoming.map((m) => (
+          <PlayoffPairing key={m.id} match={m} />
+        ))}
+        <div className="match-grid">
+          {matches
+            .filter(
+              (m) => m.status !== "official" && (m.a === id || m.b === id),
+            )
+            .map((m) => (
+              <MatchRow
+                key={m.id}
+                match={m}
+                href={`/matches/${m.id}?from=team&team=${id}`}
+              />
+            ))}
+        </div>
+        <GameList season={record} games={games} from="team" team={id} />
+      </section>
+      {awards.length > 0 && (
+        <section className="notice">
+          <Icon name="cup" />
+          <div>
+            <strong>
+              {money(earned)} team total · {money(earned / 2)} per player
+            </strong>
+            <p>
+              {awards.map((a) => `${a.label}: ${money(a.amount)}`).join(" · ")}
+            </p>
+            <p>
+              Proposed sample awards with an illustrative equal split. Earned
+              does not mean paid.
+            </p>
+          </div>
+        </section>
       )}
     </>
   );
@@ -767,6 +942,7 @@ function Bracket() {
           </div>
         </div>
       ) : (
+        !publication.seeds.length &&
         !seeds.length && (
           <p className="bracket-intro">
             Seeds are confirmed after regular-season play.{" "}
@@ -794,9 +970,11 @@ function Earnings() {
   const winners = pods.map((p) => ({ pod: p, team: podWinner(matches, p) }));
   const earnedCount = winners.filter((w) => w.team).length;
   const final = publication.games.find((g) => g.id === "final");
-  const earned =
-    earnedCount * season.podAward +
-    (final ? season.championAward + season.runnerUpAward : 0);
+  const record = currentSeason(matches);
+  const earned = record.awards.reduce((total, a) => total + (a.amount ?? 0), 0);
+  const recipients = careerRows([record], "teams")
+    .filter((r) => (r.earned ?? 0) > 0)
+    .sort((a, b) => (b.earned ?? 0) - (a.earned ?? 0));
   return (
     <div className="earnings-page">
       <PageHeading eyebrow="2027 season" title="Prize money" />
@@ -823,6 +1001,34 @@ function Earnings() {
           </dd>
         </div>
       </dl>
+      {recipients.length > 0 && (
+        <section className="section" aria-label="Combined awards">
+          <SectionTitle title="Team totals & player shares" />
+          <p className="muted">
+            Proposed sample amounts · Illustrative equal split · Earned, not
+            paid
+          </p>
+          <ul className="awards-ledger">
+            {recipients.map((r) => (
+              <li key={r.id}>
+                <div className="ledger-team">
+                  <TeamName id={r.id} />
+                  <span>
+                    {record.awards
+                      .filter((a) => a.teamId === r.id)
+                      .map((a) => `${a.label} ${money(a.amount)}`)
+                      .join(" + ")}
+                  </span>
+                </div>
+                <strong className="ledger-amount">
+                  {money(r.earned)}
+                  <small>{money((r.earned ?? 0) / 2)} / player</small>
+                </strong>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
       <div className="earnings-columns">
         <section aria-labelledby="earned-awards-heading">
           <div className="earnings-section-heading">
@@ -963,8 +1169,22 @@ function Rules() {
               title: "If a partner must withdraw",
               body: "For a medical emergency or another serious reason, contact the commissioner before the next match. With approval, the remaining player may play two separately marked balls on six holes in that match: three on the front nine and three on the back nine, declared to the opponents before tee-off.\n\nPlay each ball independently from tee to hole and count the better net score, using the remaining player’s GHIN-assigned strokes, capped at one stroke per hole, for both. This is not a scramble: do not switch balls or replay a shot. Play one ball on the other 12 holes and on every extra playoff hole. The allowance applies only to the next match; any later participation needs a new commissioner decision.\n\nThis is a tournament-specific emergency exception, not standard four-ball play. Ask the handicap committee whether the modified round is eligible for handicap posting. If a regular-season card is required, report the exception and both scores on the six nominated holes directly to the commissioner.",
             },
-          ].map((r) => (
-            <section key={r.title}>
+          ].map((r, i) => (
+            <section
+              key={r.title}
+              id={
+                [
+                  "format",
+                  "strokes",
+                  "regular-card",
+                  "playoff-result",
+                  "scheduling",
+                  "seeding",
+                  "prizes",
+                  "withdrawal",
+                ][i]
+              }
+            >
               <div>
                 <h2>{r.title}</h2>
                 {r.body.split("\n\n").map((paragraph) => (
@@ -979,7 +1199,27 @@ function Rules() {
   );
 }
 
+function PlayoffPairing({ match: m }: { match: BracketMatch }) {
+  return (
+    <Link
+      className="match-row pending-match"
+      href={`/bracket?round=${m.round}#bracket-${m.id}`}
+    >
+      <span className="eyebrow">
+        {m.label} · {m.slots.every((s) => s.id) ? "Pre-match" : "Opponent TBD"}
+      </span>
+      <span className="pending-pair">
+        <strong>{m.slots[0].label}</strong>
+        <span>vs</span>
+        <strong>{m.slots[1].label}</strong>
+      </span>
+      <Icon name="arrow" size={16} />
+    </Link>
+  );
+}
 function PlayoffDetail({ id }: { id: string }) {
+  const params = useSearchParams();
+  const back = matchReturn(new URLSearchParams(params.toString()));
   const game = publication.games.find((g) => g.id === id);
   if (!game)
     return (
@@ -987,23 +1227,77 @@ function PlayoffDetail({ id }: { id: string }) {
         <Link href="/bracket">View bracket</Link>
       </Empty>
     );
+  const nodes = bracketMatches(publication.seeds, publication.games);
+  const next = nodes.find((n) => n.id === game.next);
+  const opponent = next?.slots.find((s) => s.id !== game.winner);
   return (
     <>
-      <PageHeading
-        eyebrow={game.round}
-        title={`${nameOf(game.winner!)} win`}
-        description={game.score}
-      />
-      <p>
-        {nameOf(game.a)} vs {nameOf(game.b)}
-      </p>
-      <p>
-        {game.course} · {game.date}
-      </p>
-      <p>{game.next ? "Advances to the next round." : "Season 2 champions."}</p>
-      <Link className="text-link" href="/bracket">
-        View bracket <Icon name="arrow" />
+      <Link
+        className="back-link"
+        href={params.has("from") ? back.href : "/bracket"}
+      >
+        <Icon name="back" size={16} />
+        {params.has("from") ? back.label : "Back to bracket"}
       </Link>
+      <div className="match-detail-kicker">
+        <span className="eyebrow">{game.round}</span>
+        <Badge status="official" />
+      </div>
+      <section className="match-hero playoff-result">
+        <div>
+          <TeamAvatar id={game.a} size="large" />
+          <h1>{nameOf(game.a)}</h1>
+        </div>
+        <div className="big-score">
+          <strong>{game.score}</strong>
+          <small>{nameOf(game.winner!)} win</small>
+        </div>
+        <div>
+          <TeamAvatar id={game.b} size="large" />
+          <h2>{nameOf(game.b)}</h2>
+        </div>
+      </section>
+      <div className="match-location">
+        <span>
+          <Icon name="flag" />
+          {game.course}
+        </span>
+        <span>
+          <Icon name="calendar" />
+          {dateLabel(game.date)}
+        </span>
+      </div>
+      <section className="notice">
+        <Icon name="cup" />
+        <div>
+          <h2>
+            {game.next
+              ? `${nameOf(game.winner!)} advance`
+              : `${nameOf(game.winner!)} · Season 2 champions`}
+          </h2>
+          {next ? (
+            <>
+              <p>
+                Next: {next.label} · vs {opponent?.label}
+              </p>
+              <Link
+                href={`/bracket?round=${next.round}&team=${game.winner}#bracket-${next.id}`}
+              >
+                View next round
+              </Link>
+            </>
+          ) : (
+            <>
+              <p>Final match-play result · {game.score}</p>
+              <Link href="/earnings">View final awards</Link>
+            </>
+          )}
+        </div>
+      </section>
+      <p className="fine-note">
+        Playoffs use the final match-play result.{" "}
+        <Link href="/rules#playoff-result">Playoff reporting rules</Link>
+      </p>
     </>
   );
 }

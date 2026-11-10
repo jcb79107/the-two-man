@@ -262,55 +262,60 @@ export const archive2026: SeasonRecord = {
       }),
   ],
 };
-export function seasons(current: Match[]): SeasonRecord[] {
-  if (offseason) return [archive2026];
-  const final = publication.games.find((g) => g.id === "final");
-  return [
-    {
-      year: 2027,
-      number: 2,
-      sample: true,
-      complete: !!final,
-      entries,
-      games: [...regularGames(current, 2027), ...publication.games],
-      regularCards: current,
-      champion: final?.winner ?? null,
-      runnerUp: final ? (final.a === final.winner ? final.b : final.a) : null,
-      prizePool: season.prizePool,
-      awards: [
-        ...(final
+export function currentSeason(
+  current: Match[],
+  playoffs = publication.games,
+): SeasonRecord {
+  const final = playoffs.find((g) => g.id === "final");
+  return {
+    year: 2027,
+    number: 2,
+    sample: true,
+    complete: !!final,
+    entries,
+    games: [...regularGames(current, 2027), ...playoffs],
+    regularCards: current,
+    champion: final?.winner ?? null,
+    runnerUp: final ? (final.a === final.winner ? final.b : final.a) : null,
+    prizePool: season.prizePool,
+    awards: [
+      ...(final
+        ? [
+            {
+              teamId: final.winner!,
+              kind: "champion" as const,
+              label: "Champions",
+              amount: season.championAward,
+              perPlayer: season.championAward / 2,
+            },
+            {
+              teamId: final.a === final.winner ? final.b : final.a,
+              kind: "runner-up" as const,
+              label: "Runners-up",
+              amount: season.runnerUpAward,
+              perPlayer: season.runnerUpAward / 2,
+            },
+          ]
+        : []),
+      ...["A", "B", "C", "D", "E", "F"].flatMap((pod) => {
+        const teamId = podWinner(current, pod);
+        return teamId
           ? [
               {
-                teamId: final.winner!,
-                kind: "champion" as const,
-                label: "Champions",
-                amount: season.championAward,
-              },
-              {
-                teamId: final.a === final.winner ? final.b : final.a,
-                kind: "runner-up" as const,
-                label: "Runners-up",
-                amount: season.runnerUpAward,
+                teamId,
+                kind: "pod" as const,
+                label: `Pod ${pod} winner`,
+                amount: season.podAward,
+                perPlayer: season.podAward / 2,
               },
             ]
-          : []),
-        ...["A", "B", "C", "D", "E", "F"].flatMap((pod) => {
-          const teamId = podWinner(current, pod);
-          return teamId
-            ? [
-                {
-                  teamId,
-                  kind: "pod" as const,
-                  label: `Pod ${pod} winner`,
-                  amount: season.podAward,
-                },
-              ]
-            : [];
-        }),
-      ],
-    },
-    archive2026,
-  ];
+          : [];
+      }),
+    ],
+  };
+}
+export function seasons(current: Match[]): SeasonRecord[] {
+  return offseason ? [archive2026] : [currentSeason(current), archive2026];
 }
 export function entryName(s: SeasonRecord, id: string) {
   return s.entries.find((e) => e.teamId === id)?.name ?? "Unknown team";
@@ -414,6 +419,24 @@ export function careerScore(game: HistoricalGame, teamId: string) {
   return teamId === game.a ? `${a} – ${b}` : `${b} – ${a}`;
 }
 
+// Canonical playoff IDs encode rounds even when a played date is missing.
+export function compareHistoricalGames(a: HistoricalGame, b: HistoricalGame) {
+  const stage = (g: HistoricalGame) =>
+    g.phase === "regular"
+      ? 0
+      : g.id === "final"
+        ? 3
+        : /^s[12]$/.test(g.id)
+          ? 2
+          : 1;
+  return (
+    b.year - a.year ||
+    stage(b) - stage(a) ||
+    (Date.parse(b.date) || 0) - (Date.parse(a.date) || 0) ||
+    a.id.localeCompare(b.id)
+  );
+}
+
 export function careerGames(
   records: SeasonRecord[],
   kind: "teams" | "players",
@@ -434,7 +457,7 @@ export function careerGames(
           teamId: ids.find((t) => t === game.a || t === game.b)!,
         }));
     })
-    .sort((a, b) => b.game.date.localeCompare(a.game.date));
+    .sort((a, b) => compareHistoricalGames(a.game, b.game));
 }
 
 // Team identities persist across seasons; include only recorded official games.

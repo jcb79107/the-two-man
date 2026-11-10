@@ -125,3 +125,31 @@ current URL for every edit so consecutive changes preserve each other. Search
 replaces history, selections push it, and Back/Forward restores the controls.
 Filtering must not request route data or depend on connectivity after loading.
 Actual navigation to another season or detail page still uses the router.
+
+## Full-season player handoffs — November 10
+
+Current-season home, team, search, history and awards share `currentSeason`;
+regular-season record/points remain separate from playoff outcomes. Home derives
+opening fixtures, next playoff round and championship recognition from results.
+Find your team uses the existing partnership page. Regular pre-match details
+link a group-text/GHIN/evidence checklist to the rules; dates remain unconfirmed.
+
+Confirmed publication seeds take precedence over qualification projections,
+including ties. Scenarios remain hypothetical and render even before the first
+result. Qualification explains the decisive cut-line statistic and both values.
+Follow a team scrolls only the bracket container, without animation. Known
+pairings say Pre-match, unresolved opponents remain TBD, and elimination ends
+the highlighted path. Match return links preserve list queries or bracket
+team/round through fixed local destinations, including after reload.
+
+Only regular matches show scorecards. Playoff details show the two teams, final
+margin, date/course and next opponent or championship award link. Gross scores
+retain traditional symbols; summaries name both teams and zero-stroke players
+say No strokes. Proposed sample awards stack, with combined team totals and
+explicitly illustrative equal player shares. Season 2 amounts and split policy
+are unconfirmed; earned never means paid. Current demo careers/history are
+labeled fictional and excluded from official all-time records.
+
+`npm run test:simulation --prefix preview` copies the app to an isolated temporary
+directory, resets only copied fixtures and rehearses seven publication states
+on desktop/mobile. It never writes source publications or the Season 1 archive.

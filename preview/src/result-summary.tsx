@@ -9,11 +9,10 @@ export function ResultSummary({ match }: { match: Match }) {
     <section className="result-summary" aria-label="How the result was decided">
       <div>
         <p className="eyebrow">18-hole result</p>
-        <h2>
-          {a} holes won · {tied} halved · {b} holes won
-        </h2>
+        <h2>How the points were earned</h2>
         <p>
-          {nameOf(match.a)} vs {nameOf(match.b)}
+          <strong>{nameOf(match.a)}</strong>: {a} holes won ·{" "}
+          <strong>{nameOf(match.b)}</strong>: {b} holes won · {tied} halved
         </p>
       </div>
       <div className="result-hole-strip" aria-label="Hole outcomes">

@@ -13,7 +13,8 @@
     "test:browser": "playwright test",
     "results": "node --import tsx scripts/publish-results.ts",
     "build:live": "NEXT_PUBLIC_SITE_MODE=offseason next build",
-    "test:offseason": "playwright test --config playwright.offseason.config.ts"
+    "test:offseason": "playwright test --config playwright.offseason.config.ts",
+    "test:simulation": "node --import tsx scripts/simulate-player-season.ts"
   },
   "dependencies": {
     "@fontsource/anton": "5.3.0",

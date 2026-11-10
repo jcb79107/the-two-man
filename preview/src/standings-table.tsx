@@ -1,6 +1,6 @@
 "use client";
 import { useRouter, useSearchParams } from "next/navigation";
-import { type Standing } from "./domain";
+import { compareStanding, type Standing } from "./domain";
 import { Icon, TeamAvatar, TeamName } from "./ui";
 import { sortKeys, sortStandings, type SortKey } from "./standings-view";
 const columns: [SortKey, string][] = [
@@ -95,9 +95,17 @@ export function StandingsTable({
                 <th scope="row">
                   <span
                     className="rank"
-                    aria-label={"Competition rank " + (rows.indexOf(r) + 1)}
+                    aria-label={
+                      "Competition rank " +
+                      (rows.findIndex(
+                        (other) => compareStanding(other, r) === 0,
+                      ) +
+                        1)
+                    }
                   >
-                    {rows.indexOf(r) + 1}
+                    {rows.findIndex(
+                      (other) => compareStanding(other, r) === 0,
+                    ) + 1}
                   </span>
                   <TeamAvatar id={r.team.id} />
                   <TeamName id={r.team.id} />

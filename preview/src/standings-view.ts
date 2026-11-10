@@ -152,3 +152,30 @@ export function simulateMatch(
     })
     .sort(compareStanding);
 }
+
+export function qualificationField(matches: Match[], confirmed: string[] = []) {
+  const rows = standings(matches);
+  if (confirmed.length !== 8) return projectField(rows);
+  return {
+    field: confirmed.map((id, i) => ({
+      ...rows.find((r) => r.team.id === id)!,
+      seed: i + 1,
+      route: i < 6 ? "Pod winner" : "Wild card",
+    })),
+    bubble: rows.filter((r) => !confirmed.includes(r.team.id)).slice(0, 4),
+    ties: [] as Standing[][],
+  };
+}
+
+export function cutoffReason(a: Standing, b: Standing) {
+  const criteria = [
+    ["match-record points", a.won + a.tied / 2, b.won + b.tied / 2],
+    ["hole points", a.points, b.points],
+    ["holes won", a.holesWon, b.holesWon],
+    ["net better-ball strokes (lower is better)", a.net, b.net],
+  ] as const;
+  const decisive = criteria.find(([, first, second]) => first !== second);
+  return decisive
+    ? `${decisive[0]}: ${decisive[1]} vs ${decisive[2]}`
+    : "level on all recorded tiebreakers; commissioner decision required";
+}
