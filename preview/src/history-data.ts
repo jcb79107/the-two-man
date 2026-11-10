@@ -403,6 +403,17 @@ export function careerRows(
     }
   return [...rows.values()];
 }
+export function careerScore(game: HistoricalGame, teamId: string) {
+  if (
+    game.phase !== "regular" ||
+    !game.points ||
+    (teamId !== game.a && teamId !== game.b)
+  )
+    return game.score;
+  const [a, b] = game.points;
+  return teamId === game.a ? `${a} – ${b}` : `${b} – ${a}`;
+}
+
 export function careerGames(
   records: SeasonRecord[],
   kind: "teams" | "players",

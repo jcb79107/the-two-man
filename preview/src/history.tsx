@@ -11,6 +11,7 @@ import {
   careerRows,
   seasonStandings,
   careerGames,
+  careerScore,
   headToHead,
   players,
   type SeasonRecord,
@@ -889,7 +890,9 @@ export function CareerProfile({
       {kind === "teams" && (
         <section className="section">
           <SectionTitle title="Head-to-head" />
-          <p className="field-help">All seasons · Official matches</p>
+          <p className="field-help">
+            All seasons · This team’s hole points first
+          </p>
           <div className="rivalry-list">
             {headToHead(records, id).map((opponent) => (
               <details key={opponent.id}>
@@ -912,7 +915,7 @@ export function CareerProfile({
                         </span>
                         <strong>
                           {g.winner === id ? "Win" : g.winner ? "Loss" : "Tie"}{" "}
-                          · {g.score}
+                          · {careerScore(g, id)}
                         </strong>
                         <Icon name="arrow" size={16} />
                       </Link>
@@ -991,7 +994,8 @@ export function CareerProfile({
       <section className="section">
         <SectionTitle title="Match history" />
         <p className="field-help">
-          Regular season: hole points · Playoffs: match-play margin
+          Regular season: this team’s hole points first · Playoffs: match-play
+          margin
         </p>
         <div className="career-match-list">
           {games.map(({ season: s, game: g, teamId }) => (
@@ -1008,11 +1012,9 @@ export function CareerProfile({
                 <strong>vs {entryName(s, g.a === teamId ? g.b : g.a)}</strong>
               </div>
               <span>
-                {g.score}
+                {careerScore(g, teamId)}
                 <small>
-                  {g.phase === "regular"
-                    ? `A–B · ${entryName(s, g.a)} first`
-                    : "Match play"}
+                  {g.phase === "regular" ? "Hole points" : "Match play"}
                 </small>
               </span>
               <Icon name="arrow" size={16} />

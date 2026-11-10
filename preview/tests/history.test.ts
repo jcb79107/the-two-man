@@ -6,6 +6,7 @@ import {
   seasons,
   careerRows,
   careerGames,
+  careerScore,
   type SeasonRecord,
 } from "../src/history-data";
 
@@ -162,5 +163,27 @@ describe("season archive and career records", () => {
     expect(links.every((h) => h.startsWith("/history/2026/matches/"))).toBe(
       true,
     );
+  });
+});
+
+describe("career score perspective", () => {
+  it("shows the featured team's points first without changing the archive", () => {
+    for (const game of archive2026.games) {
+      const original = JSON.stringify(game);
+      if (game.phase === "regular" && game.points) {
+        expect(careerScore(game, game.a)).toBe(
+          `${game.points[0]} – ${game.points[1]}`,
+        );
+        expect(careerScore(game, game.b)).toBe(
+          `${game.points[1]} – ${game.points[0]}`,
+        );
+        expect(careerScore({ ...game, points: null }, game.b)).toBe(game.score);
+      } else {
+        expect(careerScore(game, game.a)).toBe(game.score);
+        expect(careerScore(game, game.b)).toBe(game.score);
+      }
+      expect(careerScore(game, "unknown-team")).toBe(game.score);
+      expect(JSON.stringify(game)).toBe(original);
+    }
   });
 });
