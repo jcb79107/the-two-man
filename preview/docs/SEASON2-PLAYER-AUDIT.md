@@ -1,10 +1,12 @@
 # Season 2 player simulation audit
 
 Audited November 9–10, 2026 against `ed27fa5` (PR #26). This is a new
-experience audit after the technical platform audit. **Findings below are open;
-this pass changes documentation only. No merge or deployment.**
+experience audit after the technical platform audit. The findings and screenshots
+below preserve the original pre-fix observations. **B1–B7 and U1–U8 are now
+addressed in the fictional preview; see [the implementation recheck](SEASON2-PLAYER-RECHECK.md).
+No merge or deployment.**
 
-## Verdict
+## Original verdict
 
 The regular-season scorebook works well. The product loses the player's story
 when the season advances: the bracket knows about playoff results, but the home
@@ -200,7 +202,8 @@ group-text scheduling, evidence delivery, commissioner response time, payments,
 external AI rules service, production permissions and network reliability were
 not exercised. No real messages or payments were sent. All sample publication
 changes stayed in the isolated copy. Season 1 and the real Season 2 source were
-unchanged. No runtime fixes or new regression tests are claimed in this audit.
+unchanged. The original audit was documentation-only; implementation and new regression
+coverage are recorded separately in the linked recheck.
 
 ## Recommended implementation order
 

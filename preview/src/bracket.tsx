@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { useEffect, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { bracketMatches, teamPath, type BracketMatch } from "./bracket-model";
 import type { HistoricalGame } from "./history-data";
@@ -23,6 +24,7 @@ export function ConnectedBracket({
   baseHref?: string;
   label?: string;
 }) {
+  const scroller = useRef<HTMLDivElement>(null);
   const params = useSearchParams();
   const selected = params.get("round") ?? "all";
   const round = Object.hasOwn(roundLabels, selected)
@@ -44,6 +46,38 @@ export function ConnectedBracket({
     if (team) query.set("team", team);
     return `${pathname}?${query}${id ? `#bracket-${id}` : ""}`;
   };
+  const followedMatch =
+    nodes.find(
+      (n) =>
+        route.includes(n.id) &&
+        !n.winner &&
+        n.slots.some((s) => s.id === selectedTeam),
+    )?.id ??
+    [...route]
+      .reverse()
+      .find((id) =>
+        nodes
+          .find((n) => n.id === id)
+          ?.slots.some((s) => s.id === selectedTeam),
+      );
+  useEffect(() => {
+    const container = scroller.current;
+    const target = followedMatch
+      ? container?.querySelector<HTMLElement>(`#bracket-${followedMatch}`)
+      : null;
+    if (!container || !target || (round !== "all" && round !== "overview"))
+      return;
+    const bounds = container.getBoundingClientRect();
+    const card = target.getBoundingClientRect();
+    container.scrollTo({
+      left:
+        container.scrollLeft +
+        card.left -
+        bounds.left -
+        (container.clientWidth - card.width) / 2,
+      behavior: "instant",
+    });
+  }, [selectedTeam, followedMatch, round]);
   const quarterSlots = nodes
     .filter((n) => n.round === "semis")
     .flatMap((n) => n.sources ?? []);
@@ -61,7 +95,7 @@ export function ConnectedBracket({
         <span>
           {m.winner
             ? `${m.score} · Final`
-            : m.round === "quarters"
+            : m.slots.every((s) => s.id)
               ? "Pre-match"
               : "TBD"}
         </span>
@@ -89,7 +123,14 @@ export function ConnectedBracket({
       {m.date && <p className="bracket-date">{dateLabel(m.date)}</p>}
       <div className="tournament-match-footer">
         {m.href ? (
-          <Link href={m.href} aria-label={`Open ${m.label} result`}>
+          <Link
+            href={
+              baseHref === "/bracket"
+                ? `${m.href}?from=bracket&round=${round}${selectedTeam ? `&team=${selectedTeam}` : ""}`
+                : m.href
+            }
+            aria-label={`Open ${m.label} result`}
+          >
             View result <Icon name="arrow" size={13} />
           </Link>
         ) : (
@@ -163,6 +204,7 @@ export function ConnectedBracket({
             Swipe to follow the bracket, or choose a round above.
           </p>
           <div
+            ref={scroller}
             className={`tournament-scroll${round === "overview" ? " responsive-board" : ""}`}
             role="region"
             aria-label="Full connected bracket, horizontally scrollable"

@@ -3199,7 +3199,8 @@ summary {
   font-size: 13px;
   font-weight: 600;
 }
-.bracket-team-filter select {
+.bracket-team-filter select,
+.team-finder select {
   min-height: 44px;
   padding: 8px;
   border: 1px solid var(--line);
@@ -3989,6 +3990,7 @@ details.fine-note > summary {
 .record-controls select,
 .archive-picker select,
 .bracket-team-filter select,
+.team-finder select,
 .paste-entry select {
   font-size: 16px;
 }
@@ -5055,4 +5057,65 @@ main :where(a, button, input, select, textarea, summary) {
   background: var(--paper);
   color: inherit;
   font: inherit;
+}
+
+/* Player handoffs use the existing scorebook controls and panels. */
+.team-finder {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 24px 0;
+  font-weight: 600;
+}
+.team-finder select {
+  max-width: 100%;
+  min-width: 0;
+}
+.prematch-checklist {
+  border-top: 1px solid var(--line);
+  padding: 24px 0;
+}
+.prematch-checklist ol {
+  padding-left: 24px;
+}
+.prematch-checklist li {
+  margin: 16px 0;
+  line-height: 1.6;
+}
+.prematch-checklist a,
+.season-moment a {
+  text-decoration: underline;
+}
+.ledger-amount small {
+  display: block;
+  font-size: 12px;
+  font-weight: 400;
+  margin-top: 5px;
+}
+.playoff-result .big-score strong {
+  font-size: clamp(32px, 5vw, 64px);
+}
+.feed-result .feed-team + b {
+  overflow-wrap: normal;
+}
+.season-moment h2 {
+  font-size: 24px;
+}
+@media (max-width: 900px) {
+  .before-first-result .clubhouse-aside {
+    order: -1;
+  }
+  .team-finder {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+}
+.playoff-feed-result > span {
+  grid-template-columns: minmax(0, 1fr) 100px;
+}
+.playoff-feed-result b {
+  font-size: 20px;
+  padding: 8px;
+  text-align: center;
 }

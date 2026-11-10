@@ -262,55 +262,60 @@ export const archive2026: SeasonRecord = {
       }),
   ],
 };
-export function seasons(current: Match[]): SeasonRecord[] {
-  if (offseason) return [archive2026];
-  const final = publication.games.find((g) => g.id === "final");
-  return [
-    {
-      year: 2027,
-      number: 2,
-      sample: true,
-      complete: !!final,
-      entries,
-      games: [...regularGames(current, 2027), ...publication.games],
-      regularCards: current,
-      champion: final?.winner ?? null,
-      runnerUp: final ? (final.a === final.winner ? final.b : final.a) : null,
-      prizePool: season.prizePool,
-      awards: [
-        ...(final
+export function currentSeason(
+  current: Match[],
+  playoffs = publication.games,
+): SeasonRecord {
+  const final = playoffs.find((g) => g.id === "final");
+  return {
+    year: 2027,
+    number: 2,
+    sample: true,
+    complete: !!final,
+    entries,
+    games: [...regularGames(current, 2027), ...playoffs],
+    regularCards: current,
+    champion: final?.winner ?? null,
+    runnerUp: final ? (final.a === final.winner ? final.b : final.a) : null,
+    prizePool: season.prizePool,
+    awards: [
+      ...(final
+        ? [
+            {
+              teamId: final.winner!,
+              kind: "champion" as const,
+              label: "Champions",
+              amount: season.championAward,
+              perPlayer: season.championAward / 2,
+            },
+            {
+              teamId: final.a === final.winner ? final.b : final.a,
+              kind: "runner-up" as const,
+              label: "Runners-up",
+              amount: season.runnerUpAward,
+              perPlayer: season.runnerUpAward / 2,
+            },
+          ]
+        : []),
+      ...["A", "B", "C", "D", "E", "F"].flatMap((pod) => {
+        const teamId = podWinner(current, pod);
+        return teamId
           ? [
               {
-                teamId: final.winner!,
-                kind: "champion" as const,
-                label: "Champions",
-                amount: season.championAward,
-              },
-              {
-                teamId: final.a === final.winner ? final.b : final.a,
-                kind: "runner-up" as const,
-                label: "Runners-up",
-                amount: season.runnerUpAward,
+                teamId,
+                kind: "pod" as const,
+                label: `Pod ${pod} winner`,
+                amount: season.podAward,
+                perPlayer: season.podAward / 2,
               },
             ]
-          : []),
-        ...["A", "B", "C", "D", "E", "F"].flatMap((pod) => {
-          const teamId = podWinner(current, pod);
-          return teamId
-            ? [
-                {
-                  teamId,
-                  kind: "pod" as const,
-                  label: `Pod ${pod} winner`,
-                  amount: season.podAward,
-                },
-              ]
-            : [];
-        }),
-      ],
-    },
-    archive2026,
-  ];
+          : [];
+      }),
+    ],
+  };
+}
+export function seasons(current: Match[]): SeasonRecord[] {
+  return offseason ? [archive2026] : [currentSeason(current), archive2026];
 }
 export function entryName(s: SeasonRecord, id: string) {
   return s.entries.find((e) => e.teamId === id)?.name ?? "Unknown team";

@@ -43,16 +43,16 @@ describe("season archive and career records", () => {
     );
     expect(rows.every((r) => r.won + r.lost + r.tied === r.played)).toBe(true);
   });
-  it("does not fabricate an active season title or individual prize split", () => {
+  it("does not fabricate an active season title and labels sample splits through sample records", () => {
     expect(seasons(matches)[0].champion).toBeNull();
     expect(
       careerRows([seasons(matches)[0]], "teams").every((r) => r.titles === 0),
     ).toBe(true);
+    const sample = seasons(matches)[0];
+    expect(sample.sample).toBe(true);
     expect(
-      careerRows([seasons(matches)[0]], "players").filter(
-        (r) => r.earned === null,
-      ).length,
-    ).toBeGreaterThan(0);
+      sample.awards.every((a) => a.perPlayer === (a.amount ?? 0) / 2),
+    ).toBe(true);
   });
   it("reconciles confirmed Season 1 team and player payouts to the $3,600 pool", () => {
     expect(archive2026.prizePool).toBe(3600);

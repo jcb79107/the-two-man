@@ -1,5 +1,7 @@
 "use client";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { matchReturn } from "./match-return";
 import { useRef, useState } from "react";
 import { usePreview } from "./store";
 import {
@@ -26,6 +28,8 @@ const players = (m: Match) => [
 ];
 export function MatchDetail({ id }: { id: string }) {
   const { matches } = usePreview();
+  const params = useSearchParams();
+  const back = matchReturn(new URLSearchParams(params.toString()));
   const m = matches.find((m) => m.id === id);
   const [section, setSection] = useState("card");
   if (!m)
@@ -37,9 +41,9 @@ export function MatchDetail({ id }: { id: string }) {
   const r = result(m);
   return (
     <>
-      <Link href="/matches" className="back-link">
+      <Link href={back.href} className="back-link">
         <Icon name="back" size={16} />
-        All matches
+        {back.label}
       </Link>
       <div className="match-detail-kicker">
         <span className="eyebrow">Regular season · Pod {m.pod}</span>
@@ -65,7 +69,7 @@ export function MatchDetail({ id }: { id: string }) {
           ) : (
             <>
               <strong>vs</strong>
-              <small>Pre-match</small>
+              <small>Coordinate in your group text</small>
             </>
           )}
         </div>
@@ -96,16 +100,36 @@ export function MatchDetail({ id }: { id: string }) {
         </div>
       )}
       {m.status !== "official" ? (
-        <div className="notice">
-          <Icon name="clock" />
-          <div>
-            <strong>Pre-match</strong>
-            <p>
-              After the match, send the full regular-season card to the
-              commissioner.
-            </p>
-          </div>
-        </div>
+        <section className="prematch-checklist">
+          <h2>Before you tee off</h2>
+          <p>
+            <strong>Season 2 deadline: not yet confirmed.</strong> The current
+            fixtures are fictional.
+          </p>
+          <ol>
+            <li>
+              Coordinate the course, tees and time with your opponents in the
+              group text.{" "}
+              <Link href="/rules#scheduling">Scheduling guidance</Link>
+            </li>
+            <li>
+              Use GHIN’s four-ball match-play setup with a 90% allowance; review
+              the correct course, tees and strokes together. One stroke per hole
+              maximum. Save the allocation screenshot.{" "}
+              <Link href="/rules#strokes">Stroke rules</Link>
+            </li>
+            <li>
+              Play all 18 holes. Record all four gross scores, each player’s
+              strokes and each team’s best ball. Include names, date, course and
+              tees.
+            </li>
+            <li>
+              Text or email the full card and GHIN evidence to the commissioner
+              after the match.{" "}
+              <Link href="/rules#regular-card">Full card requirements</Link>
+            </li>
+          </ol>
+        </section>
       ) : (
         <>
           <ResultSummary match={m} />
@@ -163,7 +187,7 @@ function StrokeSummary({ match: m }: { match: Match }) {
               <small> strokes</small>
             </strong>
             <span>
-              Holes{" "}
+              {sum(m.strokes[i]) === 0 ? "No strokes" : "Holes "}
               {m.strokes[i]
                 .map((s, h) =>
                   s ? `${h + 1}${s > 1 ? ` (${s} strokes)` : ""}` : null,

@@ -47,8 +47,16 @@ function ArchiveNav({ active }: { active: string }) {
     </nav>
   );
 }
-function HistoryDisclosure() {
+function HistoryDisclosure({ sample = false }: { sample?: boolean }) {
   if (offseason) return null;
+  if (sample)
+    return (
+      <p className="archive-disclosure">
+        <strong>Fictional Season 2.</strong> Sample results and proposed awards.
+        Player shares illustrate an equal split; Season 2 amounts and split
+        policy are unconfirmed. Excluded from official all-time records.
+      </p>
+    );
   return (
     <p className="archive-disclosure">
       <strong>Season 1 official archive.</strong> Preserved 2026 results. Season
@@ -246,7 +254,7 @@ export function SeasonArchive({ year }: { year: number }) {
           </Link>
         ))}
       </nav>
-      <HistoryDisclosure />
+      <HistoryDisclosure sample={s.sample} />
       {view === "overview" && (
         <>
           {s.champion ? (
@@ -256,8 +264,9 @@ export function SeasonArchive({ year }: { year: number }) {
               <p className="eyebrow">Current season</p>
               <h2>Season in progress</h2>
               <p>
-                {s.games.length} regular-season results are official. Pending
-                cards do not count toward career stats.
+                {s.games.filter((g) => g.phase === "regular").length}{" "}
+                regular-season results are official. Pending cards do not count
+                toward career stats.
               </p>
               <Link href="/matches" className="text-link">
                 Back to current matches <Icon name="arrow" size={16} />
@@ -505,18 +514,23 @@ function ArchiveResults({ season: s }: { season: SeasonRecord }) {
     </>
   );
 }
-function GameList({
+export function GameList({
   season: s,
   games,
   compact = false,
+  from = "results",
+  team,
 }: {
+  from?: "results" | "matches" | "team";
+  team?: string;
   season: SeasonRecord;
   games: HistoricalGame[];
   compact?: boolean;
 }) {
   const params = useSearchParams();
   const resultQuery = new URLSearchParams(params.toString());
-  resultQuery.set("from", "results");
+  resultQuery.set("from", from);
+  if (team) resultQuery.set("team", team);
   return (
     <div className={`archive-games ${compact ? "compact" : ""}`}>
       {games.map((g) => (
@@ -853,7 +867,16 @@ export function CareerProfile({
             : "The record follows the player, even when the partner changes."
         }
       />
-      <HistoryDisclosure />
+      {appearances.every((s) => s.sample) ? (
+        <p className="archive-disclosure">
+          <strong>Fictional Season 2 career.</strong> Sample results and
+          proposed awards for this demo only. Player shares illustrate an equal
+          split; Season 2 amounts and split policy are unconfirmed. Excluded
+          from official all-time records.
+        </p>
+      ) : (
+        <HistoryDisclosure />
+      )}
       {row.titles > 0 && (
         <div className="career-honors">
           <Icon name="cup" size={26} />
