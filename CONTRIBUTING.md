@@ -26,8 +26,12 @@ Use one of these prefixes:
 Run these before opening or merging a PR:
 
 ```bash
+npm ci --prefix preview
 npm run lint
 npm test
+npm run typecheck
+npm run format:check
+npm run security:artifacts
 npm run build
 ```
 

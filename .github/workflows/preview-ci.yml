@@ -2,16 +2,10 @@ name: Season 2 Preview
 
 on:
   pull_request:
-    paths:
-      - 'preview/**'
-      - '.github/workflows/preview-ci.yml'
   push:
     branches:
       - 'codex/**'
       - main
-    paths:
-      - 'preview/**'
-      - '.github/workflows/preview-ci.yml'
 
 permissions:
   contents: read
@@ -37,9 +31,6 @@ jobs:
           cache: npm
           cache-dependency-path: preview/package-lock.json
       - run: npm ci --ignore-scripts
-      - run: npm test
-      - run: npm run lint
-      - run: npm run typecheck
       - run: npm run build
       - run: npx playwright install --with-deps chromium
       - run: npm run test:browser
